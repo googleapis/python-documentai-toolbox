@@ -10,7 +10,8 @@ Thanks for stopping by to let us know something could be better!
 
 Please run down the following list and make sure you've tried the usual "quick fixes":
 
-  - Search the issues already opened: https://github.com/googlecloudplatform/document-ai-sdk/issues
+  - Search the issues already opened: https://github.com/googleapis/python-documentai-toolbox/issues
+  - Search StackOverflow: https://stackoverflow.com/questions/tagged/google-cloud-platform+python
 
 If you are still having issues, please be sure to include as much information as possible:
 
@@ -19,7 +20,7 @@ If you are still having issues, please be sure to include as much information as
   - OS type and version:
   - Python version: `python --version`
   - pip version: `pip --version`
-  - `document-ai-sdk` version: `pip show document-ai-sdk`
+  - `google-cloud-documentai-toolbox` version: `pip show google-cloud-documentai-toolbox`
 
 #### Steps to reproduce
 

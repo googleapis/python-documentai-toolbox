@@ -1,9 +1,9 @@
-Document AI SDK
+Document AI Toolbox
 =================================
 
 |experimental| |versions|
 
-`Document AI SDK`_: Service to parse structured information from unstructured or semi-structured documents using state-of-the-art Google AI such as natural language, computer vision, translation, and AutoML.
+`Document AI Toolbox`_: Service to parse structured information from unstructured or semi-structured documents using state-of-the-art Google AI such as natural language, computer vision, translation, and AutoML.
 
 - `SDK Documentation`_
 
@@ -12,7 +12,7 @@ Document AI SDK
 .. |versions| image:: https://img.shields.io/pypi/pyversions/google-analytics-admin.svg
    :target: https://pypi.org/project/google-analytics-admin/
 
-.. _Document AI SDK: LINK
+.. _Document AI Toolbox: LINK
 .. _SDK Documentation: LINK
 
 Quick Start
@@ -77,7 +77,7 @@ Mac/Linux
     pip install virtualenv
     virtualenv <your-env>
     source <your-env>/bin/activate
-    <your-env>/bin/pip install document-ai-sdk
+    <your-env>/bin/pip install documentai-toolbox
 
 
 Windows
@@ -88,12 +88,12 @@ Windows
     pip install virtualenv
     virtualenv <your-env>
     <your-env>\Scripts\activate
-    <your-env>\Scripts\pip.exe install document-ai-sdk
+    <your-env>\Scripts\pip.exe install documentai-toolbox
 
 Next Steps
 ~~~~~~~~~~
 
--  Read the `Client Library Documentation`_ for Document AI SDK
+-  Read the `Client Library Documentation`_ for Document AI Toolbox
    to see other available methods on the client.
 -  Read the `Document AI API Product documentation`_ to learn
    more about the product and see How-to Guides.
@@ -102,4 +102,4 @@ Next Steps
 
 .. _Client Library Documentation:  LINK
 .. _Document AI API Product documentation:  LINK
-.. _README: https://github.com/googlecloudplatfrom/document-ai-sdk/blob/main/README.rst
+.. _README: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
