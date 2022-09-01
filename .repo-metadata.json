@@ -6,7 +6,7 @@
     "issue_tracker": "",
     "release_level": "experimental",
     "language": "python",
-    "library_type": "MANUAL",
+    "library_type": "GAPIC_MANUAL",
     "repo": "googleapis/python-documentai-toolbox",
     "distribution_name": "google-cloud-documentai-toolbox",
     "requires_billing": true,
