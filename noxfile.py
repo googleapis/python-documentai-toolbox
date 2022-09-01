@@ -29,9 +29,9 @@ BLACK_VERSION = "black==22.3.0"
 ISORT_VERSION = "isort==5.10.1"
 LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
-DEFAULT_PYTHON_VERSION="3.8"
+DEFAULT_PYTHON_VERSION = "3.8"
 
-UNIT_TEST_PYTHON_VERSIONS=["3.7", "3.8", "3.9", "3.10"]
+UNIT_TEST_PYTHON_VERSIONS = ["3.7", "3.8", "3.9", "3.10"]
 UNIT_TEST_STANDARD_DEPENDENCIES = [
     "mock",
     "asyncmock",
@@ -39,31 +39,23 @@ UNIT_TEST_STANDARD_DEPENDENCIES = [
     "pytest-cov",
     "pytest-asyncio",
 ]
-UNIT_TEST_EXTERNAL_DEPENDENCIES = [
-]
-UNIT_TEST_LOCAL_DEPENDENCIES = [
-]
-UNIT_TEST_DEPENDENCIES = [
-]
-UNIT_TEST_EXTRAS = [
-]
-UNIT_TEST_EXTRAS_BY_PYTHON = {
-}
+UNIT_TEST_EXTERNAL_DEPENDENCIES = []
+UNIT_TEST_LOCAL_DEPENDENCIES = []
+UNIT_TEST_DEPENDENCIES = []
+UNIT_TEST_EXTRAS = []
+UNIT_TEST_EXTRAS_BY_PYTHON = {}
 
-SYSTEM_TEST_PYTHON_VERSIONS=["3.8"]
+SYSTEM_TEST_PYTHON_VERSIONS = ["3.8"]
 SYSTEM_TEST_STANDARD_DEPENDENCIES = [
-    "mock", "pytest", "google-cloud-testutils",
+    "mock",
+    "pytest",
+    "google-cloud-testutils",
 ]
-SYSTEM_TEST_EXTERNAL_DEPENDENCIES = [
-]
-SYSTEM_TEST_LOCAL_DEPENDENCIES = [
-]
-SYSTEM_TEST_DEPENDENCIES = [
-]
-SYSTEM_TEST_EXTRAS = [
-]
-SYSTEM_TEST_EXTRAS_BY_PYTHON = {
-}
+SYSTEM_TEST_EXTERNAL_DEPENDENCIES = []
+SYSTEM_TEST_LOCAL_DEPENDENCIES = []
+SYSTEM_TEST_DEPENDENCIES = []
+SYSTEM_TEST_EXTRAS = []
+SYSTEM_TEST_EXTRAS_BY_PYTHON = {}
 
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
@@ -186,6 +178,7 @@ def default(session):
         *session.posargs,
     )
 
+
 @nox.session(python=UNIT_TEST_PYTHON_VERSIONS)
 def unit(session):
     """Run the unit test suite."""
@@ -233,7 +226,7 @@ def system(session):
     system_test_folder_path = os.path.join("tests", "system")
 
     # Check the value of `RUN_SYSTEM_TESTS` env var. It defaults to true.
-    if os.environ.get("RUN_SYSTEM_TESTS", "true") == 'false':
+    if os.environ.get("RUN_SYSTEM_TESTS", "true") == "false":
         session.skip("RUN_SYSTEM_TESTS is set to false, skipping")
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
@@ -254,7 +247,7 @@ def system(session):
             "--quiet",
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_path,
-            *session.posargs
+            *session.posargs,
         )
     if system_test_folder_exists:
         session.run(
@@ -262,8 +255,9 @@ def system(session):
             "--quiet",
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_folder_path,
-            *session.posargs
+            *session.posargs,
         )
+
 
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def cover(session):
@@ -276,6 +270,7 @@ def cover(session):
     session.run("coverage", "report", "--show-missing", "--fail-under=100")
 
     session.run("coverage", "erase")
+
 
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def docs(session):
@@ -290,8 +285,10 @@ def docs(session):
         "-W",  # warnings as errors
         "-T",  # show full traceback on exception
         "-N",  # no colors
-        "-b", "html",
-        "-d", os.path.join("docs", "_build", "doctrees", ""),
+        "-b",
+        "html",
+        "-d",
+        os.path.join("docs", "_build", "doctrees", ""),
         os.path.join("docs", ""),
         os.path.join("docs", "_build", "html", ""),
     )
@@ -302,7 +299,9 @@ def docfx(session):
     """Build the docfx yaml files for this library."""
 
     session.install("-e", ".")
-    session.install("sphinx==4.0.1", "alabaster", "recommonmark", "gcp-sphinx-docfx-yaml")
+    session.install(
+        "sphinx==4.0.1", "alabaster", "recommonmark", "gcp-sphinx-docfx-yaml"
+    )
 
     shutil.rmtree(os.path.join("docs", "_build"), ignore_errors=True)
     session.run(
@@ -338,7 +337,11 @@ def prerelease_deps(session):
     session.install("-e", ".[all, tests, tracing]")
     unit_deps_all = UNIT_TEST_STANDARD_DEPENDENCIES + UNIT_TEST_EXTERNAL_DEPENDENCIES
     session.install(*unit_deps_all)
-    system_deps_all = SYSTEM_TEST_STANDARD_DEPENDENCIES + SYSTEM_TEST_EXTERNAL_DEPENDENCIES + SYSTEM_TEST_EXTRAS
+    system_deps_all = (
+        SYSTEM_TEST_STANDARD_DEPENDENCIES
+        + SYSTEM_TEST_EXTERNAL_DEPENDENCIES
+        + SYSTEM_TEST_EXTRAS
+    )
     session.install(*system_deps_all)
 
     # Because we test minimum dependency versions on the minimum Python
