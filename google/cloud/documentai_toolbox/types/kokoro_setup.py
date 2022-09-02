@@ -14,10 +14,9 @@
 # limitations under the License.
 #
 
-from .kokoro_setup import (
-    test_kokoro,
-)
+#TODO: Remove this class
+class test_kokoro():
+    """This class tests to see if kokoro was setup properly."""
 
-__all__ = (
-    "test_kokoro",
-)
+    def __init__():
+        pass
