@@ -13,11 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from .kokoro_setup import (
-    test_kokoro,
-)
-
-__all__ = (
-    "test_kokoro",
-)
