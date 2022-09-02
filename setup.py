@@ -26,11 +26,12 @@ with io.open(readme_filename, encoding="utf-8") as readme_file:
     readme = readme_file.read()
 
 setuptools.setup(
-    name="documentai-toolbox",
+    name="google-cloud-documentai-toolbox",
     author="Google LLC",
     author_email="googleapis-packages@google.com",
     url="https://github.com/googleapis/python-documentai-toolbox",
     version=version,
+    license="Apache 2.0",
     long_description=readme,
     packages=setuptools.PEP420PackageFinder.find(),
     namespace_packages=("google", "google.cloud"),
