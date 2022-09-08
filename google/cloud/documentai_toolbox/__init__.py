@@ -14,27 +14,13 @@
 # limitations under the License.
 #
 
-from .services.document_wrapper_service import _read_output
-
-from .services.page_wrapper_service import (
-    _get_lines,
-    _get_paragraphs,
-    _get_tokens,
-    _text_from_layout,
-)
-
-from .types import (
+from .wrappers import (
     DocumentWrapper,
     PageWrapper,
     EntityWrapper,
 )
 
 __all__ = (
-    "_get_lines",
-    "_get_paragraphs",
-    "_get_tokens",
-    "_text_from_layout",
-    "_read_output",
     "DocumentWrapper",
     "PageWrapper",
     "EntityWrapper",

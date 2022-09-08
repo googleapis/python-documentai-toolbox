@@ -13,10 +13,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""This module has all of the helper functions needed to merge shards."""
+"""Wrappers for Document AI Page type."""
+
+from dataclasses import dataclass, field
+import re
 from typing import List
 
 from google.cloud import documentai
+
+
+@dataclass
+class PageWrapper:
+    """Represents a wrapped documentai.Document.Page .
+
+    This class hides away the complexity of documentai page message type and
+    implements convenient methods for searching and extracting information within
+    the Document.
+    """
+
+    shards: List[documentai.Document]
+
+    _lines: List[str] = field(init=False, repr=False, default_factory=lambda: [])
+    _paragraphs: List[str] = field(init=False, repr=False, default_factory=lambda: [])
+    _tokens: List[str] = field(init=False, repr=False, default_factory=lambda: [])
+
+    def __post_init__(self):
+        self._lines = _get_lines(self.shards)
+        self._paragraphs = _get_paragraphs(self.shards)
+        self._tokens = _get_tokens(self.shards)
+
+    def get_text_on_page(self, page_number: int) -> List[str]:
+        """Returns a list of paragraphs on page_number."""
+        return self._paragraphs[page_number - 1]
+
+    def search_pages_by_paragraph(self, regex: str) -> List[str]:
+        """Returns a list of paragraphs that match the regex."""
+        res = []
+        for paragraph in self._paragraphs:
+            for text in paragraph:
+                if re.findall(regex, text) != []:
+                    res.append(text)
+
+        return res
+    
+    def search_pages_by_line(self, regex: str) -> List[str]:
+        """Returns a list of lines that match the regex."""
+        res = []
+        for line in self._lines:
+            for text in line:
+                if re.findall(regex, text) != []:
+                    res.append(text)
+
+        return res
 
 
 def _get_paragraphs(shards: List[documentai.Document]) -> List[str]:

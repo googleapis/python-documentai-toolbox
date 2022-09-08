@@ -13,13 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""This module has all of the helper functions needed to merge shards."""
+"""Wrappers for Document AI Entity type."""
+
+from dataclasses import dataclass, field
+import re
 from typing import List
 
 from google.cloud import documentai
 
+
+@dataclass
+class EntityWrapper:
+    """Represents a wrapped documentai.Document.Entity .
+
+    This class hides away the complexity of documentai Entity message type.
+    """
+
+    shards: List[documentai.Document]
+
+    entities: List[str] = field(init=False, repr=False, default_factory=lambda: [])
+
+    def __post_init__(self):
+        self.entities = _get_entities(self.shards)
+
+
 def _get_entities(shard_list: List[documentai.Document]):
-  """Gets tokens from document shard and returns text in a list."""
+  """Gets entities from document shards and returns a key/value pair list with entity_type and entity_value."""
   res = []
   for shard in shard_list:
     text = shard.text
