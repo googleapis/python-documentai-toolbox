@@ -13,12 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .document_wrapper import DocumentWrapper
-from .page_wrapper import PageWrapper
-from .entity_wrapper import EntityWrapper
+"""This module has all of the helper functions needed to merge shards."""
+from typing import List
 
-__all__ = (
-    "DocumentWrapper",
-    "PageWrapper",
-    "EntityWrapper",
-)
+from google.cloud import documentai
+
+def _get_entities(shard_list: List[documentai.Document]):
+  """Gets tokens from document shard and returns text in a list."""
+  res = []
+  for shard in shard_list:
+    text = shard.text
+    for entity in shard.entities:
+      res.append({"entity_type" : entity.type, "entity_value" : entity.mention_text})
+
+  return res

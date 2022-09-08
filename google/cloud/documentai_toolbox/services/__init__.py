@@ -13,3 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from .document_wrapper_service import _read_output
+from .entity_wrapper_service import _get_entities
+from .page_wrapper_service import (
+    _get_lines,
+    _get_paragraphs,
+    _get_tokens,
+    _text_from_layout,
+)
+
+__all__ = (
+    "_get_entities",
+    "_get_lines",
+    "_get_paragraphs",
+    "_get_tokens",
+    "_text_from_layout",
+    "_read_output",
+)
