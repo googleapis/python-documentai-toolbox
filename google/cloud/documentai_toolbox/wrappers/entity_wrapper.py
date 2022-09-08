@@ -38,11 +38,13 @@ class EntityWrapper:
 
 
 def _get_entities(shard_list: List[documentai.Document]):
-  """Gets entities from document shards and returns a key/value pair list with entity_type and entity_value."""
-  res = []
-  for shard in shard_list:
-    text = shard.text
-    for entity in shard.entities:
-      res.append({"entity_type" : entity.type, "entity_value" : entity.mention_text})
+    """Gets entities from document shards and returns a key/value pair list with entity_type and entity_value."""
+    res = []
+    for shard in shard_list:
+        text = shard.text
+        for entity in shard.entities:
+            res.append(
+                {"entity_type": entity.type, "entity_value": entity.mention_text}
+            )
 
-  return res
+    return res

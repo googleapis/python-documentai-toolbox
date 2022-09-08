@@ -25,6 +25,7 @@ from google.cloud import storage
 from google.cloud.documentai_toolbox.wrappers.page_wrapper import PageWrapper
 from google.cloud.documentai_toolbox.wrappers.entity_wrapper import EntityWrapper
 
+
 @dataclass
 class DocumentWrapper:
     """Represents a wrapped Document.
@@ -40,29 +41,10 @@ class DocumentWrapper:
     entities: EntityWrapper = field(init=False, repr=False)
     gcs_prefix: InitVar[str]
 
-    def __post_init__(self,gcs_prefix):
+    def __post_init__(self, gcs_prefix):
         self._shards = _read_output(gcs_prefix)
         self.pages = PageWrapper(shards=self._shards)
         self.entities = EntityWrapper(shards=self._shards)
-    
-    def get_entity_by_type(self,entity_type : str) -> List[str]:
-        """Returns a list of entities matching the entity_type."""
-        res = []
-        for entity in self.entities.entities:
-            if entity["entity_type"] == entity_type:
-                res.append(entity["entity_value"])
-        
-        return res
-    
-    def get_entity_if_type_contains(self,contains_text : str) -> List[str]:
-        """Returns a list of entities that have contains_text in them."""
-        res = []
-        for entity in self.entities.entities:
-            if contains_text in entity["entity_type"]:
-                res.append({entity["entity_type"] : entity["entity_value"]})
-        
-        return res
-
 
 
 def _read_output(gcs_prefix: str) -> List[documentai.Document]:

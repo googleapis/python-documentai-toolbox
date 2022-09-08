@@ -38,67 +38,22 @@ class PageWrapper:
     _tokens: List[str] = field(init=False, repr=False, default_factory=lambda: [])
 
     def __post_init__(self):
-        self._lines = _get_lines(self.shards)
-        self._paragraphs = _get_paragraphs(self.shards)
-        self._tokens = _get_tokens(self.shards)
-
-    def get_text_on_page(self, page_number: int) -> List[str]:
-        """Returns a list of paragraphs on page_number."""
-        return self._paragraphs[page_number - 1]
-
-    def search_pages_by_paragraph(self, regex: str) -> List[str]:
-        """Returns a list of paragraphs that match the regex."""
-        res = []
-        for paragraph in self._paragraphs:
-            for text in paragraph:
-                if re.findall(regex, text) != []:
-                    res.append(text)
-
-        return res
-    
-    def search_pages_by_line(self, regex: str) -> List[str]:
-        """Returns a list of lines that match the regex."""
-        res = []
-        for line in self._lines:
-            for text in line:
-                if re.findall(regex, text) != []:
-                    res.append(text)
-
-        return res
+        self._paragraphs, self._lines, self._tokens = _get_text(self.shards)
 
 
-def _get_paragraphs(shards: List[documentai.Document]) -> List[str]:
-    """Returns a list of text from Document.page.paragraphs ."""
-    result = []
+def _get_text(shards: List[documentai.Document]) -> List[str]:
+    """Returns a 3 seperate lists of text for paragraphs, lines, and tokens in Document Shards ."""
+    line_result = []
+    paragraph_result = []
+    token_result = []
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(_text_from_layout(page.paragraphs, text))
+            line_result.append(_text_from_layout(page.lines, text))
+            paragraph_result.append(_text_from_layout(page.paragraphs, text))
+            token_result.append(_text_from_layout(page.tokens, text))
 
-    return result
-
-
-def _get_lines(shards: List[documentai.Document]) -> List[str]:
-    """Returns a list of text from Document.page.lines ."""
-    result = []
-    for shard in shards:
-        text = shard.text
-        for page in shard.pages:
-            result.append(_text_from_layout(page.lines, text))
-
-    return result
-
-
-def _get_tokens(shards: List[documentai.Document]) -> List[str]:
-    """Returns a list of text from Document.page.tokens ."""
-    result = []
-    for shard in shards:
-        text = shard.text
-        for page in shard.pages:
-            result.append(_text_from_layout(page.tokens, text))
-
-    return result
-
+    return paragraph_result,line_result,token_result
 
 def _text_from_layout(page_entities, text: str) -> List[str]:
     """Returns a list of texts from Document.page ."""
