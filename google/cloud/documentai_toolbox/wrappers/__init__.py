@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from .document_wrapper import DocumentWrapper
 from .page_wrapper import PageWrapper
 from .entity_wrapper import EntityWrapper
