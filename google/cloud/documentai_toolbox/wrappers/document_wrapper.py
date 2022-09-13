@@ -22,22 +22,18 @@ from typing import List
 from google.cloud import documentai
 from google.cloud import storage
 
-from google.cloud.documentai_toolbox.wrappers.page_wrapper import PageWrapper
-from google.cloud.documentai_toolbox.wrappers.entity_wrapper import EntityWrapper
+from google.cloud.documentai_toolbox.wrappers import page_wrapper,entity_wrapper
 
 
-
-
-
-def _entities_from_shards(shards) -> List[EntityWrapper]:
+def _entities_from_shards(shards) -> List[entity_wrapper.EntityWrapper]:
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(EntityWrapper(entity, entity.type, entity.mention_text))
+            result.append(entity_wrapper.EntityWrapper(entity, entity.type, entity.mention_text))
     return result
 
 
-def _pages_from_shards(shards) -> List[PageWrapper]:
+def _pages_from_shards(shards) -> List[page_wrapper.PageWrapper]:
     result = []
     for shard in shards:
         text = shard.text
@@ -50,7 +46,7 @@ def _pages_from_shards(shards) -> List[PageWrapper]:
             paragraphs.append(_text_from_layout(page.paragraphs, text))
             tokens.append(_text_from_layout(page.tokens, text))
 
-            result.append(PageWrapper(lines, paragraphs, tokens))
+            result.append(page_wrapper.PageWrapper(lines, paragraphs, tokens))
 
     return result
 
@@ -105,8 +101,8 @@ class DocumentWrapper:
     """
 
     _shards: List[documentai.Document] = field(init=False, repr=False)
-    pages: List[PageWrapper] = field(init=False, repr=False)
-    entities: List[EntityWrapper] = field(init=False, repr=False)
+    pages: List[page_wrapper.PageWrapper] = field(init=False, repr=False)
+    entities: List[entity_wrapper.EntityWrapper] = field(init=False, repr=False)
     gcs_prefix: str
 
     def __post_init__(self):
