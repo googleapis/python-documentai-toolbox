@@ -15,12 +15,10 @@
 #
 """Wrappers for Document AI Entity type."""
 
-from dataclasses import dataclass, field
-import re
+from dataclasses import dataclass
 from typing import List
 
 from google.cloud import documentai
-
 
 @dataclass
 class EntityWrapper:
@@ -29,22 +27,6 @@ class EntityWrapper:
     This class hides away the complexity of documentai Entity message type.
     """
 
-    shards: List[documentai.Document]
-
-    entities: List[str] = field(init=False, repr=False, default_factory=lambda: [])
-
-    def __post_init__(self):
-        self.entities = _get_entities(self.shards)
-
-
-def _get_entities(shard_list: List[documentai.Document]):
-    """Gets entities from document shards and returns a key/value pair list with entity_type and entity_value."""
-    res = []
-    for shard in shard_list:
-        text = shard.text
-        for entity in shard.entities:
-            res.append(
-                {"entity_type": entity.type, "entity_value": entity.mention_text}
-            )
-
-    return res
+    original_entity:documentai.Document.Entity
+    type_:str
+    mention_text:str

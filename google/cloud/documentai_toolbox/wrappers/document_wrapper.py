@@ -15,7 +15,7 @@
 #
 """Wrappers for Document AI Document type."""
 
-from dataclasses import InitVar, dataclass, field
+from dataclasses import dataclass, field
 import re
 from typing import List
 
@@ -26,25 +26,33 @@ from google.cloud.documentai_toolbox.wrappers.page_wrapper import PageWrapper
 from google.cloud.documentai_toolbox.wrappers.entity_wrapper import EntityWrapper
 
 
-@dataclass
-class DocumentWrapper:
-    """Represents a wrapped Document.
 
-    A single Document protobuf message might be written as several JSON files on
-    GCS by Document AI's BatchProcessDocuments method.  This class hides away the
-    shards from the users and implements convenient methods for searching and
-    extracting information within the Document.
-    """
 
-    _shards: List[documentai.Document] = field(init=False, repr=False)
-    pages: PageWrapper = field(init=False, repr=False)
-    entities: EntityWrapper = field(init=False, repr=False)
-    gcs_prefix: InitVar[str]
 
-    def __post_init__(self, gcs_prefix):
-        self._shards = _read_output(gcs_prefix)
-        self.pages = PageWrapper(shards=self._shards)
-        self.entities = EntityWrapper(shards=self._shards)
+def _entities_from_shards(shards) -> List[EntityWrapper]:
+    result = []
+    for shard in shards:
+        for entity in shard.entities:
+            result.append(EntityWrapper(entity, entity.type, entity.mention_text))
+    return result
+
+
+def _pages_from_shards(shards) -> List[PageWrapper]:
+    result = []
+    for shard in shards:
+        text = shard.text
+        for page in shard.pages:
+            lines = []
+            paragraphs = []
+            tokens = []
+
+            lines.append(_text_from_layout(page.lines, text))
+            paragraphs.append(_text_from_layout(page.paragraphs, text))
+            tokens.append(_text_from_layout(page.tokens, text))
+
+            result.append(PageWrapper(lines, paragraphs, tokens))
+
+    return result
 
 
 def _read_output(gcs_prefix: str) -> List[documentai.Document]:
@@ -69,3 +77,39 @@ def _read_output(gcs_prefix: str) -> List[documentai.Document]:
             shards.append(documentai.Document.from_json(blob_as_bytes))
 
     return shards
+
+
+def _text_from_layout(page_entities, text: str) -> List[str]:
+    """Returns a list of texts from Document.page ."""
+    result = []
+    # If a text segment spans several lines, it will
+    # be stored in different text segments.
+    for entity in page_entities:
+        result_text = ""
+        for text_segment in entity.layout.text_anchor.text_segments:
+            start_index = int(text_segment.start_index)
+            end_index = int(text_segment.end_index)
+            result_text += text[start_index:end_index]
+        result.append(text[start_index:end_index])
+    return result
+
+
+@dataclass
+class DocumentWrapper:
+    """Represents a wrapped Document.
+
+    A single Document protobuf message might be written as several JSON files on
+    GCS by Document AI's BatchProcessDocuments method.  This class hides away the
+    shards from the users and implements convenient methods for searching and
+    extracting information within the Document.
+    """
+
+    _shards: List[documentai.Document] = field(init=False, repr=False)
+    pages: List[PageWrapper] = field(init=False, repr=False)
+    entities: List[EntityWrapper] = field(init=False, repr=False)
+    gcs_prefix: str
+
+    def __post_init__(self):
+        self._shards = _read_output(self.gcs_prefix)
+        self.pages = _pages_from_shards(shards=self._shards)
+        self.entities = _entities_from_shards(shards=self._shards)
