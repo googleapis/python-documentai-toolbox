@@ -16,9 +16,9 @@
 """Wrappers for Document AI Entity type."""
 
 from dataclasses import dataclass
-from typing import List
 
 from google.cloud import documentai
+
 
 @dataclass
 class EntityWrapper:
@@ -27,6 +27,6 @@ class EntityWrapper:
     This class hides away the complexity of documentai Entity message type.
     """
 
-    original_entity:documentai.Document.Entity
-    type_:str
-    mention_text:str
+    original_entity: documentai.Document.Entity
+    type_: str
+    mention_text: str

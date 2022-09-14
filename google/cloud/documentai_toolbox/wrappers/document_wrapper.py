@@ -22,14 +22,16 @@ from typing import List
 from google.cloud import documentai
 from google.cloud import storage
 
-from google.cloud.documentai_toolbox.wrappers import page_wrapper,entity_wrapper
+from google.cloud.documentai_toolbox.wrappers import page_wrapper, entity_wrapper
 
 
 def _entities_from_shards(shards) -> List[entity_wrapper.EntityWrapper]:
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(entity_wrapper.EntityWrapper(entity, entity.type, entity.mention_text))
+            result.append(
+                entity_wrapper.EntityWrapper(entity, entity.type, entity.mention_text)
+            )
     return result
 
 
