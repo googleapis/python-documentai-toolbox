@@ -15,11 +15,28 @@
 #
 """Wrappers for Document AI Page type."""
 
-from dataclasses import dataclass
+import dataclasses
 from typing import List
 
+from google.cloud import documentai
 
-@dataclass
+
+def _text_from_layout(page_entities, text: str) -> List[str]:
+    """Returns a list of texts from Document.page ."""
+    result = []
+    # If a text segment spans several lines, it will
+    # be stored in different text segments.
+    for entity in page_entities:
+        result_text = ""
+        for text_segment in entity.layout.text_anchor.text_segments:
+            start_index = int(text_segment.start_index)
+            end_index = int(text_segment.end_index)
+            result_text += text[start_index:end_index]
+        result.append(text[start_index:end_index])
+    return result
+
+
+@dataclasses.dataclass
 class PageWrapper:
     """Represents a wrapped documentai.Document.Page .
 
@@ -28,6 +45,18 @@ class PageWrapper:
     the Document.
     """
 
+    _proto_page: documentai.Document.Page
     lines: List[str]
     paragraphs: List[str]
     tokens: List[str]
+
+    @classmethod
+    def from_documentai_page(
+        cls, documentai_page: documentai.Document.Page, text: str
+    ) -> "PageWrapper":
+        return PageWrapper(
+            documentai_page,
+            _text_from_layout(documentai_page.lines, text),
+            _text_from_layout(documentai_page.paragraphs, text),
+            _text_from_layout(documentai_page.tokens, text),
+        )

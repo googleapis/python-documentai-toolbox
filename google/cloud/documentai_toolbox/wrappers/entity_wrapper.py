@@ -15,18 +15,26 @@
 #
 """Wrappers for Document AI Entity type."""
 
-from dataclasses import dataclass
+import dataclasses
 
 from google.cloud import documentai
 
 
-@dataclass
+@dataclasses.dataclass
 class EntityWrapper:
     """Represents a wrapped documentai.Document.Entity .
 
     This class hides away the complexity of documentai Entity message type.
     """
 
-    original_entity: documentai.Document.Entity
+    _proto_entity: documentai.Document.Entity
     type_: str
     mention_text: str
+
+    @classmethod
+    def from_documentai_entity(
+        cls, documentai_entity: documentai.Document.Entity
+    ) -> "EntityWrapper":
+        return EntityWrapper(
+            documentai_entity, documentai_entity.type, documentai_entity.mention_text
+        )

@@ -15,7 +15,7 @@
 #
 """Wrappers for Document AI Document type."""
 
-from dataclasses import dataclass, field
+import dataclasses
 import re
 from typing import List
 
@@ -25,30 +25,37 @@ from google.cloud import storage
 from google.cloud.documentai_toolbox.wrappers import page_wrapper, entity_wrapper
 
 
-def _entities_from_shards(shards) -> List[entity_wrapper.EntityWrapper]:
+def _entities_from_shards(
+    shards: documentai.Document,
+) -> List[entity_wrapper.EntityWrapper]:
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(
-                entity_wrapper.EntityWrapper(entity, entity.type, entity.mention_text)
-            )
+            result.append(entity_wrapper.EntityWrapper.from_documentai_entity(entity))
     return result
 
 
-def _pages_from_shards(shards) -> List[page_wrapper.PageWrapper]:
+def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWrapper]:
     result = []
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            lines = []
-            paragraphs = []
-            tokens = []
+            result.append(page_wrapper.PageWrapper.from_documentai_page(page, text))
 
-            lines.append(_text_from_layout(page.lines, text))
-            paragraphs.append(_text_from_layout(page.paragraphs, text))
-            tokens.append(_text_from_layout(page.tokens, text))
+    return result
 
-            result.append(page_wrapper.PageWrapper(lines, paragraphs, tokens))
+
+def _get_bytes(output_bucket: str, output_prefix: str):
+    result = []
+
+    storage_client = storage.Client()
+
+    blob_list = storage_client.list_blobs(output_bucket, prefix=output_prefix)
+
+    for blob in blob_list:
+        if blob.name.endswith(".json"):
+            blob_as_bytes = blob.download_as_bytes()
+            result.append(blob_as_bytes)
 
     return result
 
@@ -58,41 +65,25 @@ def _read_output(gcs_prefix: str) -> List[documentai.Document]:
 
     shards = []
 
-    output_bucket, output_prefix = re.match(r"gs://(.*?)/(.*)", gcs_prefix).groups()
+    try:
+        output_bucket, output_prefix = re.match(r"gs://(.*?)/(.*)", gcs_prefix).groups()
+    except Exception:
+        raise TypeError("gcs_prefix does not match accepted format")
 
     file_check = re.match(r"(.*[.].*$)", output_prefix)
 
     if file_check is not None:
         raise TypeError("gcs_prefix cannot contain file types")
 
-    storage_client = storage.Client()
+    byte_array = _get_bytes(output_bucket, output_prefix)
 
-    blob_list = storage_client.list_blobs(output_bucket, prefix=output_prefix)
-
-    for blob in blob_list:
-        if blob.name.endswith(".json"):
-            blob_as_bytes = blob.download_as_bytes()
-            shards.append(documentai.Document.from_json(blob_as_bytes))
+    for byte in byte_array:
+        shards.append(documentai.Document.from_json(byte))
 
     return shards
 
 
-def _text_from_layout(page_entities, text: str) -> List[str]:
-    """Returns a list of texts from Document.page ."""
-    result = []
-    # If a text segment spans several lines, it will
-    # be stored in different text segments.
-    for entity in page_entities:
-        result_text = ""
-        for text_segment in entity.layout.text_anchor.text_segments:
-            start_index = int(text_segment.start_index)
-            end_index = int(text_segment.end_index)
-            result_text += text[start_index:end_index]
-        result.append(text[start_index:end_index])
-    return result
-
-
-@dataclass
+@dataclasses.dataclass
 class DocumentWrapper:
     """Represents a wrapped Document.
 
@@ -102,9 +93,11 @@ class DocumentWrapper:
     extracting information within the Document.
     """
 
-    _shards: List[documentai.Document] = field(init=False, repr=False)
-    pages: List[page_wrapper.PageWrapper] = field(init=False, repr=False)
-    entities: List[entity_wrapper.EntityWrapper] = field(init=False, repr=False)
+    _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)
+    pages: List[page_wrapper.PageWrapper] = dataclasses.field(init=False, repr=False)
+    entities: List[entity_wrapper.EntityWrapper] = dataclasses.field(
+        init=False, repr=False
+    )
     gcs_prefix: str
 
     def __post_init__(self):
