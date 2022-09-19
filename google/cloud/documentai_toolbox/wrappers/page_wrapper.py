@@ -16,19 +16,27 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
-from typing import List
+from typing import List, Union
 
 from google.cloud import documentai
 
+ElementWithLayout = Union[
+    documentai.Document.Page.Paragraph,
+    documentai.Document.Page.Line,
+    documentai.Document.Page.Token,
+]
 
-def _text_from_layout(page_entities, text: str) -> List[str]:
+
+def _text_from_element_with_layout(
+    element_with_layout: List[ElementWithLayout], text: str
+) -> List[str]:
     """Returns a list of texts from Document.page ."""
     result = []
     # If a text segment spans several lines, it will
     # be stored in different text segments.
-    for entity in page_entities:
+    for element in element_with_layout:
         result_text = ""
-        for text_segment in entity.layout.text_anchor.text_segments:
+        for text_segment in element.layout.text_anchor.text_segments:
             start_index = int(text_segment.start_index)
             end_index = int(text_segment.end_index)
             result_text += text[start_index:end_index]
@@ -45,18 +53,18 @@ class PageWrapper:
     the Document.
     """
 
-    _proto_page: documentai.Document.Page
     lines: List[str]
     paragraphs: List[str]
     tokens: List[str]
+    _documentai_page: documentai.Document.Page
 
     @classmethod
     def from_documentai_page(
         cls, documentai_page: documentai.Document.Page, text: str
     ) -> "PageWrapper":
         return PageWrapper(
+            _text_from_element_with_layout(documentai_page.lines, text),
+            _text_from_element_with_layout(documentai_page.paragraphs, text),
+            _text_from_element_with_layout(documentai_page.tokens, text),
             documentai_page,
-            _text_from_layout(documentai_page.lines, text),
-            _text_from_layout(documentai_page.paragraphs, text),
-            _text_from_layout(documentai_page.tokens, text),
         )

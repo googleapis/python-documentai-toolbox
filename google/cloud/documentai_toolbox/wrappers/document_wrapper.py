@@ -45,7 +45,7 @@ def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWra
     return result
 
 
-def _get_bytes(output_bucket: str, output_prefix: str):
+def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     result = []
 
     storage_client = storage.Client()
@@ -65,15 +65,17 @@ def _read_output(gcs_prefix: str) -> List[documentai.Document]:
 
     shards = []
 
-    try:
-        output_bucket, output_prefix = re.match(r"gs://(.*?)/(.*)", gcs_prefix).groups()
-    except Exception:
-        raise TypeError("gcs_prefix does not match accepted format")
+    match = re.match(r"gs://(.*?)/(.*)", gcs_prefix)
+
+    if match is None:
+        raise ValueError("gcs_prefix does not match accepted format")
+
+    output_bucket, output_prefix = match.groups()
 
     file_check = re.match(r"(.*[.].*$)", output_prefix)
 
     if file_check is not None:
-        raise TypeError("gcs_prefix cannot contain file types")
+        raise ValueError("gcs_prefix cannot contain file types")
 
     byte_array = _get_bytes(output_bucket, output_prefix)
 
@@ -93,14 +95,15 @@ class DocumentWrapper:
     extracting information within the Document.
     """
 
-    _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)
-    pages: List[page_wrapper.PageWrapper] = dataclasses.field(init=False, repr=False)
-    entities: List[entity_wrapper.EntityWrapper] = dataclasses.field(
-        init=False, repr=False
-    )
     gcs_prefix: str
 
     def __post_init__(self):
         self._shards = _read_output(self.gcs_prefix)
         self.pages = _pages_from_shards(shards=self._shards)
         self.entities = _entities_from_shards(shards=self._shards)
+
+    pages: List[page_wrapper.PageWrapper] = dataclasses.field(init=False, repr=False)
+    entities: List[entity_wrapper.EntityWrapper] = dataclasses.field(
+        init=False, repr=False
+    )
+    _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)

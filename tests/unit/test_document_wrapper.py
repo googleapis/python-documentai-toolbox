@@ -39,55 +39,56 @@ def get_bytes(file_name):
 
 
 def test_read_output_with_gcs_uri_contains_file_type():
-    with pytest.raises(TypeError, match="gcs_prefix cannot contain file types"):
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document_wrapper._read_output(
-            "gs://test-directory/documentai/output/123456789/1.json"
+            "gs://test-directory/documentai/output/123456789/0.json"
         )
 
 
 def test_read_output_with_invalid_gcs_uri():
-    with pytest.raises(TypeError, match="gcs_prefix does not match accepted format"):
+    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
         document_wrapper._read_output("test-directory/documentai/output/")
 
 
 def test_read_output_with_valid_gcs_uri():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        factory.return_value = get_bytes("tests/unit/resources/1")
+        factory.return_value = get_bytes("tests/unit/resources/0")
         actual = document_wrapper._read_output(
-            "gs://test-directory/documentai/output/123456789/1"
+            "gs://test-directory/documentai/output/123456789/0"
         )
+        # We are testing only one of the fields to make sure the file content could be loaded.
         assert actual[0].pages[0].page_number == 1
 
 
 def test_pages_from_shards():
     shards = []
-    for byte in get_bytes("tests/unit/resources/1"):
+    for byte in get_bytes("tests/unit/resources/0"):
         shards.append(documentai.Document.from_json(byte))
 
     actual = document_wrapper._pages_from_shards(shards=shards)
-    assert len(actual[0].paragraphs) == 32
+    assert len(actual[0].paragraphs) == 31
 
 
 def test_entities_from_shard():
     shards = []
-    for byte in get_bytes("tests/unit/resources/1"):
+    for byte in get_bytes("tests/unit/resources/0"):
         shards.append(documentai.Document.from_json(byte))
 
     actual = document_wrapper._entities_from_shards(shards=shards)
 
-    assert actual[0].mention_text == "123456"
-    assert actual[0].type_ == "invoice_id"
+    assert actual[0].mention_text == "$140.00"
+    assert actual[0].type_ == "vat"
 
 
 def test_document_wrapper_with_single_shard():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        factory.return_value = get_bytes("tests/unit/resources/1")
-        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/1")
+        factory.return_value = get_bytes("tests/unit/resources/0")
+        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
         assert len(actual.pages) == 1
 
 
 def test_document_wrapper_with_multiple_shards():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        factory.return_value = get_bytes("tests/unit/resources/2")
-        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/2")
-        assert len(actual.pages) == 50
+        factory.return_value = get_bytes("tests/unit/resources/1")
+        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/1")
+        assert len(actual.pages) == 48

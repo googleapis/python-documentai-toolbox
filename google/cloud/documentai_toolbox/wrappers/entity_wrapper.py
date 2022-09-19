@@ -27,14 +27,14 @@ class EntityWrapper:
     This class hides away the complexity of documentai Entity message type.
     """
 
-    _proto_entity: documentai.Document.Entity
     type_: str
     mention_text: str
+    _documentai_entity: documentai.Document.Entity
 
     @classmethod
     def from_documentai_entity(
         cls, documentai_entity: documentai.Document.Entity
     ) -> "EntityWrapper":
         return EntityWrapper(
-            documentai_entity, documentai_entity.type, documentai_entity.mention_text
+            documentai_entity.type, documentai_entity.mention_text, documentai_entity
         )
