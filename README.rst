@@ -94,14 +94,14 @@ Windows
 Next Steps
 ~~~~~~~~~~
 
+-  Read the `Document AI documentation`_ for Document AI
+   to see how to process documents.
 -  Read the `Client Library Documentation`_ for Document AI Toolbox
    to see other available methods on the client.
--  Read the `Document AI API Product documentation`_ to learn
-   more about the product and see How-to Guides.
 -  View this `README`_ to see the full list of Cloud
    APIs that we cover.
 
 # TODO: Change LINK
-.. _Client Library Documentation:  LINK
-.. _Document AI API Product documentation:  LINK
+.. _Client Library Documentation: https://cloud.google.com/python/docs/reference/documentai/latest
+.. _Document AI documentation:  LINK
 .. _README: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
