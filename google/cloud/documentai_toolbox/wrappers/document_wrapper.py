@@ -131,6 +131,7 @@ def list_documents(gcs_prefix: str) -> List[documentai.Document]:
             elif len(a) <= 4:
                 print(f"{display_filename_prefix_middle}{val}")
 
+
 @dataclasses.dataclass
 class DocumentWrapper:
     """Represents a wrapped Document.
