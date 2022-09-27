@@ -27,6 +27,7 @@ import glob
 from google.cloud.documentai_toolbox.wrappers import DocumentWrapper, document_wrapper
 
 from google.cloud import documentai
+from google.cloud import storage
 
 
 def get_bytes(file_name):
@@ -38,22 +39,22 @@ def get_bytes(file_name):
     return result
 
 
-def test_read_output_with_gcs_uri_contains_file_type():
+def test_get_document_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        document_wrapper._read_output(
+        document_wrapper.get_document(
             "gs://test-directory/documentai/output/123456789/0.json"
         )
 
 
-def test_read_output_with_invalid_gcs_uri():
+def test_get_document_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        document_wrapper._read_output("test-directory/documentai/output/")
+        document_wrapper.get_document("test-directory/documentai/output/")
 
 
-def test_read_output_with_valid_gcs_uri():
+def test_get_document_with_valid_gcs_uri():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = document_wrapper._read_output(
+        actual = document_wrapper.get_document(
             "gs://test-directory/documentai/output/123456789/0"
         )
         # We are testing only one of the fields to make sure the file content could be loaded.
@@ -82,13 +83,19 @@ def test_entities_from_shard():
 
 def test_document_wrapper_with_single_shard():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
+        shards = []
+        for byte in get_bytes("tests/unit/resources/0"):
+            shards.append(documentai.Document.from_json(byte))
+
+        actual = DocumentWrapper(shards)
         assert len(actual.pages) == 1
 
 
 def test_document_wrapper_with_multiple_shards():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        factory.return_value = get_bytes("tests/unit/resources/1")
-        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/1")
+        shards = []
+        for byte in get_bytes("tests/unit/resources/1"):
+            shards.append(documentai.Document.from_json(byte))
+
+        actual = DocumentWrapper(shards)
         assert len(actual.pages) == 48
