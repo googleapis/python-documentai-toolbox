@@ -29,6 +29,8 @@ from google.cloud.documentai_toolbox.wrappers import DocumentWrapper, document_w
 from google.cloud import documentai
 from google.cloud import storage
 
+os.environ["GOOGLE_CLOUD_PROJECT"] = "None"
+
 
 def get_bytes(file_name):
     result = []
@@ -113,13 +115,14 @@ def test_get_bytes():
 
 
 def test_list_with_single_document(capfd):
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+    ]
+
     with mock.patch.object(storage.Client, "list_blobs") as factory:
-        blobs = [
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-        ]
         factory.return_value = blobs
         document_wrapper.list_documents(
             "gs://test-directory/documentai/output/123456789/"
@@ -130,34 +133,36 @@ def test_list_with_single_document(capfd):
 
 
 def test_list_with_more_than_5_documents(capfd):
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+    ]
+
     with mock.patch.object(storage.Client, "list_blobs") as factory:
-        blobs = [
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-            storage.Blob(
-                name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
-                bucket="gs://test-directory/documentai/output/123456789/1",
-            ),
-        ]
         factory.return_value = blobs
+
         document_wrapper.list_documents(
             "gs://test-directory/documentai/output/123456789/"
         )
