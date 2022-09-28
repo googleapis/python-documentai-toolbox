@@ -41,20 +41,20 @@ def get_bytes(file_name):
 
 def test_get_document_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        document_wrapper.get_document(
+        document_wrapper._get_document(
             "gs://test-directory/documentai/output/123456789/0.json"
         )
 
 
 def test_get_document_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        document_wrapper.get_document("test-directory/documentai/output/")
+        document_wrapper._get_document("test-directory/documentai/output/")
 
 
 def test_get_document_with_valid_gcs_uri():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = document_wrapper.get_document(
+        actual = document_wrapper._get_document(
             "gs://test-directory/documentai/output/123456789/0"
         )
         # We are testing only one of the fields to make sure the file content could be loaded.
@@ -83,19 +83,96 @@ def test_entities_from_shard():
 
 def test_document_wrapper_with_single_shard():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        shards = []
-        for byte in get_bytes("tests/unit/resources/0"):
-            shards.append(documentai.Document.from_json(byte))
-
-        actual = DocumentWrapper(shards)
+        factory.return_value = get_bytes("tests/unit/resources/0")
+        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
         assert len(actual.pages) == 1
 
 
 def test_document_wrapper_with_multiple_shards():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        shards = []
-        for byte in get_bytes("tests/unit/resources/1"):
-            shards.append(documentai.Document.from_json(byte))
-
-        actual = DocumentWrapper(shards)
+        factory.return_value = get_bytes("tests/unit/resources/1")
+        actual = DocumentWrapper("gs://test-directory/documentai/output/123456789/1")
         assert len(actual.pages) == 48
+
+
+def test_get_bytes():
+    with mock.patch.object(storage.Client, "list_blobs") as factory:
+        blob1 = storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_file.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        )
+        factory.return_value = [blob1]
+        with mock.patch.object(storage.Blob, "download_as_bytes") as blob_factory:
+            blob_factory.return_value = ""
+
+            actual = document_wrapper._get_bytes(
+                "gs://test-directory/documentai/", "output/123456789/1/test_file.json"
+            )
+
+            assert len(actual) == 1
+
+
+def test_list_with_single_document(capfd):
+    with mock.patch.object(storage.Client, "list_blobs") as factory:
+        blobs = [
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+        ]
+        factory.return_value = blobs
+        document_wrapper.list_documents(
+            "gs://test-directory/documentai/output/123456789/"
+        )
+
+        out, err = capfd.readouterr()
+        assert out != ""
+
+
+def test_list_with_more_than_5_documents(capfd):
+    with mock.patch.object(storage.Client, "list_blobs") as factory:
+        blobs = [
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+            storage.Blob(
+                name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
+                bucket="gs://test-directory/documentai/output/123456789/1",
+            ),
+        ]
+        factory.return_value = blobs
+        document_wrapper.list_documents(
+            "gs://test-directory/documentai/output/123456789/"
+        )
+
+        out, err = capfd.readouterr()
+        assert out != ""
+
+
+def test_list_document_with_gcs_uri_contains_file_type():
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
+        document_wrapper.list_documents(
+            "gs://test-directory/documentai/output/123456789/1/test_file.json"
+        )
+
+
+def test_list_document_with_invalid_gcs_uri():
+    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
+        document_wrapper.list_documents("documentai/output/123456789/1")

@@ -60,7 +60,7 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     return result
 
 
-def get_document(gcs_prefix: str) -> List[documentai.Document]:
+def _get_document(gcs_prefix: str) -> List[documentai.Document]:
     """Returns a list of Document shards."""
 
     shards = []
@@ -89,7 +89,6 @@ def list_documents(gcs_prefix: str) -> List[documentai.Document]:
     """Returns a list of Document shards."""
     display_filename_prefix_middle = "├──"
     display_filename_prefix_last = "└──"
-    shards = []
 
     match = re.match(r"gs://(.*?)/(.*)", gcs_prefix)
 
@@ -97,6 +96,11 @@ def list_documents(gcs_prefix: str) -> List[documentai.Document]:
         raise ValueError("gcs_prefix does not match accepted format")
 
     output_bucket, output_prefix = match.groups()
+
+    file_check = re.match(r"(.*[.].*$)", output_prefix)
+
+    if file_check is not None:
+        raise ValueError("gcs_prefix cannot contain file types")
 
     storage_client = storage.Client()
 
@@ -123,7 +127,7 @@ def list_documents(gcs_prefix: str) -> List[documentai.Document]:
         for idx, val in enumerate(a):
             if idx == len(a) - 1:
                 if len(a) > 4:
-                    print(f"│  ....")
+                    print("│  ....")
                 print(f"{display_filename_prefix_last}{val}\n")
             elif len(a) > 4 and togo != -1:
                 togo -= 1
@@ -142,10 +146,10 @@ class DocumentWrapper:
     extracting information within the Document.
     """
 
-    shards: List[documentai.Document]
+    gcs_prefix: List[documentai.Document]
 
     def __post_init__(self):
-        self._shards = self.shards
+        self._shards = _get_document(gcs_prefix=self.gcs_prefix)
         self.pages = _pages_from_shards(shards=self._shards)
         self.entities = _entities_from_shards(shards=self._shards)
 
