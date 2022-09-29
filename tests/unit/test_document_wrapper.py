@@ -39,22 +39,22 @@ def get_bytes(file_name):
     return result
 
 
-def test_get_document_with_gcs_uri_contains_file_type():
+def test_get_documens_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        document_wrapper._get_document(
+        document_wrapper._get_documents(
             "gs://test-directory/documentai/output/123456789/0.json"
         )
 
 
-def test_get_document_with_invalid_gcs_uri():
+def test_get_documents_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        document_wrapper._get_document("test-directory/documentai/output/")
+        document_wrapper._get_documents("test-directory/documentai/output/")
 
 
-def test_get_document_with_valid_gcs_uri():
+def test_get_documents_with_valid_gcs_uri():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = document_wrapper._get_document(
+        actual = document_wrapper._get_documents(
             "gs://test-directory/documentai/output/123456789/0"
         )
         # We are testing only one of the fields to make sure the file content could be loaded.
