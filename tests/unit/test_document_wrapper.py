@@ -29,8 +29,6 @@ from google.cloud.documentai_toolbox.wrappers import DocumentWrapper, document_w
 from google.cloud import documentai
 from google.cloud import storage
 
-os.environ["GOOGLE_CLOUD_PROJECT"] = "None"
-
 
 def get_bytes(file_name):
     result = []
@@ -97,42 +95,85 @@ def test_document_wrapper_with_multiple_shards():
         assert len(actual.pages) == 48
 
 
-def test_get_bytes():
-    with mock.patch.object(storage.Client, "list_blobs") as factory:
-        blob1 = storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_file.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
-        )
-        factory.return_value = [blob1]
-        with mock.patch.object(storage.Blob, "download_as_bytes") as blob_factory:
-            blob_factory.return_value = ""
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document_wrapper.storage")
+def test_get_bytes(mock_storage):
 
-            actual = document_wrapper._get_bytes(
-                "gs://test-directory/documentai/", "output/123456789/1/test_file.json"
-            )
+    client = mock_storage.Client.return_value
 
-            assert len(actual) == 1
+    mock_bucket = mock.Mock()
+    mock_bucket.blob.return_value.download_as_string.return_value = "test".encode(
+        "utf-8"
+    )
+
+    client.Bucket.return_value = mock_bucket
+
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+            bucket=mock_bucket,
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+            bucket=mock_bucket,
+        ),
+    ]
+
+    client.list_blobs.return_value = blobs
+
+    actual = document_wrapper._get_bytes(
+        "gs://test-directory/documentai/", "output/123456789/1"
+    )
+    mock_storage.Client.assert_called_once()
+
+    assert actual == [b"", b""]
 
 
-def test_list_with_single_document(capfd):
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document_wrapper.storage")
+def test_list_document_with_3_documents(mock_storage, capfd):
+
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+
+    client.Bucket.return_value = mock_bucket
+
     blobs = [
         storage.Blob(
             name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
             bucket="gs://test-directory/documentai/output/123456789/1",
         ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
     ]
 
-    with mock.patch.object(storage.Client, "list_blobs") as factory:
-        factory.return_value = blobs
-        document_wrapper.list_documents(
-            "gs://test-directory/documentai/output/123456789/"
-        )
+    client.list_blobs.return_value = blobs
 
-        out, err = capfd.readouterr()
-        assert out != ""
+    document_wrapper.list_documents("gs://test-directory/documentai/output/123456789/1")
+
+    mock_storage.Client.assert_called_once()
+
+    out, err = capfd.readouterr()
+    assert (
+        out
+        == "gs://test-directory/documentai/output/123456789/1\n├──test_shard1.json\n├──test_shard2.json\n└──test_shard3.json\n\n"
+    )
 
 
-def test_list_with_more_than_5_documents(capfd):
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document_wrapper.storage")
+def test_list_document_with_more_than_5_document(mock_storage, capfd):
+
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+
+    client.Bucket.return_value = mock_bucket
+
     blobs = [
         storage.Blob(
             name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
@@ -159,16 +200,17 @@ def test_list_with_more_than_5_documents(capfd):
             bucket="gs://test-directory/documentai/output/123456789/1",
         ),
     ]
+    client.list_blobs.return_value = blobs
 
-    with mock.patch.object(storage.Client, "list_blobs") as factory:
-        factory.return_value = blobs
+    document_wrapper.list_documents("gs://test-directory/documentai/output/123456789/1")
 
-        document_wrapper.list_documents(
-            "gs://test-directory/documentai/output/123456789/"
-        )
+    mock_storage.Client.assert_called_once()
 
-        out, err = capfd.readouterr()
-        assert out != ""
+    out, err = capfd.readouterr()
+    assert (
+        out
+        == "gs://test-directory/documentai/output/123456789/1\n├──test_shard1.json\n├──test_shard2.json\n├──test_shard3.json\n├──test_shard4.json\n├──test_shard5.json\n│  ....\n└──test_shard6.json\n\n"
+    )
 
 
 def test_list_document_with_gcs_uri_contains_file_type():
