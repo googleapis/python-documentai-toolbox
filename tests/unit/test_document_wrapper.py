@@ -161,7 +161,10 @@ def test_list_document_with_3_documents(mock_storage, capfd):
     out, err = capfd.readouterr()
     assert (
         out
-        == "gs://test-directory/documentai/output/123456789/1\n├──test_shard1.json\n├──test_shard2.json\n└──test_shard3.json\n\n"
+        == """gs://test-directory/documentai/output/123456789/1
+├──test_shard1.json
+├──test_shard2.json
+└──test_shard3.json\n\n"""
     )
 
 
@@ -209,7 +212,14 @@ def test_list_document_with_more_than_5_document(mock_storage, capfd):
     out, err = capfd.readouterr()
     assert (
         out
-        == "gs://test-directory/documentai/output/123456789/1\n├──test_shard1.json\n├──test_shard2.json\n├──test_shard3.json\n├──test_shard4.json\n├──test_shard5.json\n│  ....\n└──test_shard6.json\n\n"
+        == """gs://test-directory/documentai/output/123456789/1
+├──test_shard1.json
+├──test_shard2.json
+├──test_shard3.json
+├──test_shard4.json
+├──test_shard5.json
+│  ....
+└──test_shard6.json\n\n"""
     )
 
 
