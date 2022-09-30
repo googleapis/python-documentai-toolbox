@@ -85,8 +85,8 @@ def _get_documents(gcs_prefix: str) -> List[documentai.Document]:
     return shards
 
 
-def list_documents(gcs_prefix: str) -> List[documentai.Document]:
-    """Prints a tree of shards in gcs_prefix location."""
+def print_gcs_document_tree(gcs_prefix: str) -> None:
+    """Prints a tree of Documents in gcs_prefix location."""
     display_filename_prefix_middle = "├──"
     display_filename_prefix_last = "└──"
 
