@@ -28,6 +28,16 @@ from google.cloud.documentai_toolbox.wrappers import page_wrapper, entity_wrappe
 def _entities_from_shards(
     shards: documentai.Document,
 ) -> List[entity_wrapper.EntityWrapper]:
+    r"""Returns a list of EntityWrappers.
+
+    Args:
+        shards (google.cloud.documentai.Document):
+            Required. List of document shards.
+
+    Returns:
+        List[entity_wrapper.EntityWrapper] : returns a list of EntityWrappers.
+
+    """
     result = []
     for shard in shards:
         for entity in shard.entities:
@@ -36,6 +46,16 @@ def _entities_from_shards(
 
 
 def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWrapper]:
+    r"""Returns a list of PageWrappers.
+
+    Args:
+        shards (google.cloud.documentai.Document):
+            Required. List of document shards.
+
+    Returns:
+        List[page_wrapper.PageWrapper] : returns a list of PageWrappers.
+
+    """
     result = []
     for shard in shards:
         text = shard.text
@@ -46,6 +66,23 @@ def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWra
 
 
 def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
+    r"""Returns a list of shards as bytes.
+
+    Args:
+        output_bucket (str):
+            Required. The name of the output_bucket.
+
+        output_prefix (str):
+            Required. The path to the target document.
+
+            Format: `{optional_folder}/{operation-id}/{folder-id}`
+                    where `{operation-id}` is the operation-id given from BatchProcessDocument
+                    and `{folder-id}` is the number corresponding to the target document.
+
+    Returns:
+        List[bytes] : returns a list of shards as bytes.
+
+    """
     result = []
 
     storage_client = storage.Client()
@@ -61,7 +98,20 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
 
 
 def _get_documents(gcs_prefix: str) -> List[documentai.Document]:
-    """Gets shards from gcs_prefix location and returns a list of shards."""
+    r"""Returns a list of google.cloud.documentai.Document from shards.
+
+    Args:
+        gcs_prefix (str):
+            Required. The gcs path to a single processed document.
+
+            Format: `gs://{bucket}/{optional_folder}/{operation-id}/{folder-id}`
+                    where `{operation-id}` is the operation-id given from BatchProcessDocument
+                    and `{folder-id}` is the number corresponding to the target document.
+
+    Returns:
+        List[google.cloud.documentai.Document]:returns a list of google.cloud.documentai.Document from shards.
+
+    """
 
     shards = []
 
@@ -86,7 +136,19 @@ def _get_documents(gcs_prefix: str) -> List[documentai.Document]:
 
 
 def print_gcs_document_tree(gcs_prefix: str) -> None:
-    """Prints a tree of Documents in gcs_prefix location."""
+    r"""Prints a tree of Documents in gcs_prefix location.
+
+    Args:
+        gcs_prefix (str):
+            Required. The gcs path to the folder containing all processed documents.
+
+            Format: `gs://{bucket}/{optional_folder}/{operation-id}`
+                    where `{operation-id}` is the operation-id given from BatchProcessDocument.
+
+    Returns:
+        None.
+
+    """
     display_filename_prefix_middle = "├──"
     display_filename_prefix_last = "└──"
 
@@ -138,12 +200,20 @@ def print_gcs_document_tree(gcs_prefix: str) -> None:
 
 @dataclasses.dataclass
 class DocumentWrapper:
-    """Represents a wrapped Document.
+    r"""Represents a wrapped Document.
 
     A single Document protobuf message might be written as several JSON files on
     GCS by Document AI's BatchProcessDocuments method.  This class hides away the
     shards from the users and implements convenient methods for searching and
     extracting information within the Document.
+
+    Attributes:
+        gcs_prefix (str):
+            Required.The gcs path to a single processed document.
+
+            Format: `gs://{bucket}/{optional_folder}/{operation-id}/{folder-id}`
+                    where `{operation-id}` is the operation-id given from BatchProcessDocument
+                    and `{folder-id}` is the number corresponding to the target document.
     """
 
     gcs_prefix: str
