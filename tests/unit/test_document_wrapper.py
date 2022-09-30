@@ -129,7 +129,7 @@ def test_get_bytes(mock_storage):
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document_wrapper.storage")
-def test_list_document_with_3_documents(mock_storage, capfd):
+def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client = mock_storage.Client.return_value
 
@@ -154,7 +154,7 @@ def test_list_document_with_3_documents(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    document_wrapper.list_documents("gs://test-directory/documentai/output/123456789/1")
+    document_wrapper.print_gcs_document_tree("gs://test-directory/documentai/output/123456789/1")
 
     mock_storage.Client.assert_called_once()
 
@@ -169,7 +169,7 @@ def test_list_document_with_3_documents(mock_storage, capfd):
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document_wrapper.storage")
-def test_list_document_with_more_than_5_document(mock_storage, capfd):
+def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
     client = mock_storage.Client.return_value
 
@@ -205,7 +205,7 @@ def test_list_document_with_more_than_5_document(mock_storage, capfd):
     ]
     client.list_blobs.return_value = blobs
 
-    document_wrapper.list_documents("gs://test-directory/documentai/output/123456789/1")
+    document_wrapper.print_gcs_document_tree("gs://test-directory/documentai/output/123456789/1")
 
     mock_storage.Client.assert_called_once()
 
@@ -223,13 +223,13 @@ def test_list_document_with_more_than_5_document(mock_storage, capfd):
     )
 
 
-def test_list_document_with_gcs_uri_contains_file_type():
+def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        document_wrapper.list_documents(
+        document_wrapper.print_gcs_document_tree(
             "gs://test-directory/documentai/output/123456789/1/test_file.json"
         )
 
 
-def test_list_document_with_invalid_gcs_uri():
+def test_print_gcs_document_tree_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        document_wrapper.list_documents("documentai/output/123456789/1")
+        document_wrapper.print_gcs_document_tree("documentai/output/123456789/1")
