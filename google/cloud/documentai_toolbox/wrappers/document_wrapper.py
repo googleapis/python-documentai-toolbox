@@ -60,7 +60,7 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     return result
 
 
-def _get_documents(gcs_prefix: str) -> List[documentai.Document]:
+def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
     """Gets shards from gcs_prefix location and returns a list of shards."""
 
     shards = []
@@ -149,7 +149,7 @@ class DocumentWrapper:
     gcs_prefix: str
 
     def __post_init__(self):
-        self._shards = _get_documents(gcs_prefix=self.gcs_prefix)
+        self._shards = _get_shards(gcs_prefix=self.gcs_prefix)
         self.pages = _pages_from_shards(shards=self._shards)
         self.entities = _entities_from_shards(shards=self._shards)
 
