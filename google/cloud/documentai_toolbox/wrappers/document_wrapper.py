@@ -97,7 +97,6 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     return result
 
 
-
 def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
     r"""Returns a list of google.cloud.documentai.Document from shards.
 
