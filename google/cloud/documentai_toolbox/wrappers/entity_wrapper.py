@@ -24,8 +24,6 @@ from google.cloud import documentai
 class EntityWrapper:
     r"""Represents a wrapped google.cloud.documentai.Document.Entity.
 
-    This class hides away the complexity of Document AI Entity message type.
-
     Attributes:
         _documentai_entity (google.cloud.documentai.Document.Entity):
             Required.The original google.cloud.documentai.Document.Entity object.
@@ -53,9 +51,12 @@ class EntityWrapper:
                 Required. A single entity object.
 
         Returns:
-            EntityWrapper:returns a EntityWrapper from google.cloud.documentai.Document.Entity.
+            EntityWrapper:
+                A EntityWrapper from google.cloud.documentai.Document.Entity.
 
         """
         return EntityWrapper(
-            documentai_entity, documentai_entity.type, documentai_entity.mention_text
+            _documentai_entity=documentai_entity,
+            type_=documentai_entity.type,
+            mention_text=documentai_entity.mention_text,
         )

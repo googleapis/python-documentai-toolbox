@@ -30,14 +30,15 @@ ElementWithLayout = Union[
 def _text_from_element_with_layout(
     element_with_layout: List[ElementWithLayout], text: str
 ) -> List[str]:
-    r"""Returns a list of texts from google.cloud.documentai.Document.Page.
+    r"""Returns a list of strings extracted from the element with layout.
 
     Args:
         element_with_layout (List[ElementWithLayout]):
             Required. A element containing a layout object.
 
     Returns:
-        List[str]:returns a list of strings extracted from the element with layout.
+        List[str]:
+            A list of strings extracted from the element with layout.
 
     """
     result = []
@@ -56,8 +57,6 @@ def _text_from_element_with_layout(
 @dataclasses.dataclass
 class PageWrapper:
     """Represents a wrapped documentai.Document.Page .
-
-    This class hides away the complexity of documentai page message type.
 
     Attributes:
         _documentai_page (google.cloud.documentai.Document.Page):
@@ -95,12 +94,13 @@ class PageWrapper:
                 from the document.
 
         Returns:
-            PageWrapper:returns a PageWrapper from google.cloud.documentai.Document.Page.
+            PageWrapper:
+                A PageWrapper from google.cloud.documentai.Document.Page.
 
         """
         return PageWrapper(
-            documentai_page,
-            _text_from_element_with_layout(documentai_page.lines, text),
-            _text_from_element_with_layout(documentai_page.paragraphs, text),
-            _text_from_element_with_layout(documentai_page.tokens, text),
+            _documentai_page=documentai_page,
+            lines=_text_from_element_with_layout(documentai_page.lines, text),
+            paragraphs=_text_from_element_with_layout(documentai_page.paragraphs, text),
+            tokens=_text_from_element_with_layout(documentai_page.tokens, text),
         )

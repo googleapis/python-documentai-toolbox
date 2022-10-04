@@ -53,7 +53,8 @@ def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWra
             Required. List of document shards.
 
     Returns:
-        List[page_wrapper.PageWrapper] : returns a list of PageWrappers.
+        List[page_wrapper.PageWrapper]:
+            A list of PageWrappers.
 
     """
     result = []
@@ -68,6 +69,17 @@ def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWra
 def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     r"""Returns a list of shards as bytes.
 
+        .. code-block:: python
+
+            from google.cloud.documentai_toolbox import document_wrapper
+
+            def sample_get_bytes():
+                # For a gcs path gs://abc/def/gh/{1,2,3}.json
+                output_bucket = abc
+                output_prefix = def/gh
+
+                list_of_bytes = document_wrapper._get_bytes(output_bucket=output_bucket,output_prefix=output_prefix)
+
     Args:
         output_bucket (str):
             Required. The name of the output_bucket.
@@ -80,7 +92,8 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
                     and `{folder-id}` is the number corresponding to the target document.
 
     Returns:
-        List[bytes] : returns a list of shards as bytes.
+        List[bytes]:
+            A list of shards as bytes.
 
     """
     result = []
@@ -100,6 +113,16 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
 def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
     r"""Returns a list of google.cloud.documentai.Document from shards.
 
+        .. code-block:: python
+
+            from google.cloud.documentai_toolbox import document_wrapper
+
+            def sample_get_shards():
+                # For a gcs path gs://abc/def/gh/{1,2,3}.json
+                gcs_prefix = gs://abc/def/gh
+
+                shards = document_wrapper._get_shards(gcs_prefix=gcs_prefix)
+
     Args:
         gcs_prefix (str):
             Required. The gcs path to a single processed document.
@@ -109,7 +132,8 @@ def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
                     and `{folder-id}` is the number corresponding to the target document.
 
     Returns:
-        List[google.cloud.documentai.Document]:returns a list of google.cloud.documentai.Document from shards.
+        List[google.cloud.documentai.Document]:
+            A list of google.cloud.documentai.Document from shards.
 
     """
     shards = []
@@ -135,7 +159,17 @@ def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
 
 
 def print_gcs_document_tree(gcs_prefix: str) -> None:
-    r"""Prints a tree of Documents in gcs_prefix location.
+    r"""Prints a tree of filenames in gcs_prefix location.
+
+        .. code-block:: python
+
+            from google.cloud.documentai_toolbox import document_wrapper
+
+            def sample_get_shards():
+                # For a gcs path gs://abc/def/gh/{1,2,3}.json
+                gcs_prefix = gs://abc/def/gh
+
+                shards = document_wrapper.print_gcs_document_tree(gcs_prefix=gcs_prefix)
 
     Args:
         gcs_prefix (str):
