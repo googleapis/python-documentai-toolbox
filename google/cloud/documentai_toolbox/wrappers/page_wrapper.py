@@ -69,8 +69,6 @@ class PageWrapper:
             Required.A list of visually detected text paragraphs
             on the page. A collection of lines that a human
             would perceive as a paragraph.
-        tokens (List[str]]):
-            Required.A list of visually detected tokens on the page.
     """
 
     _documentai_page: documentai.Document.Page = dataclasses.field(
@@ -78,7 +76,6 @@ class PageWrapper:
     )
     lines: List[str] = dataclasses.field(init=True, repr=False)
     paragraphs: List[str] = dataclasses.field(init=True, repr=False)
-    tokens: List[str] = dataclasses.field(init=True, repr=False)
 
     @classmethod
     def from_documentai_page(
@@ -102,5 +99,4 @@ class PageWrapper:
             _documentai_page=documentai_page,
             lines=_text_from_element_with_layout(documentai_page.lines, text),
             paragraphs=_text_from_element_with_layout(documentai_page.paragraphs, text),
-            tokens=_text_from_element_with_layout(documentai_page.tokens, text),
         )

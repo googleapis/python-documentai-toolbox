@@ -35,7 +35,8 @@ def _entities_from_shards(
             Required. List of document shards.
 
     Returns:
-        List[entity_wrapper.EntityWrapper] : returns a list of EntityWrappers.
+        List[entity_wrapper.EntityWrapper]:
+            a list of EntityWrappers.
 
     """
     result = []
@@ -69,27 +70,15 @@ def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWra
 def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     r"""Returns a list of shards as bytes.
 
-        .. code-block:: python
-
-            from google.cloud.documentai_toolbox import document_wrapper
-
-            def sample_get_bytes():
-                # For a gcs path gs://abc/def/gh/{1,2,3}.json
-                output_bucket = abc
-                output_prefix = def/gh
-
-                list_of_bytes = document_wrapper._get_bytes(output_bucket=output_bucket,output_prefix=output_prefix)
+    If the filepaths are gs://abc/def/gh/{1,2,3}.json, then output_bucket should be "abc",
+    and output_prefix should be "def/gh".
 
     Args:
         output_bucket (str):
             Required. The name of the output_bucket.
 
         output_prefix (str):
-            Required. The path to the target document.
-
-            Format: `{optional_folder}/{operation-id}/{folder-id}`
-                    where `{operation-id}` is the operation-id given from BatchProcessDocument
-                    and `{folder-id}` is the number corresponding to the target document.
+            Required. The prefix of the folder where files are excluding the bucket name.
 
     Returns:
         List[bytes]:
@@ -113,23 +102,11 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
 def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
     r"""Returns a list of google.cloud.documentai.Document from shards.
 
-        .. code-block:: python
-
-            from google.cloud.documentai_toolbox import document_wrapper
-
-            def sample_get_shards():
-                # For a gcs path gs://abc/def/gh/{1,2,3}.json
-                gcs_prefix = gs://abc/def/gh
-
-                shards = document_wrapper._get_shards(gcs_prefix=gcs_prefix)
+    If the filepaths are gs://abc/def/gh/{1,2,3}.json, then gcs_prefix should be "gs://abc/def/gh".
 
     Args:
         gcs_prefix (str):
             Required. The gcs path to a single processed document.
-
-            Format: `gs://{bucket}/{optional_folder}/{operation-id}/{folder-id}`
-                    where `{operation-id}` is the operation-id given from BatchProcessDocument
-                    and `{folder-id}` is the number corresponding to the target document.
 
     Returns:
         List[google.cloud.documentai.Document]:
