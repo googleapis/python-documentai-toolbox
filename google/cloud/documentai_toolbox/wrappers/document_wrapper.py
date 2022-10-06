@@ -263,7 +263,9 @@ class DocumentWrapper:
     )
     _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)
 
-    def search_pages(self, target_string:str = None, regex:str = None) -> List[page_wrapper.PageWrapper]:
+    def search_pages(
+        self, target_string: str = None, regex: str = None
+    ) -> List[page_wrapper.PageWrapper]:
         r"""Returns a list of PageWrapper.
 
         Args:
@@ -273,19 +275,21 @@ class DocumentWrapper:
                 Optional. regex str.
 
         Returns:
-            List[page_wrapper.PageWrapper]: 
+            List[page_wrapper.PageWrapper]:
                 A list of PageWrapper.
 
         """
         if target_string and regex:
-            raise ValueError("you can only search with one target either target_string or regex")
+            raise ValueError(
+                "you can only search with one target either target_string or regex"
+            )
 
         found_pages = []
         for page in self.pages:
             for paragraph in page.paragraphs:
-                if target_string != None and target_string in paragraph:
+                if target_string != None and target_string in paragraph.text:
                     found_pages.append(page)
-                if regex != None and re.findall(regex, paragraph) != []:
+                if regex != None and re.findall(regex, paragraph.text) != []:
                     found_pages.append(page)
         return found_pages
 
@@ -297,11 +301,11 @@ class DocumentWrapper:
                 Required. page number.
 
         Returns:
-            page_wrapper.PageWrapper: 
+            page_wrapper.PageWrapper:
                 A page_wrapper.PageWrapper.
 
         """
-        return self.pages[page_number-1]
+        return self.pages[page_number - 1]
 
     def get_entity_if_type_contains(
         self, target_type: str
