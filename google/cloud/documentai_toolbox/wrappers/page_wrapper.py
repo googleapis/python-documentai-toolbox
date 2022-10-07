@@ -42,7 +42,9 @@ class TableWrapper:
             Required.A list of headers.
     """
 
-    _documentai_table: documentai.Document.Page.Table = dataclasses.field(init=True, repr=False)
+    _documentai_table: documentai.Document.Page.Table = dataclasses.field(
+        init=True, repr=False
+    )
     body_rows: List[List[str]] = dataclasses.field(init=True, repr=False)
     header_rows: List[List[str]] = dataclasses.field(init=True, repr=False)
 
@@ -224,7 +226,9 @@ def _list_of_text_from_element_with_layout(
     # If a text segment spans several lines, it will
     # be stored in different text segments.
     for element in element_with_layout:
-        result.append(_text_from_element_with_layout(element_with_layout=element,text=text))
+        result.append(
+            _text_from_element_with_layout(element_with_layout=element, text=text)
+        )
     return result
 
 
@@ -307,7 +311,7 @@ def _get_lines(
     for line in lines:
         result.append(
             LineWrapper(
-                 _documentai_line=line,text=_text_from_element_with_layout(line, text)
+                _documentai_line=line, text=_text_from_element_with_layout(line, text)
             )
         )
 

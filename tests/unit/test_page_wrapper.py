@@ -14,8 +14,10 @@
 # limitations under the License.
 #
 
-from google.cloud.documentai_toolbox.wrappers import PageWrapper
+
+from google.cloud.documentai_toolbox.wrappers import page_wrapper
 from google.cloud import documentai
+import os
 
 
 def test_from_documentai_page():
@@ -31,6 +33,59 @@ def test_from_documentai_page():
 
     test_entity = documentai.Document.Page(page_number=1, paragraphs=[test_paragraph])
 
-    actual = PageWrapper.from_documentai_page(test_entity, test_text)
+    actual = page_wrapper.PageWrapper.from_documentai_page(test_entity, test_text)
 
     assert actual.paragraphs[0].text == test_text
+
+
+def test_table_to_csv():
+    header_rows = [["This", "Is", "A", "Header", "Test"]]
+    body_rows = [["This", "Is", "A", "Body", "Test"]]
+    table = page_wrapper.TableWrapper(
+        _documentai_table=None, header_rows=header_rows, body_rows=body_rows
+    )
+
+    try:
+        table.to_csv("test_table_to_csv.csv")
+        contents = open("test_table_to_csv.csv").read()
+    finally:
+        # NOTE: To retain the tempfile if the test fails, remove
+        # the try-finally clauses
+        os.remove("test_table_to_csv.csv")
+    assert (
+        contents
+        == """This,Is,A,Header,Test
+This,Is,A,Body,Test
+"
+",,,,
+"
+",,,,
+"""
+    )
+
+
+def test_table_to_csv_with_empty_body_rows():
+    header_rows = [["This", "Is", "A", "Header", "Test"]]
+    table = page_wrapper.TableWrapper(
+        _documentai_table=None, header_rows=header_rows, body_rows=[]
+    )
+
+    print(table)
+
+    try:
+        table.to_csv("test_table_to_csv.csv")
+        contents = open("test_table_to_csv.csv").read()
+    finally:
+        # NOTE: To retain the tempfile if the test fails, remove
+        # the try-finally clauses
+        os.remove("test_table_to_csv.csv")
+    assert (
+        contents
+        == """0,1,2,3,4
+This,Is,A,Header,Test
+"
+",,,,
+"
+",,,,
+"""
+    )

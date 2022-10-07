@@ -237,3 +237,52 @@ def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
 def test_print_gcs_document_tree_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
         document_wrapper.print_gcs_document_tree("documentai/output/123456789/1")
+
+
+def test_search_page_with_target_string():
+    with mock.patch.object(document_wrapper, "_get_bytes") as factory:
+        factory.return_value = get_bytes("tests/unit/resources/0")
+        document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
+
+        actual_string = document.search_pages(target_string="contract")
+        actual_regex = document.search_pages(regex=r"\$\d+(?:\.\d+)?")
+
+        assert len(actual_string) == 1
+        assert len(actual_regex) == 1
+
+
+def test_search_page_with_regex():
+    with pytest.raises(
+        ValueError,
+        match="you can only search with one target either target_string or regex",
+    ):
+        with mock.patch.object(document_wrapper, "_get_bytes") as factory:
+            factory.return_value = get_bytes("tests/unit/resources/0")
+            document = DocumentWrapper(
+                "gs://test-directory/documentai/output/123456789/0"
+            )
+            document.search_pages(
+                regex=r"^\$?(\d*(\d\.?|\.\d{1,2}))$", target_string="hello"
+            )
+
+
+def test_get_entity_if_type_contains():
+    with mock.patch.object(document_wrapper, "_get_bytes") as factory:
+        factory.return_value = get_bytes("tests/unit/resources/0")
+        document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
+
+        actual = document.get_entity_if_type_contains(target_type="address")
+
+        assert len(actual) == 2
+        assert actual[0].type_ == "receiver_address"
+        assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
+
+
+def test_get_page():
+    with mock.patch.object(document_wrapper, "_get_bytes") as factory:
+        factory.return_value = get_bytes("tests/unit/resources/0")
+        document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
+
+        actual = document.get_page(page_number=1)
+
+        assert len(actual.paragraphs) == 31
