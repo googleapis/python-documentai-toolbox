@@ -138,21 +138,11 @@ def _get_shards(gcs_prefix: str) -> List[documentai.Document]:
 def print_gcs_document_tree(gcs_prefix: str) -> None:
     r"""Prints a tree of filenames in gcs_prefix location.
 
-        .. code-block:: python
-
-            from google.cloud.documentai_toolbox import document_wrapper
-
-            def sample_get_shards():
-                # For a gcs path gs://abc/def/gh/{1,2,3}.json
-                gcs_prefix = gs://abc/def/gh
-
-                shards = document_wrapper.print_gcs_document_tree(gcs_prefix=gcs_prefix)
-
     Args:
         gcs_prefix (str):
             Required. The gcs path to the folder containing all processed documents.
 
-            Format: `gs://{bucket}/{optional_folder}/{operation-id}`
+            Format: `gs://{bucket}/{optional_folder}/{operation_id}`
                     where `{operation-id}` is the operation-id given from BatchProcessDocument.
 
     Returns:
@@ -221,9 +211,9 @@ class DocumentWrapper:
         gcs_prefix (str):
             Required.The gcs path to a single processed document.
 
-            Format: `gs://{bucket}/{optional_folder}/{operation-id}/{folder-id}`
-                    where `{operation-id}` is the operation-id given from BatchProcessDocument
-                    and `{folder-id}` is the number corresponding to the target document.
+            Format: `gs://{bucket}/{optional_folder}/{operation_id}/{folder_id}`
+                    where `{operation_id}` is the operation-id given from BatchProcessDocument
+                    and `{folder_id}` is the number corresponding to the target document.
     """
 
     gcs_prefix: str
