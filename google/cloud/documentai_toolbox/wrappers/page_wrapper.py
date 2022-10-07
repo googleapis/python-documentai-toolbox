@@ -257,6 +257,7 @@ class LineWrapper:
         text (str):
             Required. UTF-8 encoded text.
     """
+
     _documentai_line: documentai.Document.Page.Line
     text: str
 
