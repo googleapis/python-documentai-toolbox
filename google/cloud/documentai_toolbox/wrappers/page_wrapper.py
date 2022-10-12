@@ -233,95 +233,8 @@ def _list_of_text_from_element_with_layout(
 
 
 @dataclasses.dataclass
-class ParagraphWrapper:
-    """Represents a wrapped documentai.Document.Page.Paragraph.
-
-    Attributes:
-        _documentai_table (google.cloud.documentai.Document.Page.Paragraph):
-            Required.The original google.cloud.documentai.Document.Page.Paragraph object.
-        text (str):
-            Required. UTF-8 encoded text.
-    """
-
-    _documentai_paragraph: documentai.Document.Page.Paragraph
-    text: str
-
-
-@dataclasses.dataclass
-class LineWrapper:
-    """Represents a wrapped documentai.Document.Page.Line.
-
-    Attributes:
-        _documentai_line (google.cloud.documentai.Document.Page.Line):
-            Required.The original google.cloud.documentai.Document.Page.Line object.
-        text (str):
-            Required. UTF-8 encoded text.
-    """
-
-    _documentai_line: documentai.Document.Page.Line
-    text: str
-
-
-def _get_paragraphs(
-    paragraphs: List[documentai.Document.Page.Paragraph], text: str
-) -> List[ParagraphWrapper]:
-    r"""Returns a list of ParagraphWrapper.
-
-    Args:
-        paragraphs (List[documentai.Document.Page.Paragraph]):
-            Required. a list of documentai.Document.Page.Paragraph objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-
-    Returns:
-        List[str]:
-            A list of texts from a List[ParagraphWrapper].
-    """
-    result = []
-
-    for paragraph in paragraphs:
-        result.append(
-            ParagraphWrapper(
-                _documentai_paragraph=paragraph,
-                text=_text_from_element_with_layout(paragraph, text),
-            )
-        )
-
-    return result
-
-
-def _get_lines(
-    lines: List[documentai.Document.Page.Line], text: str
-) -> List[LineWrapper]:
-    r"""Returns a list of LineWrapper.
-
-    Args:
-        paragraphs (List[documentai.Document.Page.Line]):
-            Required. a list of documentai.Document.Page.Line objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-
-    Returns:
-        List[str]:
-            A list of texts from a List[LineWrapper].
-    """
-    result = []
-
-    for line in lines:
-        result.append(
-            LineWrapper(
-                _documentai_line=line, text=_text_from_element_with_layout(line, text)
-            )
-        )
-
-    return result
-
-
-@dataclasses.dataclass
 class PageWrapper:
-    """Represents a wrapped documentai.Document.Page.
+    """Represents a wrapped documentai.Document.Page .
 
     Attributes:
         _documentai_page (google.cloud.documentai.Document.Page):
@@ -334,13 +247,16 @@ class PageWrapper:
             Required.A list of visually detected text paragraphs
             on the page. A collection of lines that a human
             would perceive as a paragraph.
+        tables (List[TableWrapper]):
+            A list of visually detected tables on the
+            page.
     """
 
     _documentai_page: documentai.Document.Page = dataclasses.field(
         init=True, repr=False
     )
-    lines: List[LineWrapper] = dataclasses.field(init=True, repr=False)
-    paragraphs: List[ParagraphWrapper] = dataclasses.field(init=True, repr=False)
+    lines: List[str] = dataclasses.field(init=True, repr=False)
+    paragraphs: List[str] = dataclasses.field(init=True, repr=False)
     tables: List[TableWrapper] = dataclasses.field(init=True, repr=False)
 
     @classmethod
@@ -355,17 +271,15 @@ class PageWrapper:
             text (str):
                 Required. UTF-8 encoded text in reading order
                 from the document.
-
         Returns:
             PageWrapper:
                 A PageWrapper from google.cloud.documentai.Document.Page.
-
         """
         return PageWrapper(
             _documentai_page=documentai_page,
-            lines=_get_lines(lines=documentai_page.lines, text=text),
-            paragraphs=_get_paragraphs(
-                paragraphs=documentai_page.paragraphs, text=text
+            lines=_list_of_text_from_element_with_layout(documentai_page.lines, text),
+            paragraphs=_list_of_text_from_element_with_layout(
+                documentai_page.paragraphs, text
             ),
             tables=_get_tables(documentai_tables=documentai_page.tables, text=text),
         )

@@ -35,7 +35,7 @@ def test_from_documentai_page():
 
     actual = page_wrapper.PageWrapper.from_documentai_page(test_entity, test_text)
 
-    assert actual.paragraphs[0].text == test_text
+    assert actual.paragraphs[0] == test_text
 
 
 def test_table_to_csv():
