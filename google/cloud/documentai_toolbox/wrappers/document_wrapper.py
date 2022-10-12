@@ -253,10 +253,10 @@ class DocumentWrapper:
         found_pages = []
         for page in self.pages:
             for paragraph in page.paragraphs:
-                if target_string is not None and target_string in paragraph.text:
+                if target_string is not None and target_string in paragraph:
                     found_pages.append(page)
                     break
-                if regex is not None and re.findall(regex, paragraph.text) != []:
+                if regex is not None and re.findall(regex, paragraph) != []:
                     found_pages.append(page)
                     break
         return found_pages
