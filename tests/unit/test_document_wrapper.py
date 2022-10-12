@@ -251,10 +251,10 @@ def test_search_page_with_target_string():
         assert len(actual_regex) == 1
 
 
-def test_search_page_with_regex():
+def test_search_page_with_regex_and_str():
     with pytest.raises(
         ValueError,
-        match="you can only search with one target either target_string or regex",
+        match="You can only search with one target either target_string or regex",
     ):
         with mock.patch.object(document_wrapper, "_get_bytes") as factory:
             factory.return_value = get_bytes("tests/unit/resources/0")
@@ -264,6 +264,19 @@ def test_search_page_with_regex():
             document.search_pages(
                 regex=r"^\$?(\d*(\d\.?|\.\d{1,2}))$", target_string="hello"
             )
+
+
+def test_search_page_with_none():
+    with pytest.raises(
+        ValueError,
+        match="Both target_string or regex cannot be None",
+    ):
+        with mock.patch.object(document_wrapper, "_get_bytes") as factory:
+            factory.return_value = get_bytes("tests/unit/resources/0")
+            document = DocumentWrapper(
+                "gs://test-directory/documentai/output/123456789/0"
+            )
+            document.search_pages()
 
 
 def test_get_entity_if_type_contains():
@@ -276,13 +289,3 @@ def test_get_entity_if_type_contains():
         assert len(actual) == 2
         assert actual[0].type_ == "receiver_address"
         assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
-
-
-def test_get_page():
-    with mock.patch.object(document_wrapper, "_get_bytes") as factory:
-        factory.return_value = get_bytes("tests/unit/resources/0")
-        document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
-
-        actual = document.get_page(page_number=1)
-
-        assert len(actual.paragraphs) == 31

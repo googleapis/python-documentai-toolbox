@@ -245,9 +245,12 @@ class DocumentWrapper:
                 A list of PageWrapper.
 
         """
+
         if target_string is None and regex is None:
+            raise ValueError("Both target_string or regex cannot be None")
+        elif target_string and regex:
             raise ValueError(
-                "you can only search with one target either target_string or regex"
+                "You can only search with one target either target_string or regex"
             )
 
         found_pages = []
@@ -260,7 +263,6 @@ class DocumentWrapper:
                     found_pages.append(page)
                     break
         return found_pages
-
 
     def get_entity_if_type_contains(
         self, target_type: str
