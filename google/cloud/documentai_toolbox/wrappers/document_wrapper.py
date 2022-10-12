@@ -232,7 +232,7 @@ class DocumentWrapper:
     def search_pages(
         self, target_string: str = None, regex: str = None
     ) -> List[page_wrapper.PageWrapper]:
-        r"""Returns a list of PageWrapper.
+        r"""Returns the list of PageWrappers containing target_string.
 
         Args:
             target_string (str):
@@ -245,7 +245,7 @@ class DocumentWrapper:
                 A list of PageWrapper.
 
         """
-        if target_string and regex:
+        if target_string is None and regex is None:
             raise ValueError(
                 "you can only search with one target either target_string or regex"
             )
@@ -253,27 +253,14 @@ class DocumentWrapper:
         found_pages = []
         for page in self.pages:
             for paragraph in page.paragraphs:
-                if target_string is not None and target_string in paragraph:
+                if target_string and target_string in paragraph:
                     found_pages.append(page)
                     break
-                if regex is not None and re.findall(regex, paragraph) != []:
+                elif regex and re.search(regex, paragraph) != None:
                     found_pages.append(page)
                     break
         return found_pages
 
-    def get_page(self, page_number: int) -> page_wrapper.PageWrapper:
-        r"""Returns a page_wrapper.PageWrapper.
-
-        Args:
-            page_number (int):
-                Required. page number.
-
-        Returns:
-            page_wrapper.PageWrapper:
-                A page_wrapper.PageWrapper.
-
-        """
-        return self.pages[page_number - 1]
 
     def get_entity_if_type_contains(
         self, target_type: str
