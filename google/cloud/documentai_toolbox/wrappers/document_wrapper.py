@@ -259,7 +259,7 @@ class DocumentWrapper:
                 if target_string and target_string in paragraph:
                     found_pages.append(page)
                     break
-                elif regex and re.search(regex, paragraph) != None:
+                elif regex and re.search(regex, paragraph) is not None:
                     found_pages.append(page)
                     break
         return found_pages
