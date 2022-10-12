@@ -28,29 +28,111 @@ ElementWithLayout = Union[
 
 
 def _text_from_element_with_layout(
-    element_with_layout: List[ElementWithLayout], text: str
-) -> List[str]:
-    r"""Returns a list of strings extracted from the element with layout.
-
+    element_with_layout: ElementWithLayout, text: str
+) -> str:
+    r"""Returns a text from a single element.
     Args:
-        element_with_layout (List[ElementWithLayout]):
-            Required. A element containing a layout object.
+        element_with_layout (ElementWithLayout):
+            Required. a element with layout object.
+        text (str):
+            Required. UTF-8 encoded text in reading order
+            from the document.
+    Returns:
+        str:
+            Text from a single element.
+    """
 
+    result_text = ""
+
+    if element_with_layout.layout.text_anchor.text_segments == []:
+        return ""
+    else:
+        for text_segment in element_with_layout.layout.text_anchor.text_segments:
+            result_text += text[
+                int(text_segment.start_index) : int(text_segment.end_index)
+            ]
+
+    return result_text
+
+
+@dataclasses.dataclass
+class ParagraphWrapper:
+    """Represents a wrapped documentai.Document.Page.Paragraph.
+    Attributes:
+        _documentai_table (google.cloud.documentai.Document.Page.Paragraph):
+            Required.The original google.cloud.documentai.Document.Page.Paragraph object.
+        text (str):
+            Required. UTF-8 encoded text.
+    """
+
+    _documentai_paragraph: documentai.Document.Page.Paragraph
+    text: str
+
+
+@dataclasses.dataclass
+class LineWrapper:
+    """Represents a wrapped documentai.Document.Page.Line.
+    Attributes:
+        _documentai_line (google.cloud.documentai.Document.Page.Line):
+            Required.The original google.cloud.documentai.Document.Page.Line object.
+        text (str):
+            Required. UTF-8 encoded text.
+    """
+
+    _documentai_line: documentai.Document.Page.Line
+    text: str
+
+
+def _get_paragraphs(
+    paragraphs: List[documentai.Document.Page.Paragraph], text: str
+) -> List[ParagraphWrapper]:
+    r"""Returns a list of ParagraphWrapper.
+    Args:
+        paragraphs (List[documentai.Document.Page.Paragraph]):
+            Required. a list of documentai.Document.Page.Paragraph objects.
+        text (str):
+            Required. UTF-8 encoded text in reading order
+            from the document.
     Returns:
         List[str]:
-            A list of strings extracted from the element with layout.
-
+            A list of texts from a List[ParagraphWrapper].
     """
     result = []
-    # If a text segment spans several lines, it will
-    # be stored in different text segments.
-    for element in element_with_layout:
-        result_text = ""
-        for text_segment in element.layout.text_anchor.text_segments:
-            start_index = int(text_segment.start_index)
-            end_index = int(text_segment.end_index)
-            result_text += text[start_index:end_index]
-        result.append(text[start_index:end_index])
+
+    for paragraph in paragraphs:
+        result.append(
+            ParagraphWrapper(
+                _documentai_paragraph=paragraph,
+                text=_text_from_element_with_layout(paragraph, text),
+            )
+        )
+
+    return result
+
+
+def _get_lines(
+    lines: List[documentai.Document.Page.Line], text: str
+) -> List[LineWrapper]:
+    r"""Returns a list of LineWrapper.
+    Args:
+        paragraphs (List[documentai.Document.Page.Line]):
+            Required. a list of documentai.Document.Page.Line objects.
+        text (str):
+            Required. UTF-8 encoded text in reading order
+            from the document.
+    Returns:
+        List[str]:
+            A list of texts from a List[LineWrapper].
+    """
+    result = []
+
+    for line in lines:
+        result.append(
+            LineWrapper(
+                _documentai_line=line, text=_text_from_element_with_layout(line, text)
+            )
+        )
+
     return result
 
 
@@ -97,6 +179,6 @@ class PageWrapper:
         """
         return PageWrapper(
             _documentai_page=documentai_page,
-            lines=_text_from_element_with_layout(documentai_page.lines, text),
-            paragraphs=_text_from_element_with_layout(documentai_page.paragraphs, text),
+            lines=_get_lines(documentai_page.lines, text),
+            paragraphs=_get_paragraphs(documentai_page.paragraphs, text),
         )

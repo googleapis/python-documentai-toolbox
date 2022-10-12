@@ -14,8 +14,10 @@
 # limitations under the License.
 #
 
-from google.cloud.documentai_toolbox.wrappers import PageWrapper
+
+from google.cloud.documentai_toolbox.wrappers import page_wrapper
 from google.cloud import documentai
+import os
 
 
 def test_from_documentai_page():
@@ -31,6 +33,6 @@ def test_from_documentai_page():
 
     test_entity = documentai.Document.Page(page_number=1, paragraphs=[test_paragraph])
 
-    actual = PageWrapper.from_documentai_page(test_entity, test_text)
+    actual = page_wrapper.PageWrapper.from_documentai_page(test_entity, test_text)
 
-    assert actual.paragraphs[0] == test_text
+    assert actual.paragraphs[0].text == test_text
