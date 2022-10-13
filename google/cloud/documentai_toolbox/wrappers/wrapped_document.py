@@ -22,47 +22,47 @@ from typing import List
 from google.cloud import documentai
 from google.cloud import storage
 
-from google.cloud.documentai_toolbox.wrappers import page_wrapper, entity_wrapper
+from google.cloud.documentai_toolbox.wrappers import wrapped_page, wrapped_entity
 
 
 def _entities_from_shards(
     shards: documentai.Document,
-) -> List[entity_wrapper.EntityWrapper]:
-    r"""Returns a list of EntityWrappers.
+) -> List[wrapped_entity.WrappedEntity]:
+    r"""Returns a list of WrappedEntitys.
 
     Args:
         shards (google.cloud.documentai.Document):
             Required. List of document shards.
 
     Returns:
-        List[entity_wrapper.EntityWrapper]:
-            a list of EntityWrappers.
+        List[wrapped_entity.WrappedEntity]:
+            a list of WrappedEntitys.
 
     """
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(entity_wrapper.EntityWrapper.from_documentai_entity(entity))
+            result.append(wrapped_entity.WrappedEntity.from_documentai_entity(entity))
     return result
 
 
-def _pages_from_shards(shards: documentai.Document) -> List[page_wrapper.PageWrapper]:
-    r"""Returns a list of PageWrappers.
+def _pages_from_shards(shards: documentai.Document) -> List[wrapped_page.WrappedPage]:
+    r"""Returns a list of WrappedPages.
 
     Args:
         shards (google.cloud.documentai.Document):
             Required. List of document shards.
 
     Returns:
-        List[page_wrapper.PageWrapper]:
-            A list of PageWrappers.
+        List[wrapped_page.WrappedPage]:
+            A list of WrappedPages.
 
     """
     result = []
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(page_wrapper.PageWrapper.from_documentai_page(page, text))
+            result.append(wrapped_page.WrappedPage.from_documentai_page(page, text))
 
     return result
 
@@ -199,7 +199,7 @@ def print_gcs_document_tree(gcs_prefix: str) -> None:
 
 
 @dataclasses.dataclass
-class DocumentWrapper:
+class WrappedDocument:
     r"""Represents a wrapped Document.
 
     A single Document protobuf message might be written as several JSON files on
@@ -223,8 +223,8 @@ class DocumentWrapper:
         self.pages = _pages_from_shards(shards=self._shards)
         self.entities = _entities_from_shards(shards=self._shards)
 
-    pages: List[page_wrapper.PageWrapper] = dataclasses.field(init=False, repr=False)
-    entities: List[entity_wrapper.EntityWrapper] = dataclasses.field(
+    pages: List[wrapped_page.WrappedPage] = dataclasses.field(init=False, repr=False)
+    entities: List[wrapped_entity.WrappedEntity] = dataclasses.field(
         init=False, repr=False
     )
     _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)

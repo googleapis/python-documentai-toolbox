@@ -30,16 +30,16 @@ ElementWithLayout = Union[
 
 
 @dataclasses.dataclass
-class TableWrapper:
+class WrappedTable:
     """Represents a wrapped documentai.Document.Page.Table.
 
     Attributes:
         _documentai_table (google.cloud.documentai.Document.Page.Table):
-            Required.The original google.cloud.documentai.Document.Page.Table object.
+            Required. The original google.cloud.documentai.Document.Page.Table object.
         body_rows (List[List[str]]):
-            Required.A list of body rows.
+            Required. A list of body rows.
         header_rows (List[List[str]]):
-            Required.A list of headers.
+            Required. A list of headers.
     """
 
     _documentai_table: documentai.Document.Page.Table = dataclasses.field(
@@ -54,8 +54,8 @@ class TableWrapper:
         documentai_table: documentai.Document.Page.Table,
         header_rows: List[List[str]],
         body_rows: List[List[str]],
-    ) -> "TableWrapper":
-        r"""Returns a TableWrapper from google.cloud.documentai.Document.Page.
+    ) -> "WrappedTable":
+        r"""Returns a WrappedTable from google.cloud.documentai.Document.Page.
 
         Args:
             documentai_table (google.cloud.documentai.Document.Page.Table):
@@ -66,40 +66,22 @@ class TableWrapper:
                 Required. a list of body rows.
 
         Returns:
-            TableWrapper:
-                A TableWrapper from google.cloud.documentai.Document.Page.Table.
+            WrappedTable:
+                A WrappedTable from google.cloud.documentai.Document.Page.Table.
 
         """
-        return TableWrapper(
+        return WrappedTable(
             _documentai_table=documentai_table,
             header_rows=header_rows,
             body_rows=body_rows,
         )
 
-    def to_csv(self, file_name: str) -> None:
-        r"""Writes table to a csv file with ``file_name``
-
-            .. code-block:: python
-
-                from google.cloud.documentai_toolbox import DocumentWrapper
-
-                def sample_table_to_csv():
-
-                    #Wrap document from gcs_path
-                    merged_document = DocumentWrapper('gs://abc/def/gh/1')
-
-                    #Use first page
-                    page = merged_document.get_page(1)
-
-                    #export the first table in page 1 to csv
-                    page.tables[0].to_csv('test_table.csv')
-
-        Args:
-            file_name (str):
-                Required. A file_name to write table to.
+    def to_dataframe(self) -> pd.DataFrame:
+        r"""Returns pd.DataFrame from documentai.table
 
         Returns:
-            None.
+            pd.DataFrame:
+                The DataFrame of the table.
 
         """
         rows = self.body_rows if self.body_rows != [] else self.header_rows
@@ -107,17 +89,65 @@ class TableWrapper:
         rows.append("\n")
         rows.append("\n")
 
-        df = pd.DataFrame(rows)
+        dataframe = pd.DataFrame(rows)
         if self.body_rows != [] and self.header_rows != []:
-            df.columns = self.header_rows
+            dataframe.columns = self.header_rows
 
-        df.to_csv(file_name, index=False)
+        return dataframe
+
+    def to_csv(self, dataframe: pd.DataFrame, file_path: str = None) -> str:
+        r"""Writes table to a csv file with ``file_name`` or returns a csv str
+
+            .. code-block:: python
+
+                from google.cloud.documentai_toolbox import WrappedDocument
+
+                def sample_table_to_csv_file():
+
+                    #Wrap document from gcs_path
+                    merged_document = WrappedDocument('gs://abc/def/gh/1')
+
+                    #Use first page
+                    page = merged_document.pages[0]
+
+                    #export the first table in page 1 to csv
+                    dataframe = page.tables[0].to_dataframe()
+                    csv_text = page.tables[0].to_csv(dataframe=dataframe, file_path='test_table.csv')
 
 
-def _get_tables(
-    documentai_tables: List[documentai.Document.Page.Table], text: str
-) -> List[TableWrapper]:
-    r"""Returns a list of TableWrappers.
+                def sample_table_to_csv_text():
+
+                    #Wrap document from gcs_path
+                    merged_document = WrappedDocument('gs://abc/def/gh/1')
+
+                    #Use first page
+                    page = merged_document.pages[0]
+
+                    #export the first table in page 1 to csv
+                    dataframe = page.tables[0].to_dataframe()
+                    csv_text = page.tables[0].to_csv(dataframe=dataframe)
+
+                    print(csv_text)
+
+        Args:
+            file_path (str):
+                Optional. If file_path is not provided the csv will be returned otherwise the csv will be written to file_path.
+
+        Returns:
+            str:
+                The table in csv format.
+
+        """
+
+        result_csv = dataframe.to_csv(file_path, index=False)
+
+        return f"Wrote CSV table to {file_path}" if result_csv is None else result_csv
+
+
+def _table_wrapper_from_documentai_table(
+    documentai_table: List[documentai.Document.Page.Table], text: str
+) -> WrappedTable:
+    r"""Returns a WrappedTable.
 
     Args:
         documentai_tables (List[documentai.Document.Page.Table]):
@@ -127,29 +157,27 @@ def _get_tables(
             from the document.
 
     Returns:
-        List[str]:
-            A list of strings extracted from the element with layout.
+        WrappedTable:
+            A WrappedTable.
 
     """
-    result = []
 
-    for table in documentai_tables:
-        header_rows = []
-        body_rows = []
+    header_rows = []
+    body_rows = []
 
-        header_rows = _get_table_row(table.header_rows, text)
-        body_rows = _get_table_row(table.body_rows, text)
+    header_rows = _table_row_from_documentai_table_row(
+        documentai_table.header_rows, text
+    )
+    body_rows = _table_row_from_documentai_table_row(documentai_table.body_rows, text)
 
-        result.append(
-            TableWrapper.from_documentai_table(
-                documentai_table=table, body_rows=body_rows, header_rows=header_rows
-            )
-        )
+    result = WrappedTable.from_documentai_table(
+        documentai_table=documentai_table, body_rows=body_rows, header_rows=header_rows
+    )
 
     return result
 
 
-def _get_table_row(
+def _table_row_from_documentai_table_row(
     table_rows: List[documentai.Document.Page.Table.TableRow], text: str
 ) -> List[str]:
     r"""Returns a list rows from table_rows.
@@ -167,12 +195,14 @@ def _get_table_row(
     """
     body_rows = []
     for row in table_rows:
-        body_rows.append(
-            [
-                x.replace("\n", "")
-                for x in _list_of_text_from_element_with_layout(row.cells, text)
-            ]
-        )
+        row_text = []
+
+        for cell in row.cells:
+            row_text.append(
+                _text_from_element_with_layout(element_with_layout=cell, text=text)
+            )
+
+        body_rows.append([x.replace("\n", "") for x in row_text])
     return body_rows
 
 
@@ -183,7 +213,7 @@ def _text_from_element_with_layout(
 
     Args:
         element_with_layout (ElementWithLayout):
-            Required. a element with layout object.
+            Required. a element with layout attribute.
         text (str):
             Required. UTF-8 encoded text in reading order
             from the document.
@@ -206,34 +236,8 @@ def _text_from_element_with_layout(
     return result_text
 
 
-def _list_of_text_from_element_with_layout(
-    element_with_layout: List[ElementWithLayout], text: str
-) -> List[str]:
-    r"""Returns a list of text from an element with layout.
-
-    Args:
-        element_with_layout (List[ElementWithLayout]):
-            Required. a list of elements with layout object.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-
-    Returns:
-        List[str]:
-            A list of texts from a List[ElementWithLayout].
-    """
-    result = []
-    # If a text segment spans several lines, it will
-    # be stored in different text segments.
-    for element in element_with_layout:
-        result.append(
-            _text_from_element_with_layout(element_with_layout=element, text=text)
-        )
-    return result
-
-
 @dataclasses.dataclass
-class PageWrapper:
+class WrappedPage:
     """Represents a wrapped documentai.Document.Page .
 
     Attributes:
@@ -247,7 +251,7 @@ class PageWrapper:
             Required.A list of visually detected text paragraphs
             on the page. A collection of lines that a human
             would perceive as a paragraph.
-        tables (List[TableWrapper]):
+        tables (List[WrappedTable]):
             A list of visually detected tables on the
             page.
     """
@@ -257,13 +261,13 @@ class PageWrapper:
     )
     lines: List[str] = dataclasses.field(init=True, repr=False)
     paragraphs: List[str] = dataclasses.field(init=True, repr=False)
-    tables: List[TableWrapper] = dataclasses.field(init=True, repr=False)
+    tables: List[WrappedTable] = dataclasses.field(init=True, repr=False)
 
     @classmethod
     def from_documentai_page(
         cls, documentai_page: documentai.Document.Page, text: str
-    ) -> "PageWrapper":
-        r"""Returns a PageWrapper from google.cloud.documentai.Document.Page.
+    ) -> "WrappedPage":
+        r"""Returns a WrappedPage from google.cloud.documentai.Document.Page.
 
         Args:
             documentai_page (google.cloud.documentai.Document.Page):
@@ -272,14 +276,32 @@ class PageWrapper:
                 Required. UTF-8 encoded text in reading order
                 from the document.
         Returns:
-            PageWrapper:
-                A PageWrapper from google.cloud.documentai.Document.Page.
+            WrappedPage:
+                A WrappedPage from google.cloud.documentai.Document.Page.
         """
-        return PageWrapper(
+
+        lines = []
+        paragraphs = []
+        tables = []
+
+        for line in documentai_page.lines:
+            lines.append(
+                _text_from_element_with_layout(element_with_layout=line, text=text)
+            )
+
+        for paragraph in documentai_page.paragraphs:
+            paragraphs.append(
+                _text_from_element_with_layout(element_with_layout=paragraph, text=text)
+            )
+
+        for table in documentai_page.tables:
+            tables.append(
+                _table_wrapper_from_documentai_table(documentai_table=table, text=text)
+            )
+
+        return WrappedPage(
             _documentai_page=documentai_page,
-            lines=_list_of_text_from_element_with_layout(documentai_page.lines, text),
-            paragraphs=_list_of_text_from_element_with_layout(
-                documentai_page.paragraphs, text
-            ),
-            tables=_get_tables(documentai_tables=documentai_page.tables, text=text),
+            lines=lines,
+            paragraphs=paragraphs,
+            tables=tables,
         )

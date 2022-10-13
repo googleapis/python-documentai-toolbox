@@ -15,13 +15,13 @@
 #
 
 from .wrappers import (
-    DocumentWrapper,
-    PageWrapper,
-    EntityWrapper,
+    WrappedDocument,
+    WrappedPage,
+    WrappedEntity,
 )
 
 __all__ = (
-    "DocumentWrapper",
-    "PageWrapper",
-    "EntityWrapper",
+    "WrappedDocument",
+    "WrappedPage",
+    "WrappedEntity",
 )
