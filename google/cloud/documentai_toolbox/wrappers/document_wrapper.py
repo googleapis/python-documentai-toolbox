@@ -230,14 +230,14 @@ class DocumentWrapper:
     _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)
 
     def search_pages(
-        self, target_string: str = None, regex: str = None
+        self, target_string: str = None, pattern: str = None
     ) -> List[page_wrapper.PageWrapper]:
         r"""Returns the list of PageWrappers containing target_string.
 
         Args:
             target_string (str):
                 Optional. target str.
-            regex (str):
+            pattern (str):
                 Optional. regex str.
 
         Returns:
@@ -246,11 +246,11 @@ class DocumentWrapper:
 
         """
 
-        if target_string is None and regex is None:
-            raise ValueError("Both target_string or regex cannot be None")
-        elif target_string and regex:
+        if target_string is None and pattern is None:
+            raise ValueError("Both target_string or pattern cannot be None")
+        elif target_string and pattern:
             raise ValueError(
-                "You can only search with one target either target_string or regex"
+                "You can only search with one target either target_string or pattern"
             )
 
         found_pages = []
@@ -259,15 +259,15 @@ class DocumentWrapper:
                 if target_string and target_string in paragraph:
                     found_pages.append(page)
                     break
-                elif regex and re.search(regex, paragraph) is not None:
+                elif pattern and re.search(pattern, paragraph) is not None:
                     found_pages.append(page)
                     break
         return found_pages
 
-    def get_entity_if_type_contains(
+    def get_entity_by_type(
         self, target_type: str
     ) -> List[entity_wrapper.EntityWrapper]:
-        r"""Returns a list of EntityWrappers containing target_type.
+        r"""Returns a list of EntityWrappers matching target_type.
 
         Args:
             target_type (str):
@@ -275,11 +275,11 @@ class DocumentWrapper:
 
         Returns:
             List[entity_wrapper.EntityWrapper]:
-                A list of EntityWrappers containing target_type.
+                A list of EntityWrappers matching target_type.
 
         """
         match_entity_list = []
         for entity in self.entities:
-            if target_type in entity.type_:
+            if target_type == entity.type_:
                 match_entity_list.append(entity)
         return match_entity_list

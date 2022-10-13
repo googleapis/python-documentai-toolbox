@@ -245,16 +245,24 @@ def test_search_page_with_target_string():
         document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
 
         actual_string = document.search_pages(target_string="contract")
-        actual_regex = document.search_pages(regex=r"\$\d+(?:\.\d+)?")
 
         assert len(actual_string) == 1
+
+
+def test_search_page_with_target_pattern():
+    with mock.patch.object(document_wrapper, "_get_bytes") as factory:
+        factory.return_value = get_bytes("tests/unit/resources/0")
+        document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
+
+        actual_regex = document.search_pages(pattern=r"\$\d+(?:\.\d+)?")
+
         assert len(actual_regex) == 1
 
 
 def test_search_page_with_regex_and_str():
     with pytest.raises(
         ValueError,
-        match="You can only search with one target either target_string or regex",
+        match="You can only search with one target either target_string or pattern",
     ):
         with mock.patch.object(document_wrapper, "_get_bytes") as factory:
             factory.return_value = get_bytes("tests/unit/resources/0")
@@ -262,14 +270,14 @@ def test_search_page_with_regex_and_str():
                 "gs://test-directory/documentai/output/123456789/0"
             )
             document.search_pages(
-                regex=r"^\$?(\d*(\d\.?|\.\d{1,2}))$", target_string="hello"
+                pattern=r"^\$?(\d*(\d\.?|\.\d{1,2}))$", target_string="hello"
             )
 
 
 def test_search_page_with_none():
     with pytest.raises(
         ValueError,
-        match="Both target_string or regex cannot be None",
+        match="Both target_string or pattern cannot be None",
     ):
         with mock.patch.object(document_wrapper, "_get_bytes") as factory:
             factory.return_value = get_bytes("tests/unit/resources/0")
@@ -279,13 +287,13 @@ def test_search_page_with_none():
             document.search_pages()
 
 
-def test_get_entity_if_type_contains():
+def test_get_entity_by_type():
     with mock.patch.object(document_wrapper, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
         document = DocumentWrapper("gs://test-directory/documentai/output/123456789/0")
 
-        actual = document.get_entity_if_type_contains(target_type="address")
+        actual = document.get_entity_by_type(target_type="receiver_address")
 
-        assert len(actual) == 2
+        assert len(actual) == 1
         assert actual[0].type_ == "receiver_address"
         assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
