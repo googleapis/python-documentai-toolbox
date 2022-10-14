@@ -16,12 +16,15 @@
 """Wrappers for Document AI Document type."""
 
 import dataclasses
+from pydoc import doc
 import re
 from typing import List
 
 from google.api_core import client_info
 from google.cloud import documentai
 from google.cloud import storage
+from google.cloud import documentai_toolbox
+
 
 from google.cloud.documentai_toolbox.constants import base as constants
 from google.cloud.documentai_toolbox.wrappers import page_wrapper, entity_wrapper
@@ -89,10 +92,10 @@ def _get_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     """
     result = []
 
-    user_agent = f"{constants.USER_AGENT_PRODUCT}/{constants.CLIENT_LIBRARY_VERSION}"
+    user_agent = f"{constants.USER_AGENT_PRODUCT}/{documentai_toolbox.__version__}"
 
     info = client_info.ClientInfo(
-        client_library_version=constants.CLIENT_LIBRARY_VERSION,
+        client_library_version=documentai_toolbox.__version__,
         user_agent=user_agent,
     )
 
