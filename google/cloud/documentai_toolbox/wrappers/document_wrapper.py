@@ -16,7 +16,6 @@
 """Wrappers for Document AI Document type."""
 
 import dataclasses
-from pydoc import doc
 import re
 from typing import List
 
