@@ -20,7 +20,9 @@ import setuptools  # type: ignore
 package_root = os.path.abspath(os.path.dirname(__file__))
 
 version = {}
-with open(os.path.join(package_root, 'google/cloud/documentai_toolbox/version.py')) as fp:
+with open(
+    os.path.join(package_root, "google/cloud/documentai_toolbox/version.py")
+) as fp:
     exec(fp.read(), version)
 version = version["__version__"]
 

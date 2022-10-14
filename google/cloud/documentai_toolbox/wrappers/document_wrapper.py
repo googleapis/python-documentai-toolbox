@@ -176,10 +176,10 @@ def print_gcs_document_tree(gcs_prefix: str) -> None:
     if file_check is not None:
         raise ValueError("gcs_prefix cannot contain file types")
 
-    user_agent = f"{constants.USER_AGENT_PRODUCT}/{constants.CLIENT_LIBRARY_VERSION}"
+    user_agent = f"{constants.USER_AGENT_PRODUCT}/{documentai_toolbox.__version__}"
 
     info = client_info.ClientInfo(
-        client_library_version=constants.CLIENT_LIBRARY_VERSION,
+        client_library_version=documentai_toolbox.__version__,
         user_agent=user_agent,
     )
 
