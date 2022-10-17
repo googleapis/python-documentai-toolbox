@@ -246,49 +246,36 @@ class Page:
     _documentai_page: documentai.Document.Page = dataclasses.field(
         init=True, repr=False
     )
-    lines: List[str] = dataclasses.field(init=True, repr=False)
-    paragraphs: List[str] = dataclasses.field(init=True, repr=False)
-    tables: List[Table] = dataclasses.field(init=True, repr=False)
+    text: str = dataclasses.field(init=True, repr=False)
 
-    @classmethod
-    def from_documentai_page(
-        cls, documentai_page: documentai.Document.Page, text: str
-    ) -> "Page":
-        r"""Returns a Page from google.cloud.documentai.Document.Page.
+    lines: List[str] = dataclasses.field(init=False, repr=False)
+    paragraphs: List[str] = dataclasses.field(init=False, repr=False)
+    tables: List[Table] = dataclasses.field(init=False, repr=False)
 
-        Args:
-            documentai_page (google.cloud.documentai.Document.Page):
-                Required. A single page object.
-            text (str):
-                Required. UTF-8 encoded text in reading order
-                from the document.
-        Returns:
-            Page:
-                A Page from google.cloud.documentai.Document.Page.
-        """
-
+    def __post_init__(self):
         lines = []
         paragraphs = []
         tables = []
 
-        for line in documentai_page.lines:
+        for line in self._documentai_page.lines:
             lines.append(
-                _text_from_element_with_layout(element_with_layout=line, text=text)
+                _text_from_element_with_layout(element_with_layout=line, text=self.text)
             )
 
-        for paragraph in documentai_page.paragraphs:
+        for paragraph in self._documentai_page.paragraphs:
             paragraphs.append(
-                _text_from_element_with_layout(element_with_layout=paragraph, text=text)
+                _text_from_element_with_layout(
+                    element_with_layout=paragraph, text=self.text
+                )
             )
 
-        for table in documentai_page.tables:
+        for table in self._documentai_page.tables:
             tables.append(
-                _table_wrapper_from_documentai_table(documentai_table=table, text=text)
+                _table_wrapper_from_documentai_table(
+                    documentai_table=table, text=self.text
+                )
             )
 
-        return Page(
-            _documentai_page=documentai_page,
-            lines=lines,
-            paragraphs=paragraphs,
-            tables=tables,
-        )
+        self.lines = lines
+        self.paragraphs = paragraphs
+        self.tables = tables

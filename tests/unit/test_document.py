@@ -79,17 +79,32 @@ def test_entities_from_shard():
     assert actual[0].type_ == "vat"
 
 
-def test_wrapped_document_with_single_shard():
+def test_document_from_documentai_document_with_single_shard():
+    test_document = []
+    for byte in get_bytes("tests/unit/resources/0"):
+        test_document.append(documentai.Document.from_json(byte))
+
+    actual = document.Document.from_documentai_document(
+        documentai_document=test_document[0]
+    )
+    assert len(actual.pages) == 1
+
+
+def test_document_from_gcs_prefix_with_single_shard():
     with mock.patch.object(document, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = document.Document("gs://test-directory/documentai/output/123456789/0")
+        actual = document.Document.from_gcs_prefix(
+            "gs://test-directory/documentai/output/123456789/0"
+        )
         assert len(actual.pages) == 1
 
 
-def test_wrapped_document_with_multiple_shards():
+def test_document_from_gcs_prefix_with_multiple_shards():
     with mock.patch.object(document, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/1")
-        actual = document.Document("gs://test-directory/documentai/output/123456789/1")
+        actual = document.Document.from_gcs_prefix(
+            gcs_prefix="gs://test-directory/documentai/output/123456789/1"
+        )
         assert len(actual.pages) == 48
 
 

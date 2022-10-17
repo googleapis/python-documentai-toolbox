@@ -43,7 +43,7 @@ def _entities_from_shards(
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(Entity.from_documentai_entity(entity))
+            result.append(Entity(_documentai_entity=entity))
     return result
 
 
@@ -63,7 +63,7 @@ def _pages_from_shards(shards: documentai.Document) -> List[Page]:
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(Page.from_documentai_page(page, text))
+            result.append(Page(_documentai_page=page, text=text))
 
     return result
 
@@ -217,13 +217,21 @@ class Document:
                     and `{folder_id}` is the number corresponding to the target document.
     """
 
-    gcs_prefix: str
-
-    def __post_init__(self):
-        self._shards = _get_shards(gcs_prefix=self.gcs_prefix)
-        self.pages = _pages_from_shards(shards=self._shards)
-        self.entities = _entities_from_shards(shards=self._shards)
+    shards: List[documentai.Document] = dataclasses.field(init=True, repr=False)
+    gcs_prefix: str = dataclasses.field(init=True, repr=False, default=None)
 
     pages: List[Page] = dataclasses.field(init=False, repr=False)
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
-    _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self):
+        self.pages = _pages_from_shards(shards=self.shards)
+        self.entities = _entities_from_shards(shards=self.shards)
+
+    @classmethod
+    def from_documentai_document(self, documentai_document: documentai.Document):
+        return Document(shards=[documentai_document])
+
+    @classmethod
+    def from_gcs_prefix(self, gcs_prefix: str):
+        shards = _get_shards(gcs_prefix=gcs_prefix)
+        return Document(shards=shards, gcs_prefix=gcs_prefix)
