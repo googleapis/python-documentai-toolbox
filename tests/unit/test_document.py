@@ -24,7 +24,7 @@ except ImportError:  # pragma: NO COVER
 import pytest
 import glob
 
-from google.cloud.documentai_toolbox.wrappers import WrappedDocument, wrapped_document
+from google.cloud.documentai_toolbox.wrappers import document
 
 from google.cloud import documentai
 from google.cloud import storage
@@ -41,20 +41,18 @@ def get_bytes(file_name):
 
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        wrapped_document._get_shards(
-            "gs://test-directory/documentai/output/123456789/0.json"
-        )
+        document._get_shards("gs://test-directory/documentai/output/123456789/0.json")
 
 
 def test_get_shards_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        wrapped_document._get_shards("test-directory/documentai/output/")
+        document._get_shards("test-directory/documentai/output/")
 
 
 def test_get_shards_with_valid_gcs_uri():
-    with mock.patch.object(wrapped_document, "_get_bytes") as factory:
+    with mock.patch.object(document, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = wrapped_document._get_shards(
+        actual = document._get_shards(
             "gs://test-directory/documentai/output/123456789/0"
         )
         # We are testing only one of the fields to make sure the file content could be loaded.
@@ -66,7 +64,7 @@ def test_pages_from_shards():
     for byte in get_bytes("tests/unit/resources/0"):
         shards.append(documentai.Document.from_json(byte))
 
-    actual = wrapped_document._pages_from_shards(shards=shards)
+    actual = document._pages_from_shards(shards=shards)
     assert len(actual[0].paragraphs) == 31
 
 
@@ -75,27 +73,27 @@ def test_entities_from_shard():
     for byte in get_bytes("tests/unit/resources/0"):
         shards.append(documentai.Document.from_json(byte))
 
-    actual = wrapped_document._entities_from_shards(shards=shards)
+    actual = document._entities_from_shards(shards=shards)
 
     assert actual[0].mention_text == "$140.00"
     assert actual[0].type_ == "vat"
 
 
 def test_wrapped_document_with_single_shard():
-    with mock.patch.object(wrapped_document, "_get_bytes") as factory:
+    with mock.patch.object(document, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/0")
-        actual = WrappedDocument("gs://test-directory/documentai/output/123456789/0")
+        actual = document.Document("gs://test-directory/documentai/output/123456789/0")
         assert len(actual.pages) == 1
 
 
 def test_wrapped_document_with_multiple_shards():
-    with mock.patch.object(wrapped_document, "_get_bytes") as factory:
+    with mock.patch.object(document, "_get_bytes") as factory:
         factory.return_value = get_bytes("tests/unit/resources/1")
-        actual = WrappedDocument("gs://test-directory/documentai/output/123456789/1")
+        actual = document.Document("gs://test-directory/documentai/output/123456789/1")
         assert len(actual.pages) == 48
 
 
-@mock.patch("google.cloud.documentai_toolbox.wrappers.wrapped_document.storage")
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_get_bytes(mock_storage):
 
     client = mock_storage.Client.return_value
@@ -120,7 +118,7 @@ def test_get_bytes(mock_storage):
 
     client.list_blobs.return_value = blobs
 
-    actual = wrapped_document._get_bytes(
+    actual = document._get_bytes(
         "gs://test-directory/documentai/", "output/123456789/1"
     )
     mock_storage.Client.assert_called_once()
@@ -128,7 +126,7 @@ def test_get_bytes(mock_storage):
     assert actual == [b"", b""]
 
 
-@mock.patch("google.cloud.documentai_toolbox.wrappers.wrapped_document.storage")
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client = mock_storage.Client.return_value
@@ -154,7 +152,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    wrapped_document.print_gcs_document_tree(
+    document.print_gcs_document_tree(
         "gs://test-directory/documentai/output/123456789/1"
     )
 
@@ -170,7 +168,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
     )
 
 
-@mock.patch("google.cloud.documentai_toolbox.wrappers.wrapped_document.storage")
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
     client = mock_storage.Client.return_value
@@ -207,7 +205,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     ]
     client.list_blobs.return_value = blobs
 
-    wrapped_document.print_gcs_document_tree(
+    document.print_gcs_document_tree(
         "gs://test-directory/documentai/output/123456789/1"
     )
 
@@ -229,11 +227,11 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
 def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        wrapped_document.print_gcs_document_tree(
+        document.print_gcs_document_tree(
             "gs://test-directory/documentai/output/123456789/1/test_file.json"
         )
 
 
 def test_print_gcs_document_tree_with_invalid_gcs_uri():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        wrapped_document.print_gcs_document_tree("documentai/output/123456789/1")
+        document.print_gcs_document_tree("documentai/output/123456789/1")

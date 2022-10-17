@@ -22,47 +22,48 @@ from typing import List
 from google.cloud import documentai
 from google.cloud import storage
 
-from google.cloud.documentai_toolbox.wrappers import wrapped_page, wrapped_entity
+from google.cloud.documentai_toolbox.wrappers.page import Page
+from google.cloud.documentai_toolbox.wrappers.entity import Entity
 
 
 def _entities_from_shards(
     shards: documentai.Document,
-) -> List[wrapped_entity.WrappedEntity]:
-    r"""Returns a list of WrappedEntitys.
+) -> List[Entity]:
+    r"""Returns a list of Entitys.
 
     Args:
         shards (google.cloud.documentai.Document):
             Required. List of document shards.
 
     Returns:
-        List[wrapped_entity.WrappedEntity]:
-            a list of WrappedEntitys.
+        List[wrapped_entity.Entity]:
+            a list of Entitys.
 
     """
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(wrapped_entity.WrappedEntity.from_documentai_entity(entity))
+            result.append(Entity.from_documentai_entity(entity))
     return result
 
 
-def _pages_from_shards(shards: documentai.Document) -> List[wrapped_page.WrappedPage]:
-    r"""Returns a list of WrappedPages.
+def _pages_from_shards(shards: documentai.Document) -> List[Page]:
+    r"""Returns a list of Pages.
 
     Args:
         shards (google.cloud.documentai.Document):
             Required. List of document shards.
 
     Returns:
-        List[wrapped_page.WrappedPage]:
-            A list of WrappedPages.
+        List[wrapped_page.Page]:
+            A list of Pages.
 
     """
     result = []
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(wrapped_page.WrappedPage.from_documentai_page(page, text))
+            result.append(Page.from_documentai_page(page, text))
 
     return result
 
@@ -199,7 +200,7 @@ def print_gcs_document_tree(gcs_prefix: str) -> None:
 
 
 @dataclasses.dataclass
-class WrappedDocument:
+class Document:
     r"""Represents a wrapped Document.
 
     A single Document protobuf message might be written as several JSON files on
@@ -223,8 +224,6 @@ class WrappedDocument:
         self.pages = _pages_from_shards(shards=self._shards)
         self.entities = _entities_from_shards(shards=self._shards)
 
-    pages: List[wrapped_page.WrappedPage] = dataclasses.field(init=False, repr=False)
-    entities: List[wrapped_entity.WrappedEntity] = dataclasses.field(
-        init=False, repr=False
-    )
+    pages: List[Page] = dataclasses.field(init=False, repr=False)
+    entities: List[Entity] = dataclasses.field(init=False, repr=False)
     _shards: List[documentai.Document] = dataclasses.field(init=False, repr=False)

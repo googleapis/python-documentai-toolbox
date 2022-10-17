@@ -30,7 +30,7 @@ ElementWithLayout = Union[
 
 
 @dataclasses.dataclass
-class WrappedTable:
+class Table:
     """Represents a wrapped documentai.Document.Page.Table.
 
     Attributes:
@@ -54,8 +54,8 @@ class WrappedTable:
         documentai_table: documentai.Document.Page.Table,
         header_rows: List[List[str]],
         body_rows: List[List[str]],
-    ) -> "WrappedTable":
-        r"""Returns a WrappedTable from google.cloud.documentai.Document.Page.
+    ) -> "Table":
+        r"""Returns a Table from google.cloud.documentai.Document.Page.
 
         Args:
             documentai_table (google.cloud.documentai.Document.Page.Table):
@@ -66,11 +66,11 @@ class WrappedTable:
                 Required. a list of body rows.
 
         Returns:
-            WrappedTable:
-                A WrappedTable from google.cloud.documentai.Document.Page.Table.
+            Table:
+                A Table from google.cloud.documentai.Document.Page.Table.
 
         """
-        return WrappedTable(
+        return Table(
             _documentai_table=documentai_table,
             header_rows=header_rows,
             body_rows=body_rows,
@@ -95,30 +95,17 @@ class WrappedTable:
 
         return dataframe
 
-    def to_csv(self, dataframe: pd.DataFrame, file_path: str = None) -> str:
-        r"""Writes table to a csv file with ``file_name`` or returns a csv str
+    def to_csv(self, dataframe: pd.DataFrame) -> str:
+        r"""Returns a csv str.
 
             .. code-block:: python
 
-                from google.cloud.documentai_toolbox import WrappedDocument
+                from google.cloud.documentai_toolbox import Document
 
-                def sample_table_to_csv_file():
-
-                    #Wrap document from gcs_path
-                    merged_document = WrappedDocument('gs://abc/def/gh/1')
-
-                    #Use first page
-                    page = merged_document.pages[0]
-
-                    #export the first table in page 1 to csv
-                    dataframe = page.tables[0].to_dataframe()
-                    csv_text = page.tables[0].to_csv(dataframe=dataframe, file_path='test_table.csv')
-
-
-                def sample_table_to_csv_text():
+                def sample_table_to_csv():
 
                     #Wrap document from gcs_path
-                    merged_document = WrappedDocument('gs://abc/def/gh/1')
+                    merged_document = Document('gs://abc/def/gh/1')
 
                     #Use first page
                     page = merged_document.pages[0]
@@ -130,8 +117,8 @@ class WrappedTable:
                     print(csv_text)
 
         Args:
-            file_path (str):
-                Optional. If file_path is not provided the csv will be returned otherwise the csv will be written to file_path.
+            dataframe (pd.Dataframe):
+                Required. Two-dimensional, size-mutable, potentially heterogeneous tabular data.
 
         Returns:
             str:
@@ -139,15 +126,15 @@ class WrappedTable:
 
         """
 
-        result_csv = dataframe.to_csv(file_path, index=False)
+        result_csv = dataframe.to_csv(index=False)
 
-        return f"Wrote CSV table to {file_path}" if result_csv is None else result_csv
+        return result_csv
 
 
 def _table_wrapper_from_documentai_table(
     documentai_table: List[documentai.Document.Page.Table], text: str
-) -> WrappedTable:
-    r"""Returns a WrappedTable.
+) -> Table:
+    r"""Returns a Table.
 
     Args:
         documentai_tables (List[documentai.Document.Page.Table]):
@@ -157,8 +144,8 @@ def _table_wrapper_from_documentai_table(
             from the document.
 
     Returns:
-        WrappedTable:
-            A WrappedTable.
+        Table:
+            A Table.
 
     """
 
@@ -170,7 +157,7 @@ def _table_wrapper_from_documentai_table(
     )
     body_rows = _table_row_from_documentai_table_row(documentai_table.body_rows, text)
 
-    result = WrappedTable.from_documentai_table(
+    result = Table.from_documentai_table(
         documentai_table=documentai_table, body_rows=body_rows, header_rows=header_rows
     )
 
@@ -237,7 +224,7 @@ def _text_from_element_with_layout(
 
 
 @dataclasses.dataclass
-class WrappedPage:
+class Page:
     """Represents a wrapped documentai.Document.Page .
 
     Attributes:
@@ -251,7 +238,7 @@ class WrappedPage:
             Required.A list of visually detected text paragraphs
             on the page. A collection of lines that a human
             would perceive as a paragraph.
-        tables (List[WrappedTable]):
+        tables (List[Table]):
             A list of visually detected tables on the
             page.
     """
@@ -261,13 +248,13 @@ class WrappedPage:
     )
     lines: List[str] = dataclasses.field(init=True, repr=False)
     paragraphs: List[str] = dataclasses.field(init=True, repr=False)
-    tables: List[WrappedTable] = dataclasses.field(init=True, repr=False)
+    tables: List[Table] = dataclasses.field(init=True, repr=False)
 
     @classmethod
     def from_documentai_page(
         cls, documentai_page: documentai.Document.Page, text: str
-    ) -> "WrappedPage":
-        r"""Returns a WrappedPage from google.cloud.documentai.Document.Page.
+    ) -> "Page":
+        r"""Returns a Page from google.cloud.documentai.Document.Page.
 
         Args:
             documentai_page (google.cloud.documentai.Document.Page):
@@ -276,8 +263,8 @@ class WrappedPage:
                 Required. UTF-8 encoded text in reading order
                 from the document.
         Returns:
-            WrappedPage:
-                A WrappedPage from google.cloud.documentai.Document.Page.
+            Page:
+                A Page from google.cloud.documentai.Document.Page.
         """
 
         lines = []
@@ -299,7 +286,7 @@ class WrappedPage:
                 _table_wrapper_from_documentai_table(documentai_table=table, text=text)
             )
 
-        return WrappedPage(
+        return Page(
             _documentai_page=documentai_page,
             lines=lines,
             paragraphs=paragraphs,
