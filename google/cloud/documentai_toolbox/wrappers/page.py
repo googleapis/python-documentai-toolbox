@@ -15,7 +15,6 @@
 #
 """Wrappers for Document AI Page type."""
 
-from cgitb import text
 import dataclasses
 from typing import List, Union
 
