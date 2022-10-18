@@ -257,7 +257,6 @@ class Page:
         paragraphs = []
         tables = []
 
-
         for line in self._documentai_page.lines:
             lines.append(
                 _text_from_element_with_layout(element_with_layout=line, text=self.text)
@@ -280,26 +279,3 @@ class Page:
         self.lines = lines
         self.paragraphs = paragraphs
         self.tables = tables
-
-        for line in documentai_page.lines:
-            lines.append(
-                _text_from_element_with_layout(element_with_layout=line, text=text)
-            )
-
-        for paragraph in documentai_page.paragraphs:
-            paragraphs.append(
-                _text_from_element_with_layout(element_with_layout=paragraph, text=text)
-            )
-
-        for table in documentai_page.tables:
-            tables.append(
-                _table_wrapper_from_documentai_table(documentai_table=table, text=text)
-            )
-
-        return Page(
-            _documentai_page=documentai_page,
-            lines=lines,
-            paragraphs=paragraphs,
-            tables=tables,
-        )
-
