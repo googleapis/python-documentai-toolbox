@@ -36,7 +36,7 @@ def _entities_from_shards(
             Required. List of document shards.
 
     Returns:
-        List[wrapped_entity.Entity]:
+        List[Entity]:
             a list of Entitys.
 
     """
@@ -55,8 +55,8 @@ def _pages_from_shards(shards: documentai.Document) -> List[Page]:
             Required. List of document shards.
 
     Returns:
-        List[wrapped_page.Page]:
-            A list of Pages.
+        List[Page]:
+            A list of wrapped Pages.
 
     """
     result = []
@@ -230,8 +230,8 @@ class Document:
 
     def search_pages(
         self, target_string: str = None, pattern: str = None
-    ) -> List[page_wrapper.PageWrapper]:
-        r"""Returns the list of PageWrappers containing target_string.
+    ) -> List[Page]:
+        r"""Returns the list of Page containing target_string.
 
         Args:
             target_string (str):
@@ -240,8 +240,8 @@ class Document:
                 Optional. regex str.
 
         Returns:
-            List[page_wrapper.PageWrapper]:
-                A list of PageWrapper.
+            List[Page]:
+                A list of wrapped pages.
 
         """
 
@@ -263,18 +263,16 @@ class Document:
                     break
         return found_pages
 
-    def get_entity_by_type(
-        self, target_type: str
-    ) -> List[entity_wrapper.EntityWrapper]:
-        r"""Returns a list of EntityWrappers matching target_type.
+    def get_entity_by_type(self, target_type: str) -> List[Entity]:
+        r"""Returns a list of wrapped entities matching target_type.
 
         Args:
             target_type (str):
                 Required. target_type.
 
         Returns:
-            List[entity_wrapper.EntityWrapper]:
-                A list of EntityWrappers matching target_type.
+            List[Entity]:
+                A list of wrapped entities matching target_type.
 
         """
         match_entity_list = []
