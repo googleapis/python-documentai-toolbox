@@ -19,24 +19,6 @@ from google.cloud.documentai_toolbox.wrappers import page
 from google.cloud import documentai
 
 
-def test_from_documentai_page():
-    test_text = "Hello this is a test of from_documentai_page"
-
-    test_text_segment = documentai.Document.TextAnchor.TextSegment(
-        start_index=0, end_index=44
-    )
-    test_text_anchor = documentai.Document.TextAnchor(text_segments=[test_text_segment])
-    test_layout = documentai.Document.Page.Layout(text_anchor=test_text_anchor)
-
-    test_paragraph = documentai.Document.Page.Paragraph(layout=test_layout)
-
-    test_entity = documentai.Document.Page(page_number=1, paragraphs=[test_paragraph])
-
-    actual = page.Page.from_documentai_page(test_entity, test_text)
-
-    assert actual.paragraphs[0] == test_text
-
-
 def test_table_to_csv():
     header_rows = [["This", "Is", "A", "Header", "Test"]]
     body_rows = [["This", "Is", "A", "Body", "Test"]]
