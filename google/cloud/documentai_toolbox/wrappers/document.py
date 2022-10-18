@@ -24,6 +24,7 @@ from google.cloud import documentai
 from google.cloud import storage
 from google.cloud import documentai_toolbox
 
+from google.cloud.documentai_toolbox.constants import base as constants
 from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
 

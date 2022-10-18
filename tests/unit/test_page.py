@@ -17,7 +17,6 @@
 
 from google.cloud.documentai_toolbox.wrappers import page
 from google.cloud import documentai
-import os
 
 
 def test_from_documentai_page():
