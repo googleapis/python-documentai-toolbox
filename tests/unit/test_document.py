@@ -260,7 +260,7 @@ def test_search_page_with_target_pattern():
 def test_search_page_with_regex_and_str():
     with pytest.raises(
         ValueError,
-        match="You can only search with one target either target_string or pattern",
+        match="Exactly one of target_string and pattern must be specified.",
     ):
         with mock.patch.object(document, "_get_bytes") as factory:
             factory.return_value = get_bytes("tests/unit/resources/0")
@@ -273,7 +273,7 @@ def test_search_page_with_regex_and_str():
 def test_search_page_with_none():
     with pytest.raises(
         ValueError,
-        match="Both target_string or pattern cannot be None",
+        match="Exactly one of target_string and pattern must be specified.",
     ):
         with mock.patch.object(document, "_get_bytes") as factory:
             factory.return_value = get_bytes("tests/unit/resources/0")

@@ -244,21 +244,20 @@ class Document:
                 A list of wrapped pages.
 
         """
-
-        if target_string is None and pattern is None:
-            raise ValueError("Both target_string or pattern cannot be None")
-        elif target_string and pattern:
+        if (target_string is None and pattern is None) or (
+            target_string is not None and pattern is not None
+        ):
             raise ValueError(
-                "You can only search with one target either target_string or pattern"
+                "Exactly one of target_string and pattern must be specified."
             )
 
         found_pages = []
         for page in self.pages:
             for paragraph in page.paragraphs:
-                if target_string and target_string in paragraph:
+                if target_string is not None and target_string in paragraph:
                     found_pages.append(page)
                     break
-                elif pattern and re.search(pattern, paragraph) is not None:
+                elif pattern is not None and re.search(pattern, paragraph) is not None:
                     found_pages.append(page)
                     break
         return found_pages
@@ -275,8 +274,4 @@ class Document:
                 A list of wrapped entities matching target_type.
 
         """
-        match_entity_list = []
-        for entity in self.entities:
-            if target_type == entity.type_:
-                match_entity_list.append(entity)
-        return match_entity_list
+        return [entity for entity in self.entities if entity.type_ == target_type]
