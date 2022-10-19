@@ -3,7 +3,7 @@ Document AI Toolbox
 
 |experimental| |versions|
 
-`Document AI Toolbox`_: Service to parse structured information from unstructured or semi-structured documents using state-of-the-art Google AI such as natural language, computer vision, translation, and AutoML.
+`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI’s BatchProcessDocument method (JSON files written to user-managed GCS buckets), especially when the number of files is large.
 
 - `SDK Documentation`_
 
@@ -21,13 +21,18 @@ Quick Start
 
 In order to use this library, you first need to go through the following steps:
 
+Enabling Document AI may not be technically required to use this library, unless ProcessDocument is inteded to be used.
+But you must enable the Storage API to access GCS buckets that contains the output of BatchProcessDocument. 
+
 1. `Select or create a Cloud Platform project.`_
 2. `Enable billing for your project.`_
-3. `Enable the Document AI API.`_
-4. `Setup Authentication.`_
+3. `Enable the Storage API.`_
+4. `Enable the Document AI API.`_
+5. `Setup Authentication.`_
 
 .. _Select or create a Cloud Platform project.: https://console.cloud.google.com/project
 .. _Enable billing for your project.: https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_a_project
+.. _Enable the Storage API.:  https://cloud.google.com/storage/docs
 .. _Enable the Document AI API.:  https://cloud.google.com/document-ai/docs
 .. _Setup Authentication.: https://googleapis.dev/python/google-api-core/latest/auth.html
 
@@ -102,6 +107,6 @@ Next Steps
    APIs that we cover.
 
 # TODO: Change LINK
-.. _Client Library Documentation: https://cloud.google.com/python/docs/reference/documentai/latest
-.. _Document AI documentation:  LINK
+.. _Client Library Documentation: LINK
+.. _Document AI documentation:  https://cloud.google.com/python/docs/reference/documentai/latest
 .. _README: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
