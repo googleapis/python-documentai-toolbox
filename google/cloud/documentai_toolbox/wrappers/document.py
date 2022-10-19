@@ -37,7 +37,7 @@ def _entities_from_shards(
 
     Returns:
         List[Entity]:
-            a list of Entitys.
+            a list of Entity.
 
     """
     result = []
@@ -56,7 +56,7 @@ def _pages_from_shards(shards: documentai.Document) -> List[Page]:
 
     Returns:
         List[Page]:
-            A list of wrapped Pages.
+            A list of Page.
 
     """
     result = []
@@ -241,7 +241,7 @@ class Document:
 
         Returns:
             List[Page]:
-                A list of wrapped pages.
+                A list of Page.
 
         """
         if (target_string is None and pattern is None) or (
@@ -254,10 +254,13 @@ class Document:
         found_pages = []
         for page in self.pages:
             for paragraph in page.paragraphs:
-                if target_string is not None and target_string in paragraph:
+                if target_string is not None and target_string in paragraph.text:
                     found_pages.append(page)
                     break
-                elif pattern is not None and re.search(pattern, paragraph) is not None:
+                elif (
+                    pattern is not None
+                    and re.search(pattern, paragraph.text) is not None
+                ):
                     found_pages.append(page)
                     break
         return found_pages
@@ -271,8 +274,7 @@ class Document:
 
         Returns:
             List[Entity]:
-                A list of wrapped entities matching target_type.
+                A list of Entity matching target_type.
 
         """
         return [entity for entity in self.entities if entity.type_ == target_type]
-
