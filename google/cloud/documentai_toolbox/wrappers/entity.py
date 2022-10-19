@@ -25,21 +25,21 @@ class Entity:
     r"""Represents a wrapped google.cloud.documentai.Document.Entity.
 
     Attributes:
-        _documentai_entity (google.cloud.documentai.Document.Entity):
+        documentai_entity (google.cloud.documentai.Document.Entity):
             Required.The original google.cloud.documentai.Document.Entity object.
         type_ (str):
-            Required. Entity type from a schema e.g. ``Address``.
+            Entity type from a schema e.g. ``Address``.
         mention_text (str):
-            Optional. Text value in the document e.g.
+            Text value in the document e.g.
             ``1600 Amphitheatre Pkwy``. If the entity is not present in
             the document, this field will be empty.
     """
-    _documentai_entity: documentai.Document.Entity = dataclasses.field(
+    documentai_entity: documentai.Document.Entity = dataclasses.field(
         init=True, repr=False
     )
     type_: str = dataclasses.field(init=False, repr=False)
     mention_text: str = dataclasses.field(init=False, repr=False, default="")
 
     def __post_init__(self):
-        self.type_ = self._documentai_entity.type_
-        self.mention_text = self._documentai_entity.mention_text
+        self.type_ = self.documentai_entity.type
+        self.mention_text = self.documentai_entity.mention_text

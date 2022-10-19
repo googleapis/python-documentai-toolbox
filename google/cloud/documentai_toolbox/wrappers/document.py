@@ -36,14 +36,14 @@ def _entities_from_shards(
             Required. List of document shards.
 
     Returns:
-        List[wrapped_entity.Entity]:
-            a list of Entitys.
+        List[Entity]:
+            a list of Entity.
 
     """
     result = []
     for shard in shards:
         for entity in shard.entities:
-            result.append(Entity(_documentai_entity=entity))
+            result.append(Entity(documentai_entity=entity))
     return result
 
 
@@ -55,15 +55,15 @@ def _pages_from_shards(shards: documentai.Document) -> List[Page]:
             Required. List of document shards.
 
     Returns:
-        List[wrapped_page.Page]:
-            A list of Pages.
+        List[Page]:
+            A list of Page.
 
     """
     result = []
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(Page(_documentai_page=page, text=text))
+            result.append(Page(documentai_page=page, text=text))
 
     return result
 
@@ -235,3 +235,54 @@ class Document:
     def from_gcs_prefix(self, gcs_prefix: str):
         shards = _get_shards(gcs_prefix=gcs_prefix)
         return Document(shards=shards, gcs_prefix=gcs_prefix)
+
+    def search_pages(
+        self, target_string: str = None, pattern: str = None
+    ) -> List[Page]:
+        r"""Returns the list of Page containing target_string.
+
+        Args:
+            target_string (str):
+                Optional. target str.
+            pattern (str):
+                Optional. regex str.
+
+        Returns:
+            List[Page]:
+                A list of Page.
+
+        """
+        if (target_string is None and pattern is None) or (
+            target_string is not None and pattern is not None
+        ):
+            raise ValueError(
+                "Exactly one of target_string and pattern must be specified."
+            )
+
+        found_pages = []
+        for page in self.pages:
+            for paragraph in page.paragraphs:
+                if target_string is not None and target_string in paragraph.text:
+                    found_pages.append(page)
+                    break
+                elif (
+                    pattern is not None
+                    and re.search(pattern, paragraph.text) is not None
+                ):
+                    found_pages.append(page)
+                    break
+        return found_pages
+
+    def get_entity_by_type(self, target_type: str) -> List[Entity]:
+        r"""Returns a list of wrapped entities matching target_type.
+
+        Args:
+            target_type (str):
+                Required. target_type.
+
+        Returns:
+            List[Entity]:
+                A list of Entity matching target_type.
+
+        """
+        return [entity for entity in self.entities if entity.type_ == target_type]
