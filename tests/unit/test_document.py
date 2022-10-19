@@ -1,0 +1,302 @@
+# -*- coding: utf-8 -*-
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+
+# try/except added for compatibility with python < 3.8
+try:
+    from unittest import mock
+except ImportError:  # pragma: NO COVER
+    import mock
+
+import pytest
+import glob
+
+from google.cloud.documentai_toolbox.wrappers import document
+
+from google.cloud import documentai
+from google.cloud import storage
+
+
+def get_bytes(file_name):
+    result = []
+    for filename in glob.glob(os.path.join(file_name, "*.json")):
+        with open(os.path.join(os.getcwd(), filename), "rb") as f:
+            result.append(f.read())
+
+    return result
+
+
+@pytest.fixture
+def get_bytes_single_file_mock():
+    with mock.patch.object(document, "_get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/0")
+        yield byte_factory
+
+
+@pytest.fixture
+def get_bytes_multiple_files_mock():
+    with mock.patch.object(document, "_get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/1")
+        yield byte_factory
+
+
+def test_get_shards_with_gcs_uri_contains_file_type():
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
+        document._get_shards("gs://test-directory/documentai/output/123456789/0.json")
+
+
+def test_get_shards_with_invalid_gcs_uri():
+    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
+        document._get_shards("test-directory/documentai/output/")
+
+
+def test_get_shards_with_valid_gcs_uri(get_bytes_single_file_mock):
+    actual = document._get_shards("gs://test-directory/documentai/output/123456789/0")
+
+    get_bytes_single_file_mock.called_once()
+    # We are testing only one of the fields to make sure the file content could be loaded.
+    assert actual[0].pages[0].page_number == 1
+
+
+def test_pages_from_shards():
+    shards = []
+    for byte in get_bytes("tests/unit/resources/0"):
+        shards.append(documentai.Document.from_json(byte))
+
+    actual = document._pages_from_shards(shards=shards)
+    assert len(actual[0].paragraphs) == 31
+
+
+def test_entities_from_shard():
+    shards = []
+    for byte in get_bytes("tests/unit/resources/0"):
+        shards.append(documentai.Document.from_json(byte))
+
+    actual = document._entities_from_shards(shards=shards)
+
+    assert actual[0].mention_text == "$140.00"
+    assert actual[0].type_ == "vat"
+
+
+def test_wrapped_document_with_single_shard(get_bytes_single_file_mock):
+    actual = document.Document("gs://test-directory/documentai/output/123456789/0")
+    get_bytes_single_file_mock.called_once()
+    assert len(actual.pages) == 1
+
+
+def test_wrapped_document_with_multiple_shards(get_bytes_multiple_files_mock):
+    actual = document.Document("gs://test-directory/documentai/output/123456789/1")
+    get_bytes_multiple_files_mock.called_once()
+    assert len(actual.pages) == 48
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_get_bytes(mock_storage):
+
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+    mock_bucket.blob.return_value.download_as_string.return_value = "test".encode(
+        "utf-8"
+    )
+
+    client.Bucket.return_value = mock_bucket
+
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+            bucket=mock_bucket,
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+            bucket=mock_bucket,
+        ),
+    ]
+
+    client.list_blobs.return_value = blobs
+
+    actual = document._get_bytes(
+        "gs://test-directory/documentai/", "output/123456789/1"
+    )
+    mock_storage.Client.assert_called_once()
+
+    assert actual == [b"", b""]
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
+
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+
+    client.Bucket.return_value = mock_bucket
+
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+    ]
+
+    client.list_blobs.return_value = blobs
+
+    document.print_gcs_document_tree(
+        "gs://test-directory/documentai/output/123456789/1"
+    )
+
+    mock_storage.Client.assert_called_once()
+
+    out, err = capfd.readouterr()
+    assert (
+        out
+        == """gs://test-directory/documentai/output/123456789/1
+├──test_shard1.json
+├──test_shard2.json
+└──test_shard3.json\n\n"""
+    )
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
+
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+
+    client.Bucket.return_value = mock_bucket
+
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
+            bucket="gs://test-directory/documentai/output/123456789/1",
+        ),
+    ]
+    client.list_blobs.return_value = blobs
+
+    document.print_gcs_document_tree(
+        "gs://test-directory/documentai/output/123456789/1"
+    )
+
+    mock_storage.Client.assert_called_once()
+
+    out, err = capfd.readouterr()
+    assert (
+        out
+        == """gs://test-directory/documentai/output/123456789/1
+├──test_shard1.json
+├──test_shard2.json
+├──test_shard3.json
+├──test_shard4.json
+├──test_shard5.json
+│  ....
+└──test_shard6.json\n\n"""
+    )
+
+
+def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
+        document.print_gcs_document_tree(
+            "gs://test-directory/documentai/output/123456789/1/test_file.json"
+        )
+
+
+def test_print_gcs_document_tree_with_invalid_gcs_uri():
+    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
+        document.print_gcs_document_tree("documentai/output/123456789/1")
+
+
+def test_search_page_with_target_string(get_bytes_single_file_mock):
+
+    doc = document.Document("gs://test-directory/documentai/output/123456789/0")
+
+    actual_string = doc.search_pages(target_string="contract")
+
+    get_bytes_single_file_mock.called_once()
+    assert len(actual_string) == 1
+
+
+def test_search_page_with_target_pattern(get_bytes_single_file_mock):
+    doc = document.Document("gs://test-directory/documentai/output/123456789/0")
+
+    actual_regex = doc.search_pages(pattern=r"\$\d+(?:\.\d+)?")
+
+    get_bytes_single_file_mock.called_once()
+    assert len(actual_regex) == 1
+
+
+def test_search_page_with_regex_and_str(get_bytes_single_file_mock):
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of target_string and pattern must be specified.",
+    ):
+
+        doc = document.Document("gs://test-directory/documentai/output/123456789/0")
+        doc.search_pages(pattern=r"^\$?(\d*(\d\.?|\.\d{1,2}))$", target_string="hello")
+
+        get_bytes_single_file_mock.called_once()
+
+
+def test_search_page_with_none(get_bytes_single_file_mock):
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of target_string and pattern must be specified.",
+    ):
+        doc = document.Document("gs://test-directory/documentai/output/123456789/0")
+        doc.search_pages()
+
+        get_bytes_single_file_mock.called_once()
+
+
+def test_get_entity_by_type(get_bytes_single_file_mock):
+
+    doc = document.Document("gs://test-directory/documentai/output/123456789/0")
+
+    actual = doc.get_entity_by_type(target_type="receiver_address")
+
+    get_bytes_single_file_mock.called_once()
+
+    assert len(actual) == 1
+    assert actual[0].type_ == "receiver_address"
+    assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
