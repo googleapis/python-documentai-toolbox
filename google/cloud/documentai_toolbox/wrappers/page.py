@@ -34,7 +34,7 @@ class Table:
     """Represents a wrapped documentai.Document.Page.Table.
 
     Attributes:
-        _documentai_table (google.cloud.documentai.Document.Page.Table):
+        documentai_table (google.cloud.documentai.Document.Page.Table):
             Required. The original google.cloud.documentai.Document.Page.Table object.
         body_rows (List[List[str]]):
             Required. A list of body rows.
@@ -42,39 +42,11 @@ class Table:
             Required. A list of headers.
     """
 
-    _documentai_table: documentai.Document.Page.Table = dataclasses.field(
+    documentai_table: documentai.Document.Page.Table = dataclasses.field(
         init=True, repr=False
     )
     body_rows: List[List[str]] = dataclasses.field(init=True, repr=False)
     header_rows: List[List[str]] = dataclasses.field(init=True, repr=False)
-
-    @classmethod
-    def from_documentai_table(
-        cls,
-        documentai_table: documentai.Document.Page.Table,
-        header_rows: List[List[str]],
-        body_rows: List[List[str]],
-    ) -> "Table":
-        r"""Returns a Table from google.cloud.documentai.Document.Page.
-
-        Args:
-            documentai_table (google.cloud.documentai.Document.Page.Table):
-                Required. A single table object.
-            header_rows (List[List[str]]):
-                Required. a list of header rows.
-            body_rows (List[List[str]]):
-                Required. a list of body rows.
-
-        Returns:
-            Table:
-                A Table from google.cloud.documentai.Document.Page.Table.
-
-        """
-        return Table(
-            _documentai_table=documentai_table,
-            header_rows=header_rows,
-            body_rows=body_rows,
-        )
 
     def to_dataframe(self) -> pd.DataFrame:
         r"""Returns pd.DataFrame from documentai.table
@@ -159,7 +131,7 @@ def _table_wrapper_from_documentai_table(
         table_rows=documentai_table.body_rows, text=text
     )
 
-    result = Table.from_documentai_table(
+    result = Table(
         documentai_table=documentai_table, body_rows=body_rows, header_rows=header_rows
     )
 
@@ -176,7 +148,7 @@ class Paragraph:
             Required. UTF-8 encoded text.
     """
 
-    _documentai_paragraph: documentai.Document.Page.Paragraph
+    documentai_paragraph: documentai.Document.Page.Paragraph
     text: str
 
 
@@ -190,7 +162,7 @@ class Line:
             Required. UTF-8 encoded text.
     """
 
-    _documentai_line: documentai.Document.Page.Line
+    documentai_line: documentai.Document.Page.Line
     text: str
 
 
@@ -213,7 +185,7 @@ def _get_paragraphs(
     for paragraph in paragraphs:
         result.append(
             Paragraph(
-                _documentai_paragraph=paragraph,
+                documentai_paragraph=paragraph,
                 text=_text_from_element_with_layout(
                     element_with_layout=paragraph, text=text
                 ),
@@ -240,7 +212,7 @@ def _get_lines(lines: List[documentai.Document.Page.Line], text: str) -> List[Li
     for line in lines:
         result.append(
             Line(
-                _documentai_line=line,
+                documentai_line=line,
                 text=_text_from_element_with_layout(
                     element_with_layout=line, text=text
                 ),

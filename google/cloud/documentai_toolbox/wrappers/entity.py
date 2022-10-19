@@ -25,7 +25,7 @@ class Entity:
     r"""Represents a wrapped google.cloud.documentai.Document.Entity.
 
     Attributes:
-        _documentai_entity (google.cloud.documentai.Document.Entity):
+        documentai_entity (google.cloud.documentai.Document.Entity):
             Required.The original google.cloud.documentai.Document.Entity object.
         type_ (str):
             Required. Entity type from a schema e.g. ``Address``.
