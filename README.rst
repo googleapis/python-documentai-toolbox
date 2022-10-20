@@ -107,6 +107,6 @@ Next Steps
    APIs that we cover.
 
 # TODO: Change LINK
-.. _Client Library Documentation: LINK
-.. _Document AI documentation:  https://cloud.google.com/python/docs/reference/documentai/latest
+.. _Client Library Documentation: https://cloud.google.com/python/docs/reference/documentai/latest
+.. _Document AI documentation:  https://cloud.google.com/document-ai
 .. _README: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
