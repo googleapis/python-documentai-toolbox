@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+from typing import List
 
 # try/except added for compatibility with python < 3.8
 try:
@@ -27,11 +28,10 @@ import glob
 from google.cloud.documentai_toolbox.wrappers import document
 
 from google.cloud import documentai
+from google.cloud import storage
 
-from tests.unit.resources import constants
 
-
-def get_bytes(file_name):
+def _get_bytes(file_name):
     result = []
     for filename in glob.glob(os.path.join(file_name, "*.json")):
         with open(os.path.join(os.getcwd(), filename), "rb") as f:
@@ -40,10 +40,45 @@ def get_bytes(file_name):
     return result
 
 
+def _make_blobs(
+    num_blobs: int = 2, bucket: str = "gs://test-directory/documentai/output/123456789"
+) -> List[storage.Blob]:
+    blob_list = []
+    for num in range(num_blobs):
+        blob_list.append(
+            storage.Blob(
+                name=f"{bucket}/1/test_shard{num}.json",
+                bucket=mock.Mock(),
+            )
+        )
+    print(blob_list)
+
+    return blob_list
+
+
+print_parameters = [
+    (
+        _make_blobs(num_blobs=3),
+        "gs://test-directory/documentai/output/123456789/1",
+    ),
+    (
+        _make_blobs(
+            num_blobs=6, bucket="gs://test-directory/documentai/output/24681012"
+        ),
+        "gs://test-directory/documentai/output/24681012/1",
+    ),
+]
+
+test_document_param = [
+    ("tests/unit/resources/0", "gs://test-directory/documentai/output/123456789/0", 1),
+    ("tests/unit/resources/1", "gs://test-directory/documentai/output/123456789/1", 48),
+]
+
+
 @pytest.fixture
 def get_bytes_mock(request):
     with mock.patch.object(document, "_get_bytes") as byte_factory:
-        byte_factory.return_value = get_bytes(request.param)
+        byte_factory.return_value = _get_bytes(request.param)
         yield byte_factory
 
 
@@ -75,17 +110,17 @@ class TestDocument:
         "single_get_bytes": ("get_bytes_mock", [("tests/unit/resources/0")]),
         "print_document_tree": (
             "get_storage_mock, expected",
-            constants.print_parameters,
+            print_parameters,
         ),
-        "single_doc_storage_mock": ("get_storage_mock", [constants.blob_array[0]]),
+        "single_doc_storage_mock": ("get_storage_mock", [_make_blobs()]),
         "bytes_mock": (
             "get_bytes_mock, gcs_path, expected",
-            constants.test_document_param,
+            test_document_param,
         ),
     }
 
     def setup_method(self):
-        for byte in get_bytes("tests/unit/resources/0"):
+        for byte in _get_bytes("tests/unit/resources/0"):
             self.single_document.append(documentai.Document.from_json(byte))
 
     def test_get_shards_with_gcs_uri_contains_file_type(self):
