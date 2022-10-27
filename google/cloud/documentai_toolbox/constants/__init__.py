@@ -14,3 +14,5 @@
 # limitations under the License.
 #
 from .base import USER_AGENT_PRODUCT
+
+__all__ = USER_AGENT_PRODUCT
