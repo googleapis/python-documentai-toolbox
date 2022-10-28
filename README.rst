@@ -3,7 +3,7 @@ Document AI Toolbox
 
 |experimental| |versions|
 
-`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI’s BatchProcessDocument method (JSON files written to user-managed GCS buckets), especially when the number of files is large.
+`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI’s BatchProcessDocument method (JSON files written to user-managed GCS buckets), programmatically.
 
 - `SDK Documentation`_
 
@@ -99,14 +99,15 @@ Windows
 Next Steps
 ~~~~~~~~~~
 
--  Read the `Document AI documentation`_ for Document AI
-   to see how to process documents.
+-  Read the `Document AI Product documentation`_ to learn
+   more about the product and see How-to Guides.
 -  Read the `Client Library Documentation`_ for Document AI Toolbox
    to see other available methods on the client.
 -  View this `README`_ to see the full list of Cloud
    APIs that we cover.
 
 # TODO: Change LINK
-.. _Client Library Documentation: https://cloud.google.com/python/docs/reference/documentai/latest
+.. _Client Library Documentation: https://googleapis.dev/python/documentai-toolbox/latest/index.html
 .. _Document AI documentation:  https://cloud.google.com/document-ai
+.. _Document AI Product documentation: https://cloud.google.com/document-ai/docs/overview
 .. _README: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
