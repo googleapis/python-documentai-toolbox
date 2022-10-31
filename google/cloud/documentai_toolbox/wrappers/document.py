@@ -245,11 +245,11 @@ class Document:
         self.entities = _entities_from_shards(shards=self.shards)
 
     @classmethod
-    def from_documentai_document(self, documentai_document: documentai.Document):
+    def from_documentai_document(cls, documentai_document: documentai.Document):
         return Document(shards=[documentai_document])
 
     @classmethod
-    def from_gcs_prefix(self, gcs_prefix: str):
+    def from_gcs_prefix(cls, gcs_prefix: str):
         shards = _get_shards(gcs_prefix=gcs_prefix)
         return Document(shards=shards, gcs_prefix=gcs_prefix)
 
