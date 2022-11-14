@@ -34,8 +34,7 @@ class Entity:
             ``1600 Amphitheatre Pkwy``. If the entity is not present in
             the document, this field will be empty.
     """
-    documentai_entity: documentai.Document.Entity = dataclasses.field(
-        repr=False)
+    documentai_entity: documentai.Document.Entity = dataclasses.field(repr=False)
     type_: str = dataclasses.field(init=False, repr=False)
     mention_text: str = dataclasses.field(init=False, repr=False, default="")
 

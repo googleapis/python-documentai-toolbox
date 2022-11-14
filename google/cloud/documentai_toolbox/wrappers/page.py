@@ -42,8 +42,7 @@ class Table:
             Required. A list of header rows.
     """
 
-    documentai_table: documentai.Document.Page.Table = dataclasses.field(
-        repr=False)
+    documentai_table: documentai.Document.Page.Table = dataclasses.field(repr=False)
     body_rows: List[List[str]] = dataclasses.field(repr=False)
     header_rows: List[List[str]] = dataclasses.field(repr=False)
 
