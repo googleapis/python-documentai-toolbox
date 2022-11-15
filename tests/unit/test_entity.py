@@ -20,8 +20,7 @@ from google.cloud.documentai_toolbox import entity
 
 def test_Entity():
     documentai_entity = documentai.Document.Entity(
-        type_="some_entity_type",
-        mention_text="some_mention_text"
+        type_="some_entity_type", mention_text="some_mention_text"
     )
     wrapper_entity = entity.Entity(documentai_entity)
 
