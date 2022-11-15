@@ -220,7 +220,7 @@ class Document:
     extracting information within the Document.
 
     Attributes:
-        shareds: (List[google.cloud.documentai.Document]):
+        shards: (List[google.cloud.documentai.Document]):
             The list of documentai.Document shards of the same Document.  Each shard
             consists of a number of pages in the Document.
         gcs_prefix (Optional[str]):
