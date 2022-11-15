@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from .document import Document
+from .document import Document, print_gcs_document_tree
 from .page import Page
 from .entity import Entity
 
@@ -22,4 +22,5 @@ __all__ = (
     "Document",
     "Page",
     "Entity",
+    "print_gcs_document_tree",
 )

@@ -22,10 +22,12 @@ from .wrappers import (
     Document,
     Page,
     Entity,
+    print_gcs_document_tree,
 )
 
 __all__ = (
     "Document",
     "Page",
     "Entity",
+    "print_gcs_document_tree",
 )
