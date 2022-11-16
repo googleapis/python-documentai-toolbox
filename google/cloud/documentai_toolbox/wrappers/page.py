@@ -56,7 +56,7 @@ class Table:
         """
         dataframe = None
 
-        if self.body_rows == []:
+        if not self.body_rows:
             dataframe = pd.DataFrame(columns=self.header_rows)
         else:
             if len(self.body_rows[0]) > 1:
