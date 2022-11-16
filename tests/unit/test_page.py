@@ -30,10 +30,6 @@ def test_table_to_csv():
         contents
         == """This,Is,A,Header,Test
 This,Is,A,Body,Test
-"
-",,,,
-"
-",,,,
 """
     )
 
@@ -46,11 +42,36 @@ def test_table_to_csv_with_empty_body_rows():
 
     assert (
         contents
-        == """0,1,2,3,4
-This,Is,A,Header,Test
-"
-",,,,
-"
-",,,,
+        == """This,Is,A,Header,Test
+"""
+    )
+
+
+def test_table_to_csv_with_empty_header_rows():
+    body_rows = [["This"], ["Is"], ["A"], ["Body"], ["Test"]]
+    table = page.Table(documentai_table=None, header_rows=[], body_rows=body_rows)
+
+    contents = table.to_csv()
+
+    assert (
+        contents
+        == """This
+Is
+A
+Body
+Test
+"""
+    )
+
+
+def test_table_to_csv_with_empty_header_rows_and_single_body():
+    body_rows = [["Body"]]
+    table = page.Table(documentai_table=None, header_rows=[], body_rows=body_rows)
+
+    contents = table.to_csv()
+
+    assert (
+        contents
+        == """Body
 """
     )
