@@ -154,6 +154,46 @@ def test_get_bytes(mock_storage):
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
+
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+
+    client.Bucket.return_value = mock_bucket
+
+    blobs = [
+        storage.Blob(
+            name="gs://test-directory/1/test_shard1.json",
+            bucket="gs://test-directory/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/1/test_shard2.json",
+            bucket="gs://test-directory/1",
+        ),
+        storage.Blob(
+            name="gs://test-directory/1/test_shard3.json",
+            bucket="gs://test-directory/1",
+        ),
+    ]
+
+    client.list_blobs.return_value = blobs
+
+    document.print_gcs_document_tree("gs://test-directory/")
+
+    mock_storage.Client.assert_called_once()
+
+    out, err = capfd.readouterr()
+    assert (
+        out
+        == """gs://test-directory/1
+├──test_shard1.json
+├──test_shard2.json
+└──test_shard3.json\n\n"""
+    )
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client = mock_storage.Client.return_value
@@ -180,7 +220,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
     client.list_blobs.return_value = blobs
 
     document.print_gcs_document_tree(
-        "gs://test-directory/documentai/output/123456789/1"
+        "gs://test-directory/documentai/output/123456789/1/"
     )
 
     mock_storage.Client.assert_called_once()
@@ -233,7 +273,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     client.list_blobs.return_value = blobs
 
     document.print_gcs_document_tree(
-        "gs://test-directory/documentai/output/123456789/1"
+        "gs://test-directory/documentai/output/123456789/1/"
     )
 
     mock_storage.Client.assert_called_once()

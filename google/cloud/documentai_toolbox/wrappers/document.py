@@ -155,7 +155,7 @@ def print_gcs_document_tree(gcs_prefix: str) -> None:
         gcs_prefix (str):
             Required. The gcs path to the folder containing all processed documents.
 
-            Format: `gs://{bucket}/{optional_folder}/{operation_id}`
+            Format: `gs://{bucket}/{optional_folder}/{operation_id}/`
                     where `{operation-id}` is the operation-id given from BatchProcessDocument.
 
     Returns:
@@ -226,7 +226,7 @@ class Document:
         gcs_prefix (Optional[str]):
             The gcs path to a single processed document.
 
-            Format: `gs://{bucket}/{optional_folder}/{operation_id}/{folder_id}`
+            Format: `gs://{bucket}/{optional_folder}/{operation_id}/{folder_id}/`
                     where `{operation_id}` is the operation-id given from BatchProcessDocument
                     and `{folder_id}` is the number corresponding to the target document.
         pages: (List[Page]):
