@@ -19,8 +19,8 @@ from google.cloud.documentai_toolbox import page
 
 
 def test_table_to_csv():
-    header_rows = [["This", "Is", "A", "Header", "Test"]]
-    body_rows = [["This", "Is", "A", "Body", "Test"]]
+    header_rows = [["This", "Is", "A", "Header", "Test"],["", "", "A", "Sub", "Header"]]
+    body_rows = [["This", "Is", "A", "Body", "Test"],["1","2","3","4","5"]]
     table = page.Table(
         documentai_table=None, header_rows=header_rows, body_rows=body_rows
     )
@@ -29,7 +29,9 @@ def test_table_to_csv():
     assert (
         contents
         == """This,Is,A,Header,Test
+,,A,Sub,Header
 This,Is,A,Body,Test
+1,2,3,4,5
 """
     )
 
@@ -55,7 +57,8 @@ def test_table_to_csv_with_empty_header_rows():
 
     assert (
         contents
-        == """This
+        == """""
+This
 Is
 A
 Body
@@ -72,6 +75,7 @@ def test_table_to_csv_with_empty_header_rows_and_single_body():
 
     assert (
         contents
-        == """Body
+        == """""
+Body
 """
     )
