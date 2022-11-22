@@ -65,7 +65,7 @@ class Table:
             else:
 
                 dataframe = pd.DataFrame(self.body_rows)
-                dataframe.columns = [None]*len(self.body_rows[0])
+                dataframe.columns = [None] * len(self.body_rows[0])
 
         return dataframe
 

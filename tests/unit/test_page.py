@@ -19,8 +19,11 @@ from google.cloud.documentai_toolbox import page
 
 
 def test_table_to_csv():
-    header_rows = [["This", "Is", "A", "Header", "Test"],["", "", "A", "Sub", "Header"]]
-    body_rows = [["This", "Is", "A", "Body", "Test"],["1","2","3","4","5"]]
+    header_rows = [
+        ["This", "Is", "A", "Header", "Test"],
+        ["", "", "A", "Sub", "Header"],
+    ]
+    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
     table = page.Table(
         documentai_table=None, header_rows=header_rows, body_rows=body_rows
     )
