@@ -74,7 +74,7 @@ nox.options.sessions = [
 nox.options.error_on_missing_interpreters = True
 
 
-@nox.session(python="3.9")
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def lint(session):
     """Run linters.
 
@@ -120,7 +120,7 @@ def format(session):
     )
 
 
-@nox.session(python="3.9")
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def lint_setup_py(session):
     """Verify that setup.py is valid (including RST check)."""
     session.install("docutils", "pygments")
@@ -259,7 +259,7 @@ def system(session):
         )
 
 
-@nox.session(python="3.9")
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def cover(session):
     """Run the final coverage report.
 
@@ -272,7 +272,7 @@ def cover(session):
     session.run("coverage", "erase")
 
 
-@nox.session(python=)
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def docs(session):
     """Build the docs for this library."""
 
@@ -294,7 +294,7 @@ def docs(session):
     )
 
 
-@nox.session(python="3.9")
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def docfx(session):
     """Build the docfx yaml files for this library."""
 
