@@ -2,7 +2,7 @@
 
 **Disclaimer**
 
-The Document AI Toolbox is in experimental state. This library is a work-in-progress and is more likely to get backwards-incompatible updates, users of the toolbox might need to rewrite their code when upgrading the toolbox version.
+The Document AI Toolbox is in an experimental state. This library is a work-in-progress and is likely to have backwards-incompatible changes. Users of the toolbox might need to rewrite their code when upgrading the toolbox version.
 
 ----
 
