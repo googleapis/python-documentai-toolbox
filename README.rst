@@ -109,7 +109,7 @@ Next Steps
 -  View this `README`_ to see the full list of Cloud
    APIs that we cover.
 
-.. _`Client Library Documentation`: https://googleapis.dev/python/documentai-toolbox/latest/index.html
+.. _`Client Library Documentation`: https://cloud.google.com/python/docs/reference/documentai/latest
 .. _`Document AI documentation`:  https://cloud.google.com/document-ai
 .. _`Document AI Product documentation`: https://cloud.google.com/document-ai/docs/overview
 .. _`README`: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
