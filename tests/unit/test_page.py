@@ -17,6 +17,13 @@
 
 from google.cloud.documentai_toolbox import page
 from google.cloud import documentai
+import pytest
+
+
+@pytest.fixture
+def get_docproto():
+    with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
+        return documentai.Document.from_json(f.read())
 
 
 def test_table_to_csv():
@@ -100,24 +107,8 @@ def test_table_to_dataframe():
     assert len(contents.values) == 2
 
 
-def test_table():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
-    table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
-    )
-
-    assert len(table.body_rows) == 2
-    assert len(table.header_rows[0]) == 5
-
-
-def test_table_wrapper_from_documentai_table():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
-
+def test_table_wrapper_from_documentai_table(get_docproto):
+    docproto = get_docproto
     docproto_page = docproto.pages[0]
 
     table = page._table_wrapper_from_documentai_table(
@@ -127,10 +118,8 @@ def test_table_wrapper_from_documentai_table():
     assert len(table.header_rows[0]) == 4
 
 
-def test_header_for_table_row_from_documentai_table_row():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
-
+def test_header_for_table_row_from_documentai_table_row(get_docproto):
+    docproto = get_docproto
     docproto_page = docproto.pages[0]
 
     header_row = page._table_row_from_documentai_table_row(
@@ -139,10 +128,8 @@ def test_header_for_table_row_from_documentai_table_row():
     assert header_row == [["Item Description", "Quantity", "Price", "Amount"]]
 
 
-def test_body_for_table_row_from_documentai_table_row():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
-
+def test_body_for_table_row_from_documentai_table_row(get_docproto):
+    docproto = get_docproto
     docproto_page = docproto.pages[0]
 
     body_row = page._table_row_from_documentai_table_row(
@@ -158,26 +145,10 @@ def test_body_for_table_row_from_documentai_table_row():
     ]
 
 
-def test_paragraph():
-    docai_paragraph = documentai.Document.Page.Paragraph()
-    paragraph = page.Paragraph(
-        documentai_paragraph=docai_paragraph, text="test_paragraph"
-    )
-
-    assert paragraph.text == "test_paragraph"
-
-
-def test_line():
-    docai_line = documentai.Document.Page.Line()
-    line = page.Line(documentai_line=docai_line, text="test_line")
-
-    assert line.text == "test_line"
-
-
-def test_text_from_element_with_layout():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
+def test_text_from_element_with_layout(get_docproto):
+    docproto = get_docproto
     docproto_page = docproto.pages[0]
+
     text = page._text_from_element_with_layout(
         element_with_layout=docproto_page.paragraphs[0], text=docproto.text
     )
@@ -185,10 +156,10 @@ def test_text_from_element_with_layout():
     assert text == "Invoice\n"
 
 
-def test_get_paragraphs():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
+def test_get_paragraphs(get_docproto):
+    docproto = get_docproto
     docproto_paragraphs = docproto.pages[0].paragraphs
+
     paragraphs = page._get_paragraphs(
         paragraphs=docproto_paragraphs, text=docproto.text
     )
@@ -197,19 +168,51 @@ def test_get_paragraphs():
     assert paragraphs[0].text == "Invoice\n"
 
 
-def test_get_lines():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
+def test_get_lines(get_docproto):
+    docproto = get_docproto
     docproto_lines = docproto.pages[0].lines
+
     lines = page._get_lines(lines=docproto_lines, text=docproto.text)
 
     assert len(lines) == 37
     assert lines[36].text == "Supplies used for Project Q.\n"
 
 
-def test_page():
-    with open("tests/unit/resources/0/ toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
+# Class init Tests
+
+
+def test_Paragraph():
+    docai_paragraph = documentai.Document.Page.Paragraph()
+    paragraph = page.Paragraph(
+        documentai_paragraph=docai_paragraph, text="test_paragraph"
+    )
+
+    assert paragraph.text == "test_paragraph"
+
+
+def test_Line():
+    docai_line = documentai.Document.Page.Line()
+    line = page.Line(documentai_line=docai_line, text="test_line")
+
+    assert line.text == "test_line"
+
+
+def test_Table():
+    header_rows = [
+        ["This", "Is", "A", "Header", "Test"],
+        ["", "", "A", "Sub", "Header"],
+    ]
+    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
+    table = page.Table(
+        documentai_table=None, header_rows=header_rows, body_rows=body_rows
+    )
+
+    assert len(table.body_rows) == 2
+    assert len(table.header_rows[0]) == 5
+
+
+def test_Page(get_docproto):
+    docproto = get_docproto
     docproto_page = docproto.pages[0]
     wrapped_page = page.Page(documentai_page=docproto_page, text=docproto.text)
 
