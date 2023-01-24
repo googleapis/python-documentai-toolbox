@@ -102,18 +102,18 @@ def test_document_from_documentai_document_with_single_shard():
     assert len(actual.pages) == 1
 
 
-def test_document_from_gcs_prefix_with_single_shard(get_bytes_single_file_mock):
-    actual = document.Document.from_gcs_prefix(
-        "gs://test-directory/documentai/output/123456789/0"
+def test_document_from_gcs_with_single_shard(get_bytes_single_file_mock):
+    actual = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
     )
 
     get_bytes_single_file_mock.assert_called_once()
     assert len(actual.pages) == 1
 
 
-def test_document_from_gcs_prefix_with_multiple_shards(get_bytes_multiple_files_mock):
-    actual = document.Document.from_gcs_prefix(
-        gcs_prefix="gs://test-directory/documentai/output/123456789/1"
+def test_document_from_gcs_with_multiple_shards(get_bytes_multiple_files_mock):
+    actual = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
     get_bytes_multiple_files_mock.assert_called_once()
 
@@ -306,8 +306,8 @@ def test_print_gcs_document_tree_with_invalid_gcs_uri():
 
 def test_search_page_with_target_string(get_bytes_single_file_mock):
 
-    doc = document.Document.from_gcs_prefix(
-        gcs_prefix="gs://test-directory/documentai/output/123456789/0"
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
     )
 
     actual_string = doc.search_pages(target_string="contract")
@@ -317,8 +317,8 @@ def test_search_page_with_target_string(get_bytes_single_file_mock):
 
 
 def test_search_page_with_target_pattern(get_bytes_single_file_mock):
-    doc = document.Document.from_gcs_prefix(
-        gcs_prefix="gs://test-directory/documentai/output/123456789/0"
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
     )
 
     actual_regex = doc.search_pages(pattern=r"\$\d+(?:\.\d+)?")
@@ -333,8 +333,9 @@ def test_search_page_with_regex_and_str(get_bytes_single_file_mock):
         match="Exactly one of target_string and pattern must be specified.",
     ):
 
-        doc = document.Document.from_gcs_prefix(
-            gcs_prefix="gs://test-directory/documentai/output/123456789/0"
+        doc = document.Document.from_gcs(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0/",
         )
         doc.search_pages(pattern=r"^\$?(\d*(\d\.?|\.\d{1,2}))$", target_string="hello")
 
@@ -346,8 +347,9 @@ def test_search_page_with_none(get_bytes_single_file_mock):
         ValueError,
         match="Exactly one of target_string and pattern must be specified.",
     ):
-        doc = document.Document.from_gcs_prefix(
-            gcs_prefix="gs://test-directory/documentai/output/123456789/0"
+        doc = document.Document.from_gcs(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0/",
         )
         doc.search_pages()
 
@@ -356,8 +358,8 @@ def test_search_page_with_none(get_bytes_single_file_mock):
 
 def test_get_entity_by_type(get_bytes_single_file_mock):
 
-    doc = document.Document.from_gcs_prefix(
-        gcs_prefix="gs://test-directory/documentai/output/123456789/0"
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
     )
 
     actual = doc.get_entity_by_type(target_type="receiver_address")
