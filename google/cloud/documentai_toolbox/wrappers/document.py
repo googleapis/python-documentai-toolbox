@@ -94,7 +94,7 @@ def _get_bytes(gcs_bucket_name: str, gcs_prefix: str) -> List[bytes]:
             Required. The path to the location of the target folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
-                    where gcs_prefix=`{target_folder}`.
+                    where gcs_prefix=`{optional_folder}/{target_folder}/`.
     Returns:
         List[bytes]:
             A list of bytes.
@@ -126,7 +126,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
             Required. The path to the location of the target folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
-                    where gcs_prefix=`{target_folder}`.
+                    where gcs_prefix=`{optional_folder}/{target_folder}/`.
     Returns:
         List[google.cloud.documentai.Document]:
             A list of documentai.Documents.
@@ -160,7 +160,7 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
             Required. The path to the location of the target folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
-                    where gcs_prefix=`{target_folder}`.
+                    where gcs_prefix=`{optional_folder}/{target_folder}/`.
     Returns:
         None.
 
@@ -220,15 +220,15 @@ class Document:
             The list of documentai.Document shards of the same Document.  Each shard
             consists of a number of pages in the Document.
         gcs_bucket_name (Optional[str]):
-            Required. The name of the gcs bucket.
+            Optional. The name of the gcs bucket.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_bucket_name=`{bucket}`.
         gcs_prefix (Optional[str]):
-            Required. The path to the location of the target folder.
+            Optional. The path to the location of the target folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
-                    where gcs_prefix=`{target_folder}`.
+                    where gcs_prefix=`{optional_folder}/{target_folder}/`.
 
             For more information please take a look at https://cloud.google.com/storage/docs/json_api/v1/objects/list
         pages: (List[Page]):
