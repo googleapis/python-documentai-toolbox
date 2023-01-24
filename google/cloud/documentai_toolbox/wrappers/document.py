@@ -91,7 +91,7 @@ def _get_bytes(gcs_bucket_name: str, gcs_prefix: str) -> List[bytes]:
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_bucket_name=`{bucket}`.
         gcs_prefix (str):
-            Required. The path to the location of the target folder.
+            Required. The prefix of the json files in the target_folder
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_prefix=`{optional_folder}/{target_folder}/`.
@@ -123,7 +123,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_bucket_name=`{bucket}`.
         gcs_prefix (str):
-            Required. The path to the location of the target folder.
+            Required. The prefix of the json files in the target_folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_prefix=`{optional_folder}/{target_folder}/`.
@@ -157,7 +157,7 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_bucket_name=`{bucket}`.
         gcs_prefix (str):
-            Required. The path to the location of the target folder.
+            Required. The prefix of the json files in the target_folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_prefix=`{optional_folder}/{target_folder}/`.
@@ -225,7 +225,7 @@ class Document:
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_bucket_name=`{bucket}`.
         gcs_prefix (Optional[str]):
-            Optional. The path to the location of the target folder.
+            Optional. The prefix of the json files in the target_folder.
 
             Format: `gs://{bucket}/{optional_folder}/{target_folder}/`
                     where gcs_prefix=`{optional_folder}/{target_folder}/`.
@@ -250,7 +250,7 @@ class Document:
 
     @classmethod
     def from_documentai_document(cls, documentai_document: documentai.Document):
-        return Document(shards=[documentai_document])
+        return cls(shards=[documentai_document])
 
     @classmethod
     def from_gcs(cls, gcs_bucket_name: str, gcs_prefix: str):
@@ -272,7 +272,7 @@ class Document:
                 A document from gcs.
         """
         shards = _get_shards(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
-        return Document(
+        return cls(
             shards=shards, gcs_prefix=gcs_prefix, gcs_bucket_name=gcs_bucket_name
         )
 
