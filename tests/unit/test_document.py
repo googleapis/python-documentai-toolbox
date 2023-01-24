@@ -91,31 +91,19 @@ def test_entities_from_shard():
     assert actual[0].type_ == "vat"
 
 
-def test_document_from_documentai_document_with_single_shard_using_path():
-    actual = document.Document.from_documentai_document(
+def test_document_from_document_path_with_single_shard():
+    actual = document.Document.from_document_path(
         document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
     )
     assert len(actual.pages) == 1
 
-def test_document_from_documentai_document_with_single_shard_using_docproto():
-    with open("tests/unit/resources/0/toolbox_invoice_test-0.json","r") as f:
+
+def test_document_from_documentai_document_with_single_shard():
+    with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
         doc = documentai.Document.from_json(f.read())
 
-    actual = document.Document.from_documentai_document(docproto=doc
-    )
+    actual = document.Document.from_documentai_document(documentai_document=doc)
     assert len(actual.pages) == 1
-
-def test_document_from_documentai_document_with_single_shard_using_docproto_and_docproto():
-    with pytest.raises(
-        ValueError,
-        match="Exactly one of document_path and docproto must be specified.",
-    ):
-
-        with open("tests/unit/resources/0/toolbox_invoice_test-0.json","r") as f:
-            doc = documentai.Document.from_json(f.read())
-
-        actual = document.Document.from_documentai_document(docproto=doc,document_path="tests/unit/resources/0/toolbox_invoice_test-0.json")
-        
 
 
 def test_document_from_gcs_with_single_shard(get_bytes_single_file_mock):

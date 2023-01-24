@@ -114,7 +114,7 @@ def _get_bytes(gcs_bucket_name: str, gcs_prefix: str) -> List[bytes]:
 
 
 def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Document]:
-    r"""Returns a list of documentai.Document shards from a GCS folder.
+    r"""Returns a list of documentai.Document shards from a Cloud Storage folder.
 
     Args:
         gcs_bucket_name (str):
@@ -148,7 +148,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
 
 
 def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
-    r"""Prints a tree of filenames in GCS folder.
+    r"""Prints a tree of filenames in Cloud Storage folder.
 
     Args:
         gcs_bucket_name (str):
@@ -210,14 +210,14 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
 class Document:
     r"""Represents a wrapped Document.
 
-    This class hides away the complexities of using Document protobuf 
-    response outputted by BatchProcessDocuments or ProcessDocument 
+    This class hides away the complexities of using Document protobuf
+    response outputted by BatchProcessDocuments or ProcessDocument
     methods and implements convenient methods for searching and
     extracting information within the Document.
 
     Attributes:
         shards: (List[google.cloud.documentai.Document]):
-            Optional. A list of documentai.Document shards of the same Document.  
+            Optional. A list of documentai.Document shards of the same Document.
             Each shard consists of a number of pages in the Document.
         gcs_bucket_name (Optional[str]):
             Optional. The name of the gcs bucket.
@@ -249,37 +249,45 @@ class Document:
         self.entities = _entities_from_shards(shards=self.shards)
 
     @classmethod
-    def from_documentai_document(cls, document_path: str = None, docproto:documentai.Document=None):
-        r"""Loads Document from local document_path or docproto.
+    def from_document_path(
+        cls,
+        document_path: str,
+    ):
+        r"""Loads Document from local document_path.
 
         Args:
             document_path (str):
-                Optional. The path to the resp.
-
-            docproto (documentai.Document):
-                Optional. The Document.proto response.
+                Required. The path to the resp.
         Returns:
             Document:
-                A document from local document_path or Document.proto.
+                A document from local document_path.
         """
-        if (document_path is None and docproto is None) or (
-            document_path is not None and docproto is not None
-        ):
-            raise ValueError(
-                "Exactly one of document_path and docproto must be specified."
-            )
 
-        if not docproto:
-            with open(document_path,"r") as f:
-                doc = documentai.Document.from_json(f.read())
-        else:
-            doc = docproto
+        with open(document_path, "r") as f:
+            doc = documentai.Document.from_json(f.read())
 
         return cls(shards=[doc])
 
     @classmethod
+    def from_documentai_document(
+        cls,
+        documentai_document: documentai.Document,
+    ):
+        r"""Loads Document from local documentai_document.
+
+        Args:
+            documentai_document (documentai.Document):
+                Optional. The Document.proto response.
+        Returns:
+            Document:
+                A document from local documentai_document.
+        """
+
+        return cls(shards=[documentai_document])
+
+    @classmethod
     def from_gcs(cls, gcs_bucket_name: str, gcs_prefix: str):
-        r"""Loads Document from gcs.
+        r"""Loads Document from Cloud Storage.
 
         Args:
             gcs_bucket_name (str):
