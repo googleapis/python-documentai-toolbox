@@ -55,16 +55,16 @@ def get_bytes_multiple_files_mock():
 
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        document._get_shards("gs://test-directory/documentai/output/123456789/0.json")
-
-
-def test_get_shards_with_invalid_gcs_uri():
-    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        document._get_shards("test-directory/documentai/output/")
+        document._get_shards(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0.json",
+        )
 
 
 def test_get_shards_with_valid_gcs_uri(get_bytes_single_file_mock):
-    actual = document._get_shards("gs://test-directory/documentai/output/123456789/0")
+    actual = document._get_shards(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
+    )
 
     get_bytes_single_file_mock.assert_called_once()
     # We are testing only one of the fields to make sure the file content could be loaded.
@@ -179,7 +179,7 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    document.print_gcs_document_tree("gs://test-directory/")
+    document.print_gcs_document_tree(gcs_bucket_name="test-directory", gcs_prefix="/")
 
     mock_storage.Client.assert_called_once()
 
@@ -220,7 +220,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
     client.list_blobs.return_value = blobs
 
     document.print_gcs_document_tree(
-        "gs://test-directory/documentai/output/123456789/1/"
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
     mock_storage.Client.assert_called_once()
@@ -273,7 +273,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     client.list_blobs.return_value = blobs
 
     document.print_gcs_document_tree(
-        "gs://test-directory/documentai/output/123456789/1/"
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
     mock_storage.Client.assert_called_once()
@@ -295,13 +295,9 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document.print_gcs_document_tree(
-            "gs://test-directory/documentai/output/123456789/1/test_file.json"
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/1/test_file.json",
         )
-
-
-def test_print_gcs_document_tree_with_invalid_gcs_uri():
-    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        document.print_gcs_document_tree("documentai/output/123456789/1")
 
 
 def test_search_page_with_target_string(get_bytes_single_file_mock):

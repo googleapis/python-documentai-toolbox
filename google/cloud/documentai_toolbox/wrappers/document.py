@@ -134,6 +134,11 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
     """
     shards = []
 
+    file_check = re.match(r"(.*[.].*$)", gcs_prefix)
+
+    if file_check is not None:
+        raise ValueError("gcs_prefix cannot contain file types")
+
     byte_array = _get_bytes(gcs_bucket_name, gcs_prefix)
 
     for byte in byte_array:
@@ -162,6 +167,11 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
     """
     display_filename_prefix_middle = "├──"
     display_filename_prefix_last = "└──"
+
+    file_check = re.match(r"(.*[.].*$)", gcs_prefix)
+
+    if file_check is not None:
+        raise ValueError("gcs_prefix cannot contain file types")
 
     storage_client = _get_storage_client()
     blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
