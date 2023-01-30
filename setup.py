@@ -44,7 +44,6 @@ setuptools.setup(
     include_package_data=True,
     install_requires=(
         "google-api-core >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
-        "libcst >= 0.2.5",
         "pandas >= 1.0.0, <1.5.0",
         "proto-plus >= 1.22.0, <2.0.0dev",
         "proto-plus >= 1.22.2, <2.0.0dev; python_version>='3.11'",
