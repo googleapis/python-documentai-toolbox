@@ -51,7 +51,7 @@ setuptools.setup(
         "grpc-google-iam-v1 >= 0.12.4, < 0.13dev",
         "google-cloud-documentai >= 1.2.1, < 2.0.0dev",
         "google-cloud-storage >= 1.31.0, < 3.0.0dev",
-        "numpy >= 1.21.0",
+        "numpy >= 1.18.1",
     ),
     python_requires=">=3.7",
     classifiers=[
