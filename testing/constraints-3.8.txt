@@ -3,7 +3,6 @@
 # List all library dependencies and extras in this file.
 google-api-core
 libcst
-googleapis-common-protos
 pandas
 proto-plus
 grpc-google-iam-v1
