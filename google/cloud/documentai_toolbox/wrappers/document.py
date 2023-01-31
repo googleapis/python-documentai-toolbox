@@ -69,8 +69,13 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     return result
 
 
-def _get_storage_client():
-    """Returns a Storage client with custom user agent header."""
+def _get_storage_client() -> storage.Client:
+    r"""Returns a Storage client with custom user agent header.
+
+    Returns:
+        storage.Client:
+            a client to use GCS API with.
+    """
     user_agent = f"{constants.USER_AGENT_PRODUCT}/{documentai_toolbox.__version__}"
 
     info = client_info.ClientInfo(
