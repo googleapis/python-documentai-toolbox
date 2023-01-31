@@ -203,7 +203,7 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
                 if dir_size > FILES_TO_DISPLAY:
                     print("│  ....")
                 print(f"{FILENAME_TREE_LAST}{file_name}\n")
-            elif idx < FILES_TO_DISPLAY:
+            elif idx <= FILES_TO_DISPLAY:
                 print(f"{FILENAME_TREE_MIDDLE}{file_name}")
 
 
