@@ -200,7 +200,7 @@ def _get_paragraphs(
     paragraphs: List[documentai.Document.Page.Paragraph], text: str
 ) -> List[Paragraph]:
     r"""Returns a list of Paragraph.
-    
+
     Args:
         paragraphs (List[documentai.Document.Page.Paragraph]):
             Required. A list of documentai.Document.Page.Paragraph objects.
