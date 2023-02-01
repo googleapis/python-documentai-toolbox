@@ -37,5 +37,3 @@ def quickstart_sample(gcs_bucket_name:str,gcs_prefix:str):
         print(f"{entity.type} : {entity.mention_text}")
 
 # [END quickstart_sample]
-
-# [START wrap_document_from_documentai_document]
