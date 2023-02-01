@@ -1,17 +1,14 @@
-----
 
 **Disclaimer**
 
 The Document AI Toolbox is in an experimental state. This library is a work-in-progress and is likely to have backwards-incompatible changes. Users of the toolbox might need to rewrite their code when upgrading the toolbox version.
-
-----
 
 Document AI Toolbox
 =================================
 
 |experimental| |versions|
 
-`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI’s BatchProcessDocument method (JSON files written to user-managed GCS buckets), programmatically.
+`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI’s BatchProcessDocument (JSON files written to user-managed GCS buckets) and ProcessDocument methods, programmatically.
 
 .. |experimental| image:: https://img.shields.io/badge/support-experimental-red.svg
    :target: https://github.com/googleapis/google-cloud-python/blob/main/README.rst#stability-levels
@@ -109,7 +106,7 @@ Next Steps
 -  View this `README`_ to see the full list of Cloud
    APIs that we cover.
 
-.. _`Client Library Documentation`: https://cloud.google.com/python/docs/reference/documentai/latest
+.. _`Client Library Documentation`: https://cloud.google.com/python/docs/reference/documentai-toolbox/latest
 .. _`Document AI documentation`:  https://cloud.google.com/document-ai
 .. _`Document AI Product documentation`: https://cloud.google.com/document-ai/docs/overview
 .. _`README`: https://github.com/googleapis/python-documentai-toolbox/blob/main/README.rst
