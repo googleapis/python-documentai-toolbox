@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# [START quickstart_sample]
+# [START toolbox_quickstart]
 
 from google.cloud.documentai_toolbox import document
 
@@ -36,4 +36,4 @@ def quickstart_sample(gcs_bucket_name:str,gcs_prefix:str):
     for entity in enumerate(dt.entities):
         print(f"{entity.type} : {entity.mention_text}")
 
-# [END quickstart_sample]
+# [END toolbox_quickstart]
