@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,8 @@
 # limitations under the License.
 #
 
-# [START toolbox_quickstart]
+
+# [START documentai_quickstart]
 
 from google.cloud.documentai_toolbox import document
 
@@ -36,4 +37,4 @@ def quickstart_sample(gcs_bucket_name:str,gcs_prefix:str):
     for entity in enumerate(dt.entities):
         print(f"{entity.type} : {entity.mention_text}")
 
-# [END toolbox_quickstart]
+# [END documentai_quickstart]
