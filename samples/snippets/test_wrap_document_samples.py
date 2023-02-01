@@ -16,15 +16,16 @@
 import os
 
 import pytest
-from samples.snippets import wrap_document_samples
+from samples.snippets import quickstart_sample
 
 location = "us"
 project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
-gcs_input_uri = "gs://cloud-samples-data/documentai_toolbox/1/"
+gcs_bucket_name= "documentai_toolbox_samples"
+gcs_input_uri = "output/123456789/0"
 
-def test_wrap_document_from_gcs_prefix(capsys):
-    wrap_document_samples.wrap_document_from_gcs_prefix(gcs_prefix=gcs_input_uri)
+def test_quickstart_sample(capsys):
+    quickstart_sample.quickstart_sample(gcs_bucket_name=gcs_bucket_name,gcs_prefix=gcs_input_uri)
     out, _ = capsys.readouterr()
 
-    assert "Number of Pages: 32" in out
-    assert "Number of Entities: 32" in out
+    assert "Number of Pages: 1" in out
+    assert "Number of Entities: 22" in out
