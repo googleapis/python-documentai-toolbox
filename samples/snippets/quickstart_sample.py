@@ -39,7 +39,7 @@ def quickstart_sample(gcs_bucket_name: str, gcs_prefix: str) -> None:
             print(paragraph.text)
 
     for entity in wrapped_document.entities:
-        print(f"{entity.type} : {entity.mention_text}")
+        print(f"{entity.type_} : {entity.mention_text}")
 
 
 # [END documentai_toolbox_quickstart]
