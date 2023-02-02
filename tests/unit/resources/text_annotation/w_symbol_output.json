@@ -1,0 +1,48 @@
+{
+  "pages": [
+    {
+      "blocks": [
+        {
+          "blockType": "TEXT",
+          "boundingBox": {
+            "vertices": [
+              {
+                "y": 2
+              },
+              {
+                "x": 2,
+                "y": 2
+              },
+              {
+                "y": 2
+              },
+              {}
+            ]
+          },
+          "paragraphs": [
+            {
+              "words": [
+                {
+                  "property": {
+                    "detectedBreak": {
+                      "type": "LINE_BREAK"
+                    }
+                  }
+                },
+                {},
+                {
+                  "property": {
+                    "detectedBreak": {
+                      "type": "LINE_BREAK"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "text": "a b c d\nINSTITUTE\n"
+}

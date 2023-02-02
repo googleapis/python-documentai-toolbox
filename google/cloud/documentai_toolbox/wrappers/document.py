@@ -23,11 +23,29 @@ from typing import Dict, List, Optional
 from google.api_core import client_info
 from google.cloud import documentai
 from google.cloud import storage
+from google.cloud import vision
 from google.cloud import documentai_toolbox
 
 from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
+
+
+def _text_from_shards(shards: List[documentai.Document]) -> str:
+    r"""Returns the full document text from a list of documentai.Document shards.
+
+    Args:
+        shards (List[google.cloud.documentai.Document]):
+            Required. List of document shards.
+
+    Returns:
+        str:
+            The full document text.
+    """
+    result = ""
+    for shard in shards:
+        result = result + shard.text
+    return result
 
 
 def _entities_from_shards(
@@ -234,10 +252,12 @@ class Document:
     gcs_bucket_name: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_prefix: Optional[str] = dataclasses.field(default=None, repr=False)
 
+    text: str = dataclasses.field(init=False, repr=False)
     pages: List[Page] = dataclasses.field(init=False, repr=False)
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
+        self.text = _text_from_shards(shards=self.shards)
         self.pages = _pages_from_shards(shards=self.shards)
         self.entities = _entities_from_shards(shards=self.shards)
 
@@ -344,3 +364,14 @@ class Document:
 
         """
         return [entity for entity in self.entities if entity.type_ == target_type]
+
+    def to_text_annotation(self) -> vision.TextAnnotation:
+        r"""Returns the OCR data as Cloud Vision API vision.TextAnnotation.
+
+        Returns:
+            vision.TextAnnotation:
+                A vision.TextAnnotation containing the OCR information from documentai_toolbox.Document
+
+        """
+        vision_annotation = vision.TextAnnotation(text=self.text)
+        return vision_annotation

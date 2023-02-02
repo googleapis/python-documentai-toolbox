@@ -28,6 +28,7 @@ from google.cloud.documentai_toolbox import document
 
 from google.cloud import documentai
 from google.cloud import storage
+from google.cloud import vision
 
 
 def get_bytes(file_name):
@@ -69,6 +70,15 @@ def test_get_shards_with_valid_gcs_uri(get_bytes_single_file_mock):
     get_bytes_single_file_mock.assert_called_once()
     # We are testing only one of the fields to make sure the file content could be loaded.
     assert actual[0].pages[0].page_number == 1
+
+
+def test_text_from_shards():
+    shards = []
+    for byte in get_bytes("tests/unit/resources/0"):
+        shards.append(documentai.Document.from_json(byte))
+
+    actual = document._text_from_shards(shards=shards)
+    assert "Invoice" in actual
 
 
 def test_pages_from_shards():
@@ -336,3 +346,19 @@ def test_get_entity_by_type(get_bytes_single_file_mock):
     assert len(actual) == 1
     assert actual[0].type_ == "receiver_address"
     assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
+
+
+def test_to_text_annotation():
+    doc = document.Document.from_document_path(
+        document_path="tests/unit/resources/text_annotation/single_page_no_symbol_input.json"
+    )
+
+    actual = doc.to_text_annotation()
+
+    with open(
+        "tests/unit/resources/text_annotation/single_page_no_symbol_output.json",
+        encoding="utf-8",
+    ) as f:
+        expected = vision.TextAnnotation.from_json(f.read())
+
+    assert actual.text == expected.text
