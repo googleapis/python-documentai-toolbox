@@ -247,6 +247,7 @@ def _get_lines(lines: List[documentai.Document.Page.Line], text: str) -> List[Li
 
 def _trim_text(text: str) -> str:
     r"""Remove extra space characters from text (blank, newline, tab, etc.)
+
     Args:
         text (str):
             Required. UTF-8 encoded text in reading order
