@@ -374,4 +374,7 @@ class Document:
 
         """
         vision_annotation = vision.TextAnnotation(text=self.text)
+
+        for page in self.pages:
+            vision_annotation.pages.append(page.to_text_annotation_page())
         return vision_annotation

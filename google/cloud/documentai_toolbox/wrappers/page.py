@@ -16,17 +16,23 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
-from typing import List, Union
+from typing import Dict, List, Union
 
 from google.cloud import documentai
+from google.cloud import vision
+
 import pandas as pd
 
 ElementWithLayout = Union[
-    documentai.Document.Page.Paragraph,
+    documentai.Document.Page.Block,
     documentai.Document.Page.Line,
-    documentai.Document.Page.Token,
+    documentai.Document.Page.Paragraph,
+    documentai.Document.Page.Symbol,
     documentai.Document.Page.Table.TableCell,
+    documentai.Document.Page.Token,
 ]
+
+VisionWithLayout = Union[vision.Block, vision.Paragraph, vision.Word, vision.Symbol]
 
 
 @dataclasses.dataclass
@@ -272,6 +278,21 @@ def _table_rows_from_documentai_table_rows(
     return body_rows
 
 
+def _convert_languages_to_vision(
+    detected_languages: List[documentai.Document.Page.DetectedLanguage],
+) -> List[vision.TextAnnotation.DetectedLanguage]:
+    vision_detected_languages: List[vision.TextAnnotation.DetectedLanguage] = []
+
+    for language in detected_languages:
+        vision_detected_languages.append(
+            vision.TextAnnotation.DetectedLanguage(
+                language_code=language.language_code, confidence=language.confidence
+            )
+        )
+
+    return vision_detected_languages
+
+
 @dataclasses.dataclass
 class Page:
     """Represents a wrapped documentai.Document.Page .
@@ -316,3 +337,78 @@ class Page:
             paragraphs=self.documentai_page.paragraphs, text=self.text
         )
         self.tables = tables
+
+    def to_text_annotation_page(self) -> vision.Page:
+        vision_page = vision.Page(
+            width=int(self.documentai_page.dimension.width),
+            height=int(self.documentai_page.dimension.height),
+            confidence=self.documentai_page.layout.confidence,
+        )
+
+        vision_page.property.detected_languages = _convert_languages_to_vision(
+            self.documentai_page.detected_languages
+        )
+
+        for block in self.documentai_page.blocks:
+            vision_page.blocks.append(self._convert_block_to_vision(block))
+        return vision_page
+
+    def _convert_break_to_vision(
+        documentai_break: documentai.Document.Page.Token.DetectedBreak,
+    ) -> vision.TextAnnotation.DetectedBreak:
+        break_type_map = {
+            documentai.Document.Page.Token.DetectedBreak.SPACE: vision.TextAnnotation.DetectedBreak.SPACE,
+            documentai.Document.Page.Token.DetectedBreak.WIDE_SPACE: vision.TextAnnotation.DetectedBreak.SURE_SPACE,
+            documentai.Document.Page.Token.DetectedBreak.HYPHEN: vision.TextAnnotation.DetectedBreak.HYPHEN,
+            documentai.Document.Page.Token.DetectedBreak.TYPE_UNSPECIFIED: None,
+        }
+
+        return break_type_map.get(
+            documentai_break, vision.TextAnnotation.DetectedBreak.UNKNOWN
+        )
+
+    def _convert_layout_element_to_vision(
+        documentai_layout: documentai.Document.Page.Layout,
+    ) -> VisionWithLayout:
+        r"""Convert Document AI Layout to Vision format.
+        Args:
+            documentai_layout documentai.Document.Page.Layout:
+                Required. A Document AI Layout element
+        Returns:
+            VisionWithLayout:
+                A Vision element that contains layout and confidence information.
+        """
+        vision_element: VisionWithLayout = VisionWithLayout(
+            confidence=documentai_layout.confidence
+        )
+
+        # Some Document AI Outputs don't include the raw vertices
+        if documentai_layout.bounding_poly.vertices:
+            for vertex in documentai_layout.bounding_poly.vertices:
+                vision_element.bounding_box.vertices.append(
+                    vision.Vertex(x=int(vertex.x), y=int(vertex.y))
+                )
+        # else:
+        #     for (
+        #         normalized_vertex
+        #     ) in documentai_layout.bounding_poly.normalized_vertices:
+        #         vision_element.bounding_box.vertices.append(
+        #             vision.Vertex(x=int(normalized_vertex.x * documentai_page.dimension.width),
+        #                           y=int(normalized_vertex.y * documentai_page.dimension.height))
+        #         )
+
+        for normalized_vertex in documentai_layout.bounding_poly.normalized_vertices:
+            vision_element.bounding_box.normalized_vertices.append(
+                vision.NormalizedVertex(x=normalized_vertex.x, y=normalized_vertex.y)
+            )
+
+        return vision_element
+
+    def _convert_block_to_vision(
+        documentai_block: documentai.Document.Page.Block,
+    ) -> vision.Block:
+        vision_block = vision.Block(block_type=vision.Block.BlockType.TEXT)
+        vision_block.property.detected_languages = _convert_languages_to_vision(
+            documentai_block.detected_languages
+        )
+        return vision_block
