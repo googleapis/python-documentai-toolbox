@@ -331,6 +331,26 @@ class Document:
                     break
         return found_pages
 
+    def get_form_field_by_name(self, target_field: str):
+        r"""Returns the list of FormFields named target_field.
+
+        Args:
+            target_field (str):
+                Required. Target field name.
+
+        Returns:
+            List[FormField]:
+                A list of FormField matching target_field.
+
+        """
+        found_fields = []
+        for page in self.pages:
+            for form_field in page.form_fields:
+                if target_field.lower() in form_field.field_name.lower():
+                    found_fields.append(form_field)
+
+        return found_fields
+
     def get_entity_by_type(self, target_type: str) -> List[Entity]:
         r"""Returns the list of Entities of target_type.
 
