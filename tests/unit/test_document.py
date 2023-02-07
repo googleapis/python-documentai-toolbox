@@ -28,7 +28,6 @@ from google.cloud.documentai_toolbox import document
 
 from google.cloud import documentai
 from google.cloud import storage
-from google.cloud import bigquery
 
 
 def get_bytes(file_name):
@@ -349,9 +348,6 @@ def test_entities_to_dict(get_bytes_single_file_mock):
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.bigquery")
 def test_entities_to_bigquery(mock_bigquery, get_bytes_single_file_mock):
     client = mock_bigquery.Client.return_value
-
-    # mock_dataset = mock.Mock()
-    # client.dataset.return_value = mock_dataset
 
     mock_table = mock.Mock()
     client.dataset.table.return_value = mock_table
