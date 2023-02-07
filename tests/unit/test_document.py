@@ -53,6 +53,13 @@ def get_bytes_multiple_files_mock():
         yield byte_factory
 
 
+@pytest.fixture
+def get_bytes_splitter_mock():
+    with mock.patch.object(document, "_get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/splitter")
+        yield byte_factory
+
+
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document._get_shards(
@@ -126,7 +133,6 @@ def test_document_from_gcs_with_multiple_shards(get_bytes_multiple_files_mock):
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
-
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -166,7 +172,6 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
-
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -208,7 +213,6 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
-
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -272,7 +276,6 @@ def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
 
 
 def test_search_page_with_target_string(get_bytes_single_file_mock):
-
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
     )
@@ -299,7 +302,6 @@ def test_search_page_with_regex_and_str(get_bytes_single_file_mock):
         ValueError,
         match="Exactly one of target_string and pattern must be specified.",
     ):
-
         doc = document.Document.from_gcs(
             gcs_bucket_name="test-directory",
             gcs_prefix="documentai/output/123456789/0/",
@@ -324,7 +326,6 @@ def test_search_page_with_none(get_bytes_single_file_mock):
 
 
 def test_get_entity_by_type(get_bytes_single_file_mock):
-
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
     )
@@ -336,3 +337,30 @@ def test_get_entity_by_type(get_bytes_single_file_mock):
     assert len(actual) == 1
     assert actual[0].type_ == "receiver_address"
     assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.Pdf")
+def test_split_pdf(mock_Pdf, get_bytes_splitter_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+
+    mock_input_file = mock.Mock()
+    mock_Pdf.open.return_value.__enter__.return_value.name = mock_input_file
+
+    mock_output_file = mock.Mock()
+    mock_Pdf.new.return_value = mock_output_file
+
+    actual = doc.split_pdf(
+        pdf_path="procurement_multi_document.pdf", output_path="splitter/output/"
+    )
+
+    get_bytes_splitter_mock.assert_called_once()
+
+    assert actual == [
+        "procurement_multi_document_pg1_invoice_statement.pdf",
+        "procurement_multi_document_pg2_receipt_statement.pdf",
+        "procurement_multi_document_pg3_other.pdf",
+        "procurement_multi_document_pg4_utility_statement.pdf",
+        "procurement_multi_document_pg5_restaurant_statement.pdf",
+    ]
