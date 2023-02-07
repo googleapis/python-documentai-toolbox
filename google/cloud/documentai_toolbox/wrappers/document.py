@@ -407,17 +407,3 @@ class Document:
             destination=table_ref,
             job_config=job_config,
         )
-
-
-# if __name__ == "__main__":
-#     doc = Document.from_document_path(
-#         "tests/unit/resources/0/toolbox_invoice_test-0.json"
-#     )
-
-#     dict = doc.entities_to_dict()
-
-#     print(len(dict))
-
-#     # job = doc.entities_to_bigquery(dataset_name="docai_export", table_name="entities")
-
-#     # print(job)
