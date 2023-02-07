@@ -347,14 +347,13 @@ class Document:
         return [entity for entity in self.entities if entity.type_ == target_type]
 
     def entities_to_dict(self) -> Dict:
-        r"""Returns Dictionary of entities in document
+        r"""Returns Dictionary of entities in document.
 
         Returns:
             Dict:
-                The Dict of the entities in format {entity.type_: [entity.mention_text]}
+                The Dict of the entities indexed by type.
 
         """
-
         entities_dict: Dict = {}
         for entity in self.entities:
             entity_type = entity.type_.replace("/", "_")
@@ -377,7 +376,7 @@ class Document:
     def entities_to_bigquery(
         self, dataset_name: str, table_name: str, project_id: Optional[str] = None
     ) -> bigquery.job.LoadJob:
-        r"""Adds extracted entities to a BigQuery table
+        r"""Adds extracted entities to a BigQuery table.
 
         Args:
             dataset_name (str):
