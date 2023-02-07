@@ -44,5 +44,6 @@ class Entity:
     def __post_init__(self):
         self.type_ = self.documentai_entity.type_
         self.mention_text = self.documentai_entity.mention_text
-        self.start_page = int(self.documentai_entity.page_anchor.page_refs[0].page)
-        self.end_page = int(self.documentai_entity.page_anchor.page_refs[-1].page)
+        if self.documentai_entity.page_anchor.page_refs:
+            self.start_page = int(self.documentai_entity.page_anchor.page_refs[0].page)
+            self.end_page = int(self.documentai_entity.page_anchor.page_refs[-1].page)
