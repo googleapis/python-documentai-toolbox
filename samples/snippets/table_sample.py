@@ -20,7 +20,8 @@ from google.cloud.documentai_toolbox import document
 
 # TODO(developer): Uncomment these variables before running the sample.
 # Given a document.proto or sharded document.proto in path
-# document_path = "bucket"
+# document_path = "path/to/local/document.json"
+# output_file_prefix = "output/table"
 
 
 def table_sample(document_path: str, output_file_prefix: str) -> None:
