@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +14,24 @@
 # limitations under the License.
 #
 
-from google.cloud.documentai_toolbox import version as package_version
-
-__version__ = package_version.__version__
-
-from .wrappers import (
-    document,
-    page,
-    entity,
-)
-
-from .converters import (
-    converters,
+from google.cloud.documentai_toolbox.converters.config.converter_helpers import (
+    convert_documents_with_config,
 )
 
 
-__all__ = (
-    converters,
-    document,
-    page,
-    entity,
-)
+def convert_from_config(
+    project_id: str,
+    location: str,
+    processor_id: str,
+    gcs_input_path: str,
+    gcs_output_path: str,
+    config_path: str = None,
+) -> None:
+    convert_documents_with_config(
+        project_id=project_id,
+        location=location,
+        processor_id=processor_id,
+        gcs_input_path=gcs_input_path,
+        gcs_output_path=gcs_output_path,
+        config_path=config_path,
+    )
