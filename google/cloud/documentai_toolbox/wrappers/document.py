@@ -49,6 +49,8 @@ def _entities_from_shards(
     for shard in shards:
         for entity in shard.entities:
             result.append(Entity(documentai_entity=entity))
+            for prop in entity.properties:
+                result.append(Entity(documentai_entity=prop))
     return result
 
 

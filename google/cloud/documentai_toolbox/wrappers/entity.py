@@ -37,7 +37,13 @@ class Entity:
     documentai_entity: documentai.Document.Entity = dataclasses.field(repr=False)
     type_: str = dataclasses.field(init=False)
     mention_text: str = dataclasses.field(init=False, default="")
+    normalized_text: str = dataclasses.field(init=False, default="")
 
     def __post_init__(self):
         self.type_ = self.documentai_entity.type_
         self.mention_text = self.documentai_entity.mention_text
+        if (
+            self.documentai_entity.normalized_value
+            and self.documentai_entity.normalized_value.text
+        ):
+            self.normalized_text = self.documentai_entity.normalized_value.text

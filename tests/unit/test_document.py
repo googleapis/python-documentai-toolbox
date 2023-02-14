@@ -97,6 +97,9 @@ def test_entities_from_shard():
 
     assert actual[0].mention_text == "$140.00"
     assert actual[0].type_ == "vat"
+    assert actual[1].mention_text == "$140.00"
+    assert actual[1].type_ == "vat/tax_amount"
+    assert actual[1].normalized_text == "140 USD"
 
 
 def test_document_from_document_path_with_single_shard():
@@ -107,7 +110,9 @@ def test_document_from_document_path_with_single_shard():
 
 
 def test_document_from_documentai_document_with_single_shard():
-    with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
+    with open(
+        "tests/unit/resources/0/toolbox_invoice_test-0.json", "r", encoding="utf-8"
+    ) as f:
         doc = documentai.Document.from_json(f.read())
 
     actual = document.Document.from_documentai_document(documentai_document=doc)
@@ -362,8 +367,9 @@ def test_entities_to_dict(get_bytes_single_file_mock):
 
     get_bytes_single_file_mock.assert_called_once()
 
-    assert len(actual) == 20
+    assert len(actual) == 25
     assert actual.get("vat") == "$140.00"
+    assert actual.get("vat_tax_amount") == "$140.00"
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.bigquery")
