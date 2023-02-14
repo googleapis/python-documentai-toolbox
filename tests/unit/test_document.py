@@ -363,4 +363,5 @@ def test_split_pdf(mock_Pdf, get_bytes_splitter_mock):
         "procurement_multi_document_pg3_other.pdf",
         "procurement_multi_document_pg4_utility_statement.pdf",
         "procurement_multi_document_pg5_restaurant_statement.pdf",
+        "procurement_multi_document_pg6-7_other.pdf",
     ]
