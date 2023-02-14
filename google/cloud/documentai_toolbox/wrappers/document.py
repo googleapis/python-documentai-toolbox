@@ -27,6 +27,7 @@ from google.cloud import documentai_toolbox
 
 from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.page import Page
+from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
 
 
@@ -331,7 +332,7 @@ class Document:
                     break
         return found_pages
 
-    def get_form_field_by_name(self, target_field: str) -> List:
+    def get_form_field_by_name(self, target_field: str) -> List[FormField]:
         r"""Returns the list of FormFields named target_field.
 
         Args:
@@ -339,7 +340,7 @@ class Document:
                 Required. Target field name.
 
         Returns:
-            List:
+            List[FormField]:
                 A list of FormField matching target_field.
 
         """
