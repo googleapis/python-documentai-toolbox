@@ -19,7 +19,7 @@
 from google.cloud.documentai_toolbox import document
 
 # TODO(developer): Uncomment these variables before running the sample.
-# Given a document.proto or sharded document.proto in path
+# Given a local document.proto or sharded document.proto in path
 # document_path = "path/to/local/document.json"
 # output_file_prefix = "output/table"
 
