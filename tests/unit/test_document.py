@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 # -*- coding: utf-8 -*-
 # Copyright 2022 Google LLC
 #
@@ -50,6 +51,13 @@ def get_bytes_single_file_mock():
 def get_bytes_multiple_files_mock():
     with mock.patch.object(document, "_get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/1")
+        yield byte_factory
+
+
+@pytest.fixture
+def get_bytes_form_parser_mock():
+    with mock.patch.object(document, "_get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/form_parser")
         yield byte_factory
 
 
@@ -337,6 +345,20 @@ def test_get_entity_by_type(get_bytes_single_file_mock):
     assert len(actual) == 1
     assert actual[0].type_ == "receiver_address"
     assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
+
+
+def test_get_form_field_by_name(get_bytes_form_parser_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+    actual = doc.get_form_field_by_name(target_field="Phone #:")
+
+    get_bytes_form_parser_mock.assert_called_once()
+
+    assert len(actual) == 1
+    assert actual[0].field_name == "Phone #:"
+    assert actual[0].field_value == "(906) 917-3486"
+
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.Pdf")
