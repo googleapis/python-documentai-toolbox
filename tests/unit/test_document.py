@@ -360,7 +360,6 @@ def test_get_form_field_by_name(get_bytes_form_parser_mock):
     assert actual[0].field_value == "(906) 917-3486"
 
 
-
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.Pdf")
 def test_split_pdf(mock_Pdf, get_bytes_splitter_mock):
     doc = document.Document.from_gcs(
