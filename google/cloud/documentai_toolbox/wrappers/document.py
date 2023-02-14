@@ -414,7 +414,9 @@ class Document:
 
         """
         bq_client = bigquery.Client(project=project_id)
-        table_ref = bq_client.dataset(dataset_name).table(table_name)
+        table_ref = bigquery.DatasetReference(
+            project=project_id, dataset_id=dataset_name
+        ).table(table_name)
 
         job_config = bigquery.LoadJobConfig(
             schema_update_options=[
