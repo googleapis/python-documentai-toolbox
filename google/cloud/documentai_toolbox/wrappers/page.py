@@ -16,7 +16,7 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
-from typing import List
+from typing import List, MutableSequence
 
 from google.cloud import documentai
 import pandas as pd
@@ -291,19 +291,19 @@ def _get_form_fields(
 
 
 def _table_rows_from_documentai_table_rows(
-    table_rows: List[documentai.Document.Page.Table.TableRow], text: str
-) -> List[str]:
+    table_rows: MutableSequence[documentai.Document.Page.Table.TableRow], text: str
+) -> List[List[str]]:
     r"""Returns a list of rows from table_rows.
 
     Args:
-        table_rows (List[documentai.Document.Page.Table.TableRow]):
+        table_rows (MutableSequence[documentai.Document.Page.Table.TableRow]):
             Required. A documentai.Document.Page.Table.TableRow.
         text (str):
             Required. UTF-8 encoded text in reading order
             from the document.
 
     Returns:
-        List[str]:
+        List[List[str]]:
             A list of table rows.
     """
     body_rows = []
