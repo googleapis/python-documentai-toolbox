@@ -25,7 +25,7 @@ output_path = "resources/output/"
 
 
 def test_split_pdf_sample(capsys: pytest.CaptureFixture) -> None:
-    os.mkdir(output_path)
+    os.makedirs(output_path)
     current_directory = os.path.dirname(__file__)
     rel_document_path = os.path.relpath(document_path, current_directory)
     rel_pdf_path = os.path.relpath(pdf_path, current_directory)
