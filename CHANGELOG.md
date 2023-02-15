@@ -5,6 +5,7 @@
 
 ### Features
 
+* Add `entities_to_dict()` and `entities_to_bigquery()` to `Document` wrapper ([#50](https://github.com/googleapis/python-documentai-toolbox/issues/50)) ([494fa86](https://github.com/googleapis/python-documentai-toolbox/commit/494fa864998b340e052f693ee963a4370128ae80))
 * Add PDF Splitter ([#51](https://github.com/googleapis/python-documentai-toolbox/issues/51)) ([8359911](https://github.com/googleapis/python-documentai-toolbox/commit/8359911b55f4545421fa6ddc6f069eaf0311391d))
 * Added Support for Form Fields ([#48](https://github.com/googleapis/python-documentai-toolbox/issues/48)) ([6d74548](https://github.com/googleapis/python-documentai-toolbox/commit/6d74548b471a0401b6fde66283aead507c046dd1))
 
