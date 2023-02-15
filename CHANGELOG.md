@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.1.1-alpha...v0.2.0-alpha) (2023-02-15)
+
+
+### Features
+
+* Add PDF Splitter ([#51](https://github.com/googleapis/python-documentai-toolbox/issues/51)) ([8359911](https://github.com/googleapis/python-documentai-toolbox/commit/8359911b55f4545421fa6ddc6f069eaf0311391d))
+* Added Support for Form Fields ([#48](https://github.com/googleapis/python-documentai-toolbox/issues/48)) ([6d74548](https://github.com/googleapis/python-documentai-toolbox/commit/6d74548b471a0401b6fde66283aead507c046dd1))
+
 ## [0.1.1-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.1.0-alpha...v0.1.1-alpha) (2023-02-08)
 
 
