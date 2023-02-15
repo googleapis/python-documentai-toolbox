@@ -52,6 +52,9 @@ def test_Entity_splitter():
                 documentai.Document.PageAnchor.PageRef(page=1),
                 documentai.Document.PageAnchor.PageRef(page=2),
             ]
+        ),
+    )
+    wrapper_entity = entity.Entity(documentai_entity)
     assert wrapper_entity.type_ == "invoice_statement"
     assert wrapper_entity.start_page == 0
     assert wrapper_entity.end_page == 2

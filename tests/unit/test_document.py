@@ -366,6 +366,9 @@ def test_get_form_field_by_name(get_bytes_form_parser_mock):
 
 
 def test_entities_to_dict(get_bytes_single_file_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
     actual = doc.entities_to_dict()
 
     get_bytes_single_file_mock.assert_called_once()
