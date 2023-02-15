@@ -405,9 +405,9 @@ class Document:
 
         Args:
             dataset_name (str):
-                Name of the BigQuery dataset.
+                Required. Name of the BigQuery dataset.
             table_name (str):
-                Name of the BigQuery table.
+                Required. Name of the BigQuery table.
             project_id (Optional[str]):
                 Optional. Project ID containing the BigQuery table. If not passed, falls back to the default inferred from the environment.
         Returns:
