@@ -3,7 +3,7 @@ Document AI Toolbox
 
 |experimental| |versions|
 
-`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI `BatchProcessDocuments()` (JSON files written to user-managed GCS buckets) and `ProcessDocument()` methods, programmatically.
+`Document AI Toolbox`_: Document AI Toolbox aims to reduce the friction of managing, manipulating, and extracting information from outputs of Document AI ``BatchProcessDocuments()`` (JSON files written to user-managed GCS buckets) and ``ProcessDocument()`` methods, programmatically.
 
 **Disclaimer**
 
@@ -20,8 +20,8 @@ Quick Start
 
 In order to use this library, you first need to go through the following steps:
 
-Enabling Document AI may not be technically required to use this library, unless `ProcessDocument()` is intended to be used.
-But you must enable the Storage API to access GCS buckets that contains the output of `BatchProcessDocument()`. 
+Enabling Document AI may not be technically required to use this library, unless ``ProcessDocument()`` is intended to be used.
+But you must enable the Storage API to access GCS buckets that contains the output of ``BatchProcessDocument()``. 
 You will need to enable the BigQuery API if you intend to use the BigQuery features.
 
 1. `Select or create a Cloud Platform project.`_
