@@ -365,12 +365,12 @@ class Document:
         """
         return [entity for entity in self.entities if entity.type_ == target_type]
 
-    def to_text_annotation(self) -> vision.TextAnnotation:
-        r"""Returns the OCR data as Cloud Vision API vision.TextAnnotation.
+    def to_vision_output(self) -> vision.AnnotateFileResponse:
+        r"""Returns the OCR data as Cloud Vision API AnnotateFileResponse.
 
         Returns:
-            vision.TextAnnotation:
-                A vision.TextAnnotation containing the OCR information from documentai_toolbox.Document
+            vision.AnnotateFileResponse:
+                A vision.AnnotateFileResponse containing the OCR information from documentai_toolbox.Document
 
         """
         vision_annotation = vision.TextAnnotation(text=self.text)
