@@ -27,9 +27,15 @@ from google.cloud import storage
 from google.cloud import documentai_toolbox
 
 from google.cloud.documentai_toolbox import constants
-from google.cloud.documentai_toolbox.wrappers.page import Page
+from google.cloud.documentai_toolbox.wrappers.page import Page as toolbox_page
 from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
+from google.cloud.documentai_toolbox.converters.converters import (
+    _convert_to_vision_annotate_file_response,
+)
+
+from google.cloud.vision import AnnotateFileResponse
+
 
 from pikepdf import Pdf
 
@@ -56,7 +62,7 @@ def _entities_from_shards(
     return result
 
 
-def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
+def _pages_from_shards(shards: List[documentai.Document]) -> List[toolbox_page]:
     r"""Returns a list of Pages from a list of documentai.Document shards.
 
     Args:
@@ -71,7 +77,7 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(Page(documentai_page=page, text=text))
+            result.append(toolbox_page(documentai_page=page, text=text))
 
     return result
 
@@ -157,6 +163,17 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
     return shards
 
 
+def _text_from_shards(shards: List[documentai.Document]) -> str:
+    total_text = ""
+    for shard in shards:
+        if total_text == "":
+            total_text = shard.text
+        elif total_text != shard.text:
+            total_text += shard.text
+
+    return total_text
+
+
 def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
     r"""Prints a tree of filenames in Cloud Storage folder.
 
@@ -240,12 +257,14 @@ class Document:
     gcs_bucket_name: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_prefix: Optional[str] = dataclasses.field(default=None, repr=False)
 
-    pages: List[Page] = dataclasses.field(init=False, repr=False)
+    pages: List[toolbox_page] = dataclasses.field(init=False, repr=False)
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
+    text: str = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
         self.pages = _pages_from_shards(shards=self.shards)
         self.entities = _entities_from_shards(shards=self.shards)
+        self.text = _text_from_shards(shards=self.shards)
 
     @classmethod
     def from_document_path(
@@ -308,7 +327,7 @@ class Document:
 
     def search_pages(
         self, target_string: Optional[str] = None, pattern: Optional[str] = None
-    ) -> List[Page]:
+    ) -> List[toolbox_page]:
         r"""Returns the list of Pages containing target_string or text matching pattern.
 
         Args:
@@ -474,3 +493,13 @@ class Document:
                 )
                 output_files.append(output_filename)
         return output_files
+
+    def convert_document_to_annotate_file_response(self) -> AnnotateFileResponse:
+        """Convert OCR data from Document proto to AnnotateFileResponse proto (Vision API).
+
+        Args:
+            None.
+        Returns:
+            AnnotateFileResponse proto with a TextAnnotation per page.
+        """
+        return _convert_to_vision_annotate_file_response(self.text, self.pages)
