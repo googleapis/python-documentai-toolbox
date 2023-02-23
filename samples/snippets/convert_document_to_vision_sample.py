@@ -39,7 +39,7 @@ def convert_document_to_vision_sample(
 
     print("Document converted to AnnotateFileResponse!")
     print(
-        f"Number of Pages : {len(annotate_file_response.responses[0].full_text_annotation.pages)}"
+        f"Number of Pages: {len(annotate_file_response.responses[0].full_text_annotation.pages)}"
     )
 
 
