@@ -31,4 +31,4 @@ def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
     out, _ = capsys.readouterr()
 
     assert "Document converted to AnnotateFileResponse!" in out
-    assert "Number of Pages: 1" in out
+    assert "Number of Pages : 1" in out
