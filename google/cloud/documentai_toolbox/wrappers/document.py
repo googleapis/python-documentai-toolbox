@@ -27,7 +27,7 @@ from google.cloud import storage
 from google.cloud import documentai_toolbox
 
 from google.cloud.documentai_toolbox import constants
-from google.cloud.documentai_toolbox.wrappers.page import Page as toolbox_page
+from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
 from google.cloud.documentai_toolbox.converters.converters import (
@@ -62,7 +62,7 @@ def _entities_from_shards(
     return result
 
 
-def _pages_from_shards(shards: List[documentai.Document]) -> List[toolbox_page]:
+def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     r"""Returns a list of Pages from a list of documentai.Document shards.
 
     Args:
@@ -77,7 +77,7 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[toolbox_page]:
     for shard in shards:
         text = shard.text
         for page in shard.pages:
-            result.append(toolbox_page(documentai_page=page, text=text))
+            result.append(Page(documentai_page=page, text=text))
 
     return result
 
@@ -257,7 +257,7 @@ class Document:
     gcs_bucket_name: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_prefix: Optional[str] = dataclasses.field(default=None, repr=False)
 
-    pages: List[toolbox_page] = dataclasses.field(init=False, repr=False)
+    pages: List[Page] = dataclasses.field(init=False, repr=False)
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
     text: str = dataclasses.field(init=False, repr=False)
 
@@ -327,7 +327,7 @@ class Document:
 
     def search_pages(
         self, target_string: Optional[str] = None, pattern: Optional[str] = None
-    ) -> List[toolbox_page]:
+    ) -> List[Page]:
         r"""Returns the list of Pages containing target_string or text matching pattern.
 
         Args:
