@@ -21,6 +21,7 @@ gcs_bucket_name = "cloud-samples-data"
 gcs_input_uri = "documentai_toolbox/document_batches/folder_with_3_documents/"
 batch_size = 50
 
+
 def test_create_batches_sample(capsys: pytest.CaptureFixture) -> None:
     create_batches_sample.create_batches_sample(
         gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_input_uri, batch_size=batch_size
