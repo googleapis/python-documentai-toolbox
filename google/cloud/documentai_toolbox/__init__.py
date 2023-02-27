@@ -25,12 +25,12 @@ from .wrappers import (
 )
 
 from .converters import (
-    converters,
+    converter,
 )
 
 
 __all__ = (
-    converters,
+    converter,
     document,
     page,
     entity,

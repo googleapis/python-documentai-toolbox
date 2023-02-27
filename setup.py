@@ -52,7 +52,7 @@ setuptools.setup(
         "google-cloud-documentai >= 1.2.1, < 3.0.0dev",
         "google-cloud-storage >= 1.31.0, < 3.0.0dev",
         "numpy >= 1.18.1",
-        "intervaltree >= 3.0.0"
+        "intervaltree >= 3.0.0",
     ),
     python_requires=">=3.7",
     classifiers=[

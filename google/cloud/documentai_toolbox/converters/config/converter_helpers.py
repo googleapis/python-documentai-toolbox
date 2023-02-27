@@ -26,6 +26,8 @@ from google.cloud.documentai_toolbox.converters.config.bbox_conversion import (
 from google.cloud.documentai_toolbox.converters.config.blocks import (
     load_blocks_from_schema,
 )
+
+from google.cloud.documentai_toolbox import document
 from google.cloud import documentai, storage
 
 
@@ -92,7 +94,7 @@ def get_entitiy_content(blocks, docproto):
     for block in blocks:
 
         docai_entity = documentai.Document.Entity()
-        if block.confidence:
+        if block.confidence != None:
             docai_entity.confidence = block.confidence
 
         docai_entity.type = block.type_
@@ -235,9 +237,9 @@ def _get_bytes(
 
     """
 
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-    blobs = bucket.list_blobs(prefix=f"{prefix}")
+    storage_client = document._get_storage_client()
+    bucket = storage_client.bucket(bucket_name=bucket_name)
+    blobs = storage_client.list_blobs(bucket_or_name=bucket_name, prefix=prefix)
 
     metadata_blob = None
 
@@ -289,9 +291,10 @@ def _upload_file(
         None.
 
     """
-    storage_client = storage.Client()
+    storage_client = document._get_storage_client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(output_prefix)
+
     print("Uploaded : %s\r" % output_prefix.split("/")[-1], end="")
     blob.upload_from_string(file, content_type="application/json")
 
