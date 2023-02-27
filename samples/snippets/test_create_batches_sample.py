@@ -18,7 +18,7 @@ import pytest
 from samples.snippets import create_batches_sample
 
 gcs_bucket_name = "cloud-samples-data"
-gcs_input_uri = "documentai_toolbox/document_batches/folder_with_3_documents/"
+gcs_input_uri = "documentai_toolbox/document_batches/"
 batch_size = 50
 
 
@@ -28,5 +28,6 @@ def test_create_batches_sample(capsys: pytest.CaptureFixture) -> None:
     )
     out, _ = capsys.readouterr()
 
-    assert "1 batch(es) created." in out
-    assert "3 files in batch." in out
+    assert "2 batch(es) created." in out
+    assert "50 files in batch." in out
+    assert "47 files in batch." in out

@@ -18,10 +18,10 @@
 from typing import List, Optional
 
 from google.cloud import documentai
-from google.cloud import storage
 
 from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.document import _get_storage_client
+
 
 def create_batches(
     gcs_bucket_name: str,
@@ -53,13 +53,12 @@ def create_batches(
 
     storage_client = _get_storage_client()
     blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
-
     batches: List[documentai.BatchDocumentsInputConfig] = []
     batch: List[documentai.GcsDocument] = []
 
     for blob in blob_list:
         # Skip Directories
-        if blob.name[-1] == "/":
+        if blob.name.endswith("/"):
             continue
 
         if blob.content_type not in constants.VALID_MIME_TYPES:

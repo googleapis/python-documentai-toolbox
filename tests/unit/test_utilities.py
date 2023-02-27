@@ -18,10 +18,32 @@ import pytest
 
 from google.cloud.documentai_toolbox.utilities import utilities
 
+# try/except added for compatibility with python < 3.8
+try:
+    from unittest import mock
+except ImportError:  # pragma: NO COVER
+    import mock
 
-def test_create_batches_with_3_documents(capfd):
-    test_bucket = "cloud-samples-data"
-    test_prefix = "documentai_toolbox/document_batches/folder_with_3_documents/"
+import pytest
+
+test_bucket = "test-directory"
+test_prefix = "documentai/input"
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_create_batches_with_3_documents(mock_storage, capfd):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    mock_blobs = []
+    for i in range(3):
+        mock_blob = mock.Mock(name=f"test_file{i}.pdf")
+        mock_blob.content_type = mock.PropertyMock(return_value="application/pdf")
+        mock_blob.size = mock.PropertyMock(return_value=1024)
+        mock_blob.endswith.return_value = False
+        mock_blobs.append(mock_blob)
+    client.list_blobs.return_value = mock_blobs
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
@@ -34,9 +56,6 @@ def test_create_batches_with_3_documents(capfd):
 
 
 def test_create_batches_with_invalid_batch_size(capfd):
-    test_bucket = "cloud-samples-data"
-    test_prefix = "documentai_toolbox/document_batches/folder_with_3_documents/"
-
     with pytest.raises(ValueError):
         utilities.create_batches(
             gcs_bucket_name=test_bucket, gcs_prefix=test_prefix, batch_size=51
@@ -47,9 +66,20 @@ def test_create_batches_with_invalid_batch_size(capfd):
         assert err
 
 
-def test_create_batches_with_large_folder(capfd):
-    test_bucket = "cloud-samples-data"
-    test_prefix = "documentai_toolbox/document_batches/"
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_create_batches_with_large_folder(mock_storage, capfd):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    mock_blobs = []
+    for i in range(96):
+        mock_blob = mock.Mock(name=f"test_file{i}.pdf")
+        mock_blob.content_type = mock.PropertyMock(return_value="application/pdf")
+        mock_blob.size = mock.PropertyMock(return_value=1024)
+        mock_blob.endswith.return_value = False
+        mock_blobs.append(mock_blob)
+    client.list_blobs.return_value = mock_blobs
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
@@ -62,9 +92,17 @@ def test_create_batches_with_large_folder(capfd):
     assert len(actual[1].gcs_documents.documents) == 46
 
 
-def test_create_batches_with_invalid_file_type(capfd):
-    test_bucket = "cloud-samples-data"
-    test_prefix = "documentai_toolbox/1/"
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_create_batches_with_invalid_file_type(mock_storage, capfd):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    mock_blob = mock.Mock(name=f"test_file.json")
+    mock_blob.content_type = mock.PropertyMock(return_value="application/json")
+    mock_blob.size = mock.PropertyMock(return_value=1024)
+    mock_blob.endswith.return_value = False
+    client.list_blobs.return_value = [mock_blob]
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
@@ -75,9 +113,17 @@ def test_create_batches_with_invalid_file_type(capfd):
     assert actual == []
 
 
-def test_create_batches_with_large_file(capfd):
-    test_bucket = "cloud-samples-data"
-    test_prefix = "documentai_toolbox/file_too_large/"
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+def test_create_batches_with_large_file(mock_storage, capfd):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    mock_blob = mock.Mock(name=f"test_file.pdf")
+    mock_blob.content_type = mock.PropertyMock(return_value="application/pdf")
+    mock_blob.size = mock.PropertyMock(return_value=2073741824)
+    mock_blob.endswith.return_value = False
+    client.list_blobs.return_value = [mock_blob]
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
