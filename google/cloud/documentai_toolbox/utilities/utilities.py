@@ -21,7 +21,7 @@ from google.cloud import documentai
 from google.cloud import storage
 
 from google.cloud.documentai_toolbox import constants
-
+from google.cloud.documentai_toolbox.wrappers.document import _get_storage_client
 
 def create_batches(
     gcs_bucket_name: str,
@@ -51,7 +51,7 @@ def create_batches(
             f"Batch size must be less than {constants.BATCH_MAX_FILES}. You provided {batch_size}."
         )
 
-    storage_client = storage.Client()
+    storage_client = _get_storage_client()
     blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
 
     batches: List[documentai.BatchDocumentsInputConfig] = []
