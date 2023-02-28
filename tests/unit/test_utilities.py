@@ -24,7 +24,6 @@ try:
 except ImportError:  # pragma: NO COVER
     import mock
 
-import pytest
 
 test_bucket = "test-directory"
 test_prefix = "documentai/input"
@@ -38,16 +37,18 @@ def test_create_batches_with_3_documents(mock_storage, capfd):
 
     mock_blobs = []
     for i in range(3):
-        mock_blob = mock.Mock(name=f"test_file{i}.pdf")
-        mock_blob.content_type = mock.PropertyMock(return_value="application/pdf")
-        mock_blob.size = mock.PropertyMock(return_value=1024)
-        mock_blob.endswith.return_value = False
+        mock_blob = mock.Mock(
+            name=f"test_file{i}.pdf", content_type="application/pdf", size=1024
+        )
+        mock_blob.name.endswith.return_value = False
         mock_blobs.append(mock_blob)
     client.list_blobs.return_value = mock_blobs
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
+
+    mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
     assert out == ""
@@ -74,16 +75,18 @@ def test_create_batches_with_large_folder(mock_storage, capfd):
 
     mock_blobs = []
     for i in range(96):
-        mock_blob = mock.Mock(name=f"test_file{i}.pdf")
-        mock_blob.content_type = mock.PropertyMock(return_value="application/pdf")
-        mock_blob.size = mock.PropertyMock(return_value=1024)
-        mock_blob.endswith.return_value = False
+        mock_blob = mock.Mock(
+            name=f"test_file{i}.pdf", content_type="application/pdf", size=1024
+        )
+        mock_blob.name.endswith.return_value = False
         mock_blobs.append(mock_blob)
     client.list_blobs.return_value = mock_blobs
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
+
+    mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
     assert out == ""
@@ -98,15 +101,17 @@ def test_create_batches_with_invalid_file_type(mock_storage, capfd):
     mock_bucket = mock.Mock()
     client.Bucket.return_value = mock_bucket
 
-    mock_blob = mock.Mock(name=f"test_file.json")
-    mock_blob.content_type = mock.PropertyMock(return_value="application/json")
-    mock_blob.size = mock.PropertyMock(return_value=1024)
-    mock_blob.endswith.return_value = False
+    mock_blob = mock.Mock(
+        name="test_file.json", content_type="application/json", size=1024
+    )
+    mock_blob.name.endswith.return_value = False
     client.list_blobs.return_value = [mock_blob]
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
+
+    mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
     assert "Invalid Mime Type" in out
@@ -119,15 +124,17 @@ def test_create_batches_with_large_file(mock_storage, capfd):
     mock_bucket = mock.Mock()
     client.Bucket.return_value = mock_bucket
 
-    mock_blob = mock.Mock(name=f"test_file.pdf")
-    mock_blob.content_type = mock.PropertyMock(return_value="application/pdf")
-    mock_blob.size = mock.PropertyMock(return_value=2073741824)
-    mock_blob.endswith.return_value = False
+    mock_blob = mock.Mock(
+        name="test_file.pdf", content_type="application/pdf", size=2073741824
+    )
+    mock_blob.name.endswith.return_value = False
     client.list_blobs.return_value = [mock_blob]
 
     actual = utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
+
+    mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
     assert "File size must be less than" in out
