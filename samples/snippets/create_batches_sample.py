@@ -38,12 +38,15 @@ def create_batches_sample(
 
     print(f"{len(batches)} batch(es) created.")
     for batch in batches:
+        print(f"{len(batch.gcs_documents.documents)} files in batch.")
+        print(batch.gcs_documents.documents)
+
         # Use as input for batch_process_documents()
+        # Refer to https://cloud.google.com/document-ai/docs/send-request
+        # for how to send a batch processing request
         request = documentai.BatchProcessRequest(
             name="processor_name", input_documents=batch
         )
-        print(f"{len(batch.gcs_documents.documents)} files in batch.")
-        print(batch.gcs_documents.documents)
 
 
 # [END documentai_toolbox_create_batches]
