@@ -21,6 +21,7 @@ except ImportError:  # pragma: NO COVER
 
 from google.cloud.documentai_toolbox.converters.config import blocks, converter_helpers
 from google.cloud import documentai, storage
+import pytest
 
 
 @mock.patch(
@@ -195,5 +196,66 @@ def test_upload():
     pass
 
 
-def test_convert_documents_with_config():
-    pass
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
+@mock.patch(
+    "google.cloud.documentai_toolbox.converters.config.converter_helpers._get_docproto_files",
+    return_value=(["file1"], ["test_label"], []),
+)
+@mock.patch(
+    "google.cloud.documentai_toolbox.converters.config.converter_helpers._upload",
+    return_value="Done",
+)
+def test_convert_documents_with_config(
+    mock_storage, mock_get_docproto_files, mock_upload, capfd
+):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    mock_blob1 = mock.Mock(name="gs://test-directory/1/test-annotations.json")
+    mock_blob1.download_as_bytes.return_value = (
+        "gs://test-directory/1/test-annotations.json"
+    )
+
+    mock_blob2 = mock.Mock(name="gs://test-directory/1/test-config.json")
+    mock_blob2.download_as_bytes.return_value = "gs://test-directory/1/test-config.json"
+
+    mock_blob3 = mock.Mock(name="gs://test-directory/1/test.pdf")
+    mock_blob3.download_as_bytes.return_value = "gs://test-directory/1/test.pdf"
+
+    client.list_blobs.return_value = [mock_blob1, mock_blob2, mock_blob3]
+
+    actual = converter_helpers.convert_documents_with_config(
+        project_id="project-id",
+        location="location",
+        processor_id="project-id",
+        gcs_input_path="gs://test-directory/",
+        gcs_output_path="gs://test-directory/1/output",
+    )   
+
+    out, err = capfd.readouterr()
+    assert "test_label" in out
+
+
+def test_convert_documents_with_config_with_gcs_path_error():
+    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
+
+        converter_helpers.convert_documents_with_config(
+            project_id="project-id",
+            location="location",
+            processor_id="project-id",
+            gcs_input_path="test-directory/1",
+            gcs_output_path="gs://test-directory/1/output",
+        )
+
+
+def test_convert_documents_with_config_with_file_error():
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
+
+        converter_helpers.convert_documents_with_config(
+            project_id="project-id",
+            location="location",
+            processor_id="project-id",
+            gcs_input_path="gs://test-directory/1.json",
+            gcs_output_path="gs://test-directory/1/output",
+        )

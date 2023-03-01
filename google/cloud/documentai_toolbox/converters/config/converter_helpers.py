@@ -445,7 +445,7 @@ def convert_documents_with_config(
     if file_check is not None:
         raise ValueError("gcs_prefix cannot contain file types")
 
-    storage_client = storage.Client()
+    storage_client = document._get_storage_client()
 
     blob_list = storage_client.list_blobs(output_bucket, prefix=output_prefix)
 
