@@ -160,6 +160,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
     for byte in byte_array:
         shards.append(documentai.Document.from_json(byte, ignore_unknown_fields=True))
 
+    shards.sort(key=lambda x: int(x.shard_info.shard_index))
     return shards
 
 
