@@ -17,7 +17,7 @@
 # [START documentai_toolbox_create_batches]
 
 from google.cloud import documentai
-from google.cloud.documentai_toolbox.utilities import utilities
+from google.cloud.documentai_toolbox import utilities
 
 # TODO(developer): Uncomment these variables before running the sample.
 # Given unprocessed documents in path gs://bucket/path/to/folder
