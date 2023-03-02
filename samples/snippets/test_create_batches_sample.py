@@ -13,23 +13,21 @@
 # limitations under the License.
 #
 
-import os
 
 import pytest
-from samples.snippets import quickstart_sample
+from samples.snippets import create_batches_sample
 
-location = "us"
-project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
-gcs_bucket_name = "documentai_toolbox_samples"
-gcs_input_uri = "output/123456789/0"
+gcs_bucket_name = "cloud-samples-data"
+gcs_input_uri = "documentai_toolbox/document_batches/"
+batch_size = 50
 
 
-def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
-    quickstart_sample.quickstart_sample(
-        gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_input_uri
+def test_create_batches_sample(capsys: pytest.CaptureFixture) -> None:
+    create_batches_sample.create_batches_sample(
+        gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_input_uri, batch_size=batch_size
     )
     out, _ = capsys.readouterr()
 
-    assert "Document structure in Cloud Storage" in out
-    assert "Number of Pages: 1" in out
-    assert "Number of Entities: 35" in out
+    assert "2 batch(es) created." in out
+    assert "50 files in batch." in out
+    assert "47 files in batch." in out

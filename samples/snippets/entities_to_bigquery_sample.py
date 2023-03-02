@@ -14,36 +14,37 @@
 #
 
 
-# [START documentai_toolbox_quickstart]
+# [START documentai_toolbox_entities_to_bigquery]
 
 from google.cloud.documentai_toolbox import document
-from google.cloud.documentai_toolbox import utilities
 
 # TODO(developer): Uncomment these variables before running the sample.
 # Given a document.proto or sharded document.proto in path gs://bucket/path/to/folder
 # gcs_bucket_name = "bucket"
 # gcs_prefix = "path/to/folder"
+# dataset_name = "test_dataset"
+# table_name = "test_table"
+# project_id = "YOUR_PROJECT_ID"
 
 
-def quickstart_sample(gcs_bucket_name: str, gcs_prefix: str) -> None:
-    print("Document structure in Cloud Storage")
-    utilities.print_gcs_document_tree(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
-
+def entities_to_bigquery_sample(
+    gcs_bucket_name: str,
+    gcs_prefix: str,
+    dataset_name: str,
+    table_name: str,
+    project_id: str,
+) -> None:
     wrapped_document = document.Document.from_gcs(
         gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix
     )
 
-    print("Document Successfully Loaded!")
-    print(f"\t Number of Pages: {len(wrapped_document.pages)}")
-    print(f"\t Number of Entities: {len(wrapped_document.entities)}")
+    job = wrapped_document.entities_to_bigquery(
+        dataset_name=dataset_name, table_name=table_name, project_id=project_id
+    )
 
-    for idx, page in enumerate(wrapped_document.pages):
-        print(f"Page {idx}")
-        for paragraph in page.paragraphs:
-            print(paragraph.text)
-
-    for entity in wrapped_document.entities:
-        print(f"{entity.type_} : {entity.mention_text}")
+    print("Document entities loaded into BigQuery")
+    print(f"Job ID: {job.job_id}")
+    print(f"Table: {job.destination.path}")
 
 
-# [END documentai_toolbox_quickstart]
+# [END documentai_toolbox_entities_to_bigquery]

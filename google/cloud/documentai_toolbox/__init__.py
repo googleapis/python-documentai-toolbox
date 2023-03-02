@@ -28,10 +28,8 @@ from .converters import (
     converter,
 )
 
-
-__all__ = (
-    converter,
-    document,
-    page,
-    entity,
+from .utilities import (
+    utilities,
 )
+
+__all__ = (document, page, entity, converter, utilities)

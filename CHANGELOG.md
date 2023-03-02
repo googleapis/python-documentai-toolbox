@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.0-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.2.1-alpha...v0.3.0-alpha) (2023-02-27)
+
+
+### Features
+
+* Added docproto to AnnotateFile convertor ([#63](https://github.com/googleapis/python-documentai-toolbox/issues/63)) ([f6dd89a](https://github.com/googleapis/python-documentai-toolbox/commit/f6dd89ae2d12a990439358d0aa8f94566fba28bb))
+
+## [0.2.1-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.2.0-alpha...v0.2.1-alpha) (2023-02-15)
+
+
+### Documentation
+
+* Update to README ([#58](https://github.com/googleapis/python-documentai-toolbox/issues/58)) ([4e691fa](https://github.com/googleapis/python-documentai-toolbox/commit/4e691fa8f46a24dbb2bf451f8e0d305c5c9ef607))
+
+## [0.2.0-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.1.1-alpha...v0.2.0-alpha) (2023-02-15)
+
+
+### Features
+
+* Add `entities_to_dict()` and `entities_to_bigquery()` to `Document` wrapper ([#50](https://github.com/googleapis/python-documentai-toolbox/issues/50)) ([494fa86](https://github.com/googleapis/python-documentai-toolbox/commit/494fa864998b340e052f693ee963a4370128ae80))
+* Add PDF Splitter ([#51](https://github.com/googleapis/python-documentai-toolbox/issues/51)) ([8359911](https://github.com/googleapis/python-documentai-toolbox/commit/8359911b55f4545421fa6ddc6f069eaf0311391d))
+* Added Support for Form Fields ([#48](https://github.com/googleapis/python-documentai-toolbox/issues/48)) ([6d74548](https://github.com/googleapis/python-documentai-toolbox/commit/6d74548b471a0401b6fde66283aead507c046dd1))
+
 ## [0.1.1-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.1.0-alpha...v0.1.1-alpha) (2023-02-08)
 
 

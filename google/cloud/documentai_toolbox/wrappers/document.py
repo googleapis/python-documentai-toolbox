@@ -21,13 +21,23 @@ import re
 from typing import Dict, List, Optional
 
 from google.api_core import client_info
+from google.cloud import bigquery
 from google.cloud import documentai
 from google.cloud import storage
 from google.cloud import documentai_toolbox
 
 from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.page import Page
+from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
+from google.cloud.documentai_toolbox.converters.converters import (
+    _convert_to_vision_annotate_file_response,
+)
+
+from google.cloud.vision import AnnotateFileResponse
+
+
+from pikepdf import Pdf
 
 
 def _entities_from_shards(
@@ -47,6 +57,8 @@ def _entities_from_shards(
     for shard in shards:
         for entity in shard.entities:
             result.append(Entity(documentai_entity=entity))
+            for prop in entity.properties:
+                result.append(Entity(documentai_entity=prop))
     return result
 
 
@@ -94,11 +106,11 @@ def _get_bytes(gcs_bucket_name: str, gcs_prefix: str) -> List[bytes]:
         gcs_bucket_name (str):
             Required. The name of the gcs bucket.
 
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_bucket_name=`bucket`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_bucket_name=`bucket`.
         gcs_prefix (str):
             Required. The prefix of the json files in the target_folder
 
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_prefix=`optional_folder/target_folder`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
     Returns:
         List[bytes]:
             A list of bytes.
@@ -126,11 +138,11 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
         gcs_bucket_name (str):
             Required. The name of the gcs bucket.
 
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_bucket_name=`bucket`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_bucket_name=`bucket`.
         gcs_prefix (str):
             Required. The prefix of the json files in the target_folder.
 
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_prefix=`optional_folder/target_folder`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
     Returns:
         List[google.cloud.documentai.Document]:
             A list of documentai.Documents.
@@ -148,57 +160,20 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
     for byte in byte_array:
         shards.append(documentai.Document.from_json(byte, ignore_unknown_fields=True))
 
+    if len(shards) > 1:
+        shards.sort(key=lambda x: int(x.shard_info.shard_index))
     return shards
 
 
-def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
-    r"""Prints a tree of filenames in Cloud Storage folder.
+def _text_from_shards(shards: List[documentai.Document]) -> str:
+    total_text = ""
+    for shard in shards:
+        if total_text == "":
+            total_text = shard.text
+        elif total_text != shard.text:
+            total_text += shard.text
 
-    Args:
-        gcs_bucket_name (str):
-            Required. The name of the gcs bucket.
-
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_bucket_name=`bucket`.
-        gcs_prefix (str):
-            Required. The prefix of the json files in the target_folder.
-
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_prefix=`optional_folder/target_folder`.
-    Returns:
-        None.
-
-    """
-    FILENAME_TREE_MIDDLE = "├──"
-    FILENAME_TREE_LAST = "└──"
-    FILES_TO_DISPLAY = 4
-
-    file_check = re.match(constants.FILE_CHECK_REGEX, gcs_prefix)
-
-    if file_check is not None:
-        raise ValueError("gcs_prefix cannot contain file types")
-
-    storage_client = _get_storage_client()
-    blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
-
-    path_list: Dict[str, List[str]] = {}
-
-    for blob in blob_list:
-        directory, file_name = os.path.split(blob.name)
-
-        if directory in path_list:
-            path_list[directory].append(file_name)
-        else:
-            path_list[directory] = [file_name]
-
-    for directory, files in path_list.items():
-        print(f"{directory}")
-        dir_size = len(files)
-        for idx, file_name in enumerate(files):
-            if idx == dir_size - 1:
-                if dir_size > FILES_TO_DISPLAY:
-                    print("│  ....")
-                print(f"{FILENAME_TREE_LAST}{file_name}\n")
-            elif idx <= FILES_TO_DISPLAY:
-                print(f"{FILENAME_TREE_MIDDLE}{file_name}")
+    return total_text
 
 
 @dataclasses.dataclass
@@ -217,11 +192,11 @@ class Document:
         gcs_bucket_name (Optional[str]):
             Optional. The name of the gcs bucket.
 
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_bucket_name=`bucket`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_bucket_name=`bucket`.
         gcs_prefix (Optional[str]):
             Optional. The prefix of the json files in the target_folder.
 
-            Format: `gs://bucket/optional_folder/target_folder/` where gcs_prefix=`optional_folder/target_folder`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
 
             For more information please take a look at https://cloud.google.com/storage/docs/json_api/v1/objects/list .
         pages: (List[Page]):
@@ -236,10 +211,12 @@ class Document:
 
     pages: List[Page] = dataclasses.field(init=False, repr=False)
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
+    text: str = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self):
         self.pages = _pages_from_shards(shards=self.shards)
         self.entities = _entities_from_shards(shards=self.shards)
+        self.text = _text_from_shards(shards=self.shards)
 
     @classmethod
     def from_document_path(
@@ -290,7 +267,7 @@ class Document:
             gcs_prefix (str):
                 Required. The prefix to the location of the target folder.
 
-                Format: Given `gs://{bucket_name}/optional_folder/target_folder` where gcs_prefix=`{optional_folder}/{target_folder}`.
+                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where gcs_prefix=`{optional_folder}/{target_folder}`.
         Returns:
             Document:
                 A document from gcs.
@@ -331,6 +308,26 @@ class Document:
                     break
         return found_pages
 
+    def get_form_field_by_name(self, target_field: str) -> List[FormField]:
+        r"""Returns the list of FormFields named target_field.
+
+        Args:
+            target_field (str):
+                Required. Target field name.
+
+        Returns:
+            List[FormField]:
+                A list of FormField matching target_field.
+
+        """
+        found_fields = []
+        for page in self.pages:
+            for form_field in page.form_fields:
+                if target_field.lower() in form_field.field_name.lower():
+                    found_fields.append(form_field)
+
+        return found_fields
+
     def get_entity_by_type(self, target_type: str) -> List[Entity]:
         r"""Returns the list of Entities of target_type.
 
@@ -344,3 +341,117 @@ class Document:
 
         """
         return [entity for entity in self.entities if entity.type_ == target_type]
+
+    def entities_to_dict(self) -> Dict:
+        r"""Returns Dictionary of entities in document.
+
+        Returns:
+            Dict:
+                The Dict of the entities indexed by type.
+
+        """
+        entities_dict: Dict = {}
+        for entity in self.entities:
+            entity_type = entity.type_.replace("/", "_")
+
+            existing_entity = entities_dict.get(entity_type)
+            if not existing_entity:
+                entities_dict[entity_type] = entity.mention_text
+                continue
+
+            # For entities that can have multiple (e.g. line_item)
+            # Change Entity Type to a List
+            if not isinstance(existing_entity, list):
+                existing_entity = [existing_entity]
+
+            existing_entity.append(entity.mention_text)
+            entities_dict[entity_type] = existing_entity
+
+        return entities_dict
+
+    def entities_to_bigquery(
+        self, dataset_name: str, table_name: str, project_id: Optional[str] = None
+    ) -> bigquery.job.LoadJob:
+        r"""Adds extracted entities to a BigQuery table.
+
+        Args:
+            dataset_name (str):
+                Required. Name of the BigQuery dataset.
+            table_name (str):
+                Required. Name of the BigQuery table.
+            project_id (Optional[str]):
+                Optional. Project ID containing the BigQuery table. If not passed, falls back to the default inferred from the environment.
+        Returns:
+            bigquery.job.LoadJob:
+                The BigQuery LoadJob for adding the entities.
+
+        """
+        bq_client = bigquery.Client(project=project_id)
+        table_ref = bigquery.DatasetReference(
+            project=project_id, dataset_id=dataset_name
+        ).table(table_name)
+
+        job_config = bigquery.LoadJobConfig(
+            schema_update_options=[
+                bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION,
+                bigquery.SchemaUpdateOption.ALLOW_FIELD_RELAXATION,
+            ],
+            source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+        )
+
+        return bq_client.load_table_from_json(
+            json_rows=[self.entities_to_dict()],
+            destination=table_ref,
+            job_config=job_config,
+        )
+
+    def split_pdf(self, pdf_path: str, output_path: str) -> List[str]:
+        r"""Splits local PDF file into multiple PDF files based on output from a Splitter/Classifier processor.
+
+        Args:
+            pdf_path (str):
+                Required. The path to the PDF file.
+            output_path (str):
+                Required. The path to the output directory.
+        Returns:
+            List[str]:
+                A list of output pdf files.
+        """
+        output_files: List[str] = []
+        input_filename, input_extension = os.path.splitext(os.path.basename(pdf_path))
+        with Pdf.open(pdf_path) as f:
+            for entity in self.entities:
+                subdoc_type = entity.type_ or "subdoc"
+
+                if entity.start_page == entity.end_page:
+                    page_range = f"pg{entity.start_page + 1}"
+                else:
+                    page_range = f"pg{entity.start_page + 1}-{entity.end_page + 1}"
+
+                output_filename = (
+                    f"{input_filename}_{page_range}_{subdoc_type}{input_extension}"
+                )
+
+                subdoc = Pdf.new()
+                for page_num in range(entity.start_page, entity.end_page + 1):
+                    subdoc.pages.append(f.pages[page_num])
+
+                subdoc.save(
+                    os.path.join(
+                        output_path,
+                        output_filename,
+                    ),
+                    min_version=f.pdf_version,
+                )
+                output_files.append(output_filename)
+        return output_files
+
+    def convert_document_to_annotate_file_response(self) -> AnnotateFileResponse:
+        """Convert OCR data from Document proto to AnnotateFileResponse proto (Vision API).
+
+        Args:
+            None.
+        Returns:
+            AnnotateFileResponse proto with a TextAnnotation per page.
+        """
+        return _convert_to_vision_annotate_file_response(self.text, self.pages)

@@ -16,20 +16,21 @@
 import os
 
 import pytest
-from samples.snippets import quickstart_sample
+from samples.snippets import table_sample
 
-location = "us"
-project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
-gcs_bucket_name = "documentai_toolbox_samples"
-gcs_input_uri = "output/123456789/0"
+document_path = "resources/form_with_tables.json"
+output_file_prefix = "resources/form_with_tables"
 
 
-def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
-    quickstart_sample.quickstart_sample(
-        gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_input_uri
+def test_table_sample(capsys: pytest.CaptureFixture) -> None:
+    table_sample.table_sample(
+        document_path=document_path, output_file_prefix=output_file_prefix
     )
     out, _ = capsys.readouterr()
 
-    assert "Document structure in Cloud Storage" in out
-    assert "Number of Pages: 1" in out
-    assert "Number of Entities: 35" in out
+    assert "Tables in Document" in out
+    assert "Item 1" in out
+
+    output_filename = f"{output_file_prefix}-0-0.csv"
+    assert os.path.exists(output_filename)
+    os.remove(output_filename)

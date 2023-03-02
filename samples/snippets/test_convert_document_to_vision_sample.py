@@ -16,7 +16,7 @@
 import os
 
 import pytest
-from samples.snippets import quickstart_sample
+from samples.snippets import convert_document_to_vision_sample
 
 location = "us"
 project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
@@ -25,11 +25,10 @@ gcs_input_uri = "output/123456789/0"
 
 
 def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
-    quickstart_sample.quickstart_sample(
+    convert_document_to_vision_sample.convert_document_to_vision_sample(
         gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_input_uri
     )
     out, _ = capsys.readouterr()
 
-    assert "Document structure in Cloud Storage" in out
-    assert "Number of Pages: 1" in out
-    assert "Number of Entities: 35" in out
+    assert "Document converted to AnnotateFileResponse!" in out
+    assert "Number of Pages : 1" in out

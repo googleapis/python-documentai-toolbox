@@ -14,10 +14,9 @@
 #
 
 
-# [START documentai_toolbox_quickstart]
+# [START documentai_toolbox_document_to_vision]
 
 from google.cloud.documentai_toolbox import document
-from google.cloud.documentai_toolbox import utilities
 
 # TODO(developer): Uncomment these variables before running the sample.
 # Given a document.proto or sharded document.proto in path gs://bucket/path/to/folder
@@ -25,25 +24,23 @@ from google.cloud.documentai_toolbox import utilities
 # gcs_prefix = "path/to/folder"
 
 
-def quickstart_sample(gcs_bucket_name: str, gcs_prefix: str) -> None:
-    print("Document structure in Cloud Storage")
-    utilities.print_gcs_document_tree(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
-
+def convert_document_to_vision_sample(
+    gcs_bucket_name: str,
+    gcs_prefix: str,
+) -> None:
     wrapped_document = document.Document.from_gcs(
         gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix
     )
 
-    print("Document Successfully Loaded!")
-    print(f"\t Number of Pages: {len(wrapped_document.pages)}")
-    print(f"\t Number of Entities: {len(wrapped_document.entities)}")
+    # Converting wrapped_document to vision AnnotateFileResponse
+    annotate_file_response = (
+        wrapped_document.convert_document_to_annotate_file_response()
+    )
 
-    for idx, page in enumerate(wrapped_document.pages):
-        print(f"Page {idx}")
-        for paragraph in page.paragraphs:
-            print(paragraph.text)
-
-    for entity in wrapped_document.entities:
-        print(f"{entity.type_} : {entity.mention_text}")
+    print("Document converted to AnnotateFileResponse!")
+    print(
+        f"Number of Pages : {len(annotate_file_response.responses[0].full_text_annotation.pages)}"
+    )
 
 
-# [END documentai_toolbox_quickstart]
+# [END documentai_toolbox_document_to_vision]
