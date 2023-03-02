@@ -352,13 +352,13 @@ def _get_docproto_files(f, project_id, location, processor_id, output_prefix):
             name=blobs[3],
         )
 
-        for entity in docproto.entities:
-            if entity.type_ not in unique_types:
-                unique_types.append(entity.type_)
-
         if docproto == None:
             did_not_convert.append(f"{output_prefix}/{blobs[3]}")
             continue
+
+        for entity in docproto.entities:
+            if entity.type_ not in unique_types:
+                unique_types.append(entity.type_)
 
         files[blobs[3]] = str(documentai.Document.to_json(docproto))
 

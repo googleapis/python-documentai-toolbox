@@ -64,7 +64,49 @@ def test_get_target_object_without_target():
     assert text == None
 
 
-def test_load_blocks_from_schema():
+def test_load_blocks_from_scheme_type_1():
+    docproto = documentai.Document()
+    page = documentai.Document.Page()
+    dimensions = documentai.Document.Page.Dimension()
+    dimensions.width = 2550
+    dimensions.height = 3300
+    page.dimension = dimensions
+    docproto.pages = [page]
+    with open("tests/unit/resources/converters/test_type_1.json", "r") as (f):
+        invoice = f.read()
+    with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
+        config = f.read()
+
+    actual = blocks.load_blocks_from_schema(
+        input_data=invoice, input_schema=config, base_docproto=docproto
+    )
+
+    assert actual[0].text == "411 I.T. Group"
+    assert actual[0].type_ == "BusinessName"
+
+
+def test_load_blocks_from_scheme_type_2():
+    docproto = documentai.Document()
+    page = documentai.Document.Page()
+    dimensions = documentai.Document.Page.Dimension()
+    dimensions.width = 2550
+    dimensions.height = 3300
+    page.dimension = dimensions
+    docproto.pages = [page]
+    with open("tests/unit/resources/converters/test_type_2.json", "r") as (f):
+        invoice = f.read()
+    with open("tests/unit/resources/converters/test_config_type_2.json", "r") as (f):
+        config = f.read()
+
+    actual = blocks.load_blocks_from_schema(
+        input_data=invoice, input_schema=config, base_docproto=docproto
+    )
+
+    assert actual[0].text == "4748"
+    assert actual[0].type_ == "invoice_id"
+
+
+def test_load_blocks_from_schema_type_3():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
