@@ -239,7 +239,7 @@ def load_blocks_from_schema(input_data, input_schema, base_docproto) -> List[Blo
         if bounding_y:
             b.bounding_y = bounding_y
 
-        if b.page_number == None:
+        if b.page_number is None:
             b.page_number = 0
 
         b.docproto_width = base_docproto.pages[int(b.page_number)].dimension.width

@@ -114,19 +114,19 @@ def _convert_bbox_units(
     final_coordinate = coordinate
     if input_bbox_units != "normalized":
         if input_bbox_units == "pxl":
-            if width == None:
+            if width is None:
                 final_coordinate = _normalize_coordinates(coordinate, height)
             else:
                 final_coordinate = _normalize_coordinates(coordinate, width)
         if input_bbox_units == "inch":
             x = _convert_to_pixels(coordinate, 96)
-            if width == None:
+            if width is None:
                 final_coordinate = _normalize_coordinates(x, height)
             else:
                 final_coordinate = _normalize_coordinates(x, width)
         if input_bbox_units == "cm":
             x = _convert_to_pixels(coordinate, 37.795)
-            if width == None:
+            if width is None:
                 final_coordinate = _normalize_coordinates(x, height)
             else:
                 final_coordinate = _normalize_coordinates(x, width)

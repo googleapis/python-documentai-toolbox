@@ -28,7 +28,7 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
 )
 
 from google.cloud.documentai_toolbox import document
-from google.cloud import documentai, storage
+from google.cloud import documentai
 
 
 def get_base_ocr(
@@ -94,7 +94,7 @@ def get_entitiy_content(blocks, docproto):
     for block in blocks:
 
         docai_entity = documentai.Document.Entity()
-        if block.confidence != None:
+        if block.confidence is not None:
             docai_entity.confidence = block.confidence
 
         docai_entity.type = block.type_
@@ -103,7 +103,7 @@ def get_entitiy_content(blocks, docproto):
 
         entity_id += 1
         # Generates the text anchors from bounding boxes
-        if block.bounding_box != None:
+        if block.bounding_box is not None:
             # Converts external bounding box format to docproto bounding box
 
             b1 = _convert_bbox_to_docproto_bbox(block)
@@ -257,7 +257,7 @@ def _get_bytes(
                 elif "pdf" in file_name:
                     doc_blob = blob
 
-        if metadata_blob == None and config_path != None:
+        if metadata_blob is None and config_path is not None:
             metadata_blob = bucket.get_blob(config_path)
 
         print("Downloaded : %s\r" % prefix.split("/")[-1], end="")
@@ -302,10 +302,6 @@ def _upload_file(
 def _get_files(blob_list, output_prefix, output_bucket, config_path: str = None):
     download_pool = futures.ThreadPoolExecutor(10)
     downloads = []
-    files = []
-    did_not_convert = []
-    labels = []
-    skip = ["DS_Store"]
     prev = None
     print("-------- Downloading Started --------")
     for i, blob in enumerate(blob_list):
@@ -352,7 +348,7 @@ def _get_docproto_files(f, project_id, location, processor_id, output_prefix):
             name=blobs[3],
         )
 
-        if docproto == None:
+        if docproto is None:
             did_not_convert.append(f"{output_prefix}/{blobs[3]}")
             continue
 
@@ -373,7 +369,7 @@ def _upload(files, gcs_output_path):
 
     output_bucket, output_prefix = match.groups()
 
-    if output_prefix == None:
+    if output_prefix is None:
         output_prefix = "/"
 
     file_check = re.match(r"(.*[.].*$)", output_prefix)
@@ -387,7 +383,6 @@ def _upload(files, gcs_output_path):
     for i, key in enumerate(files):
         op = output_prefix.split("/")
         op.pop()
-        prefix = "/".join(op)
         if "config" not in key and "annotations" not in key:
             _upload = download_pool.submit(
                 _upload_file,
@@ -437,7 +432,7 @@ def convert_documents_with_config(
 
     output_bucket, output_prefix = match.groups()
 
-    if output_prefix == None:
+    if output_prefix is None:
         output_prefix = "/"
 
     file_check = re.match(r"(.*[.].*$)", output_prefix)

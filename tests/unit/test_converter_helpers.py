@@ -19,9 +19,8 @@ try:
 except ImportError:  # pragma: NO COVER
     import mock
 
-from concurrent import futures
 from google.cloud.documentai_toolbox.converters.config import blocks, converter_helpers
-from google.cloud import documentai, storage
+from google.cloud import documentai
 import pytest
 
 
@@ -177,7 +176,7 @@ def test_convert_to_docproto_with_config_with_error(mock_ocr, capfd):
 
     out, err = capfd.readouterr()
 
-    assert actual == None
+    assert actual is None
     assert "Could Not Convert test_document" in out
 
 
@@ -207,7 +206,7 @@ def test_convert_to_docproto_with_config_with_error_and_retry(mock_ocr, capfd):
 
     out, err = capfd.readouterr()
 
-    assert actual == None
+    assert actual is None
     assert "Could Not Convert test_document" in out
 
 
@@ -265,7 +264,7 @@ def test_get_bytes_with_error(mock_storage):
 
         client.list_blobs.return_value = [mock_blob1]
 
-        actual = converter_helpers._get_bytes(
+        converter_helpers._get_bytes(
             bucket_name="bucket",
             prefix="prefix",
             annotation_file_prefix="annotations",
@@ -457,7 +456,7 @@ def test_convert_documents_with_config(
 
     client.list_blobs.return_value = [mock_blob1, mock_blob2, mock_blob3]
 
-    actual = converter_helpers.convert_documents_with_config(
+    converter_helpers.convert_documents_with_config(
         project_id="project-id",
         location="location",
         processor_id="project-id",

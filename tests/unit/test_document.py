@@ -75,23 +75,6 @@ def get_bytes_splitter_mock():
         yield byte_factory
 
 
-@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
-def test_get_bytes(mock_storage):
-    client = mock_storage.Client.return_value
-    mock_bucket = mock.Mock()
-    client.Bucket.return_value = mock_bucket
-    mock_blob1 = mock.Mock(name=[])
-    mock_blob1.name.ends_with.return_value = True
-    mock_blob1.download_as_bytes.return_value = (
-        "gs://test-directory/1/test-annotations.json"
-    )
-    client.list_blobs.return_value = [mock_blob1]
-
-    actual = document._get_bytes(gcs_bucket_name="test-directory", gcs_prefix="1")
-
-    assert actual == ["gs://test-directory/1/test-annotations.json"]
-
-
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document._get_shards(
@@ -287,7 +270,8 @@ def test_get_bytes(mock_storage):
         "gs://test-directory/1/test-annotations.json",
         "gs://test-directory/1/test-config.json",
     ]
-=======
+
+
 def test_get_form_field_by_name(get_bytes_form_parser_mock):
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"

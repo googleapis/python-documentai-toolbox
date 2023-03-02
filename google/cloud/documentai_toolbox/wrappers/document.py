@@ -30,9 +30,18 @@ from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
-from google.cloud.documentai_toolbox.converters.converters import (
-    _convert_to_vision_annotate_file_response,
+
+from google.cloud.vision import AnnotateFileResponse, ImageAnnotationContext
+from google.cloud.vision import AnnotateImageResponse
+
+from google.cloud.documentai_toolbox.wrappers import page
+
+from google.cloud.documentai_toolbox.converters.vision_helpers import (
+    _convert_document_page,
+    _get_text_anchor_substring,
+    PageInfo,
 )
+
 
 from google.cloud.vision import AnnotateFileResponse
 
@@ -76,8 +85,8 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     result = []
     for shard in shards:
         text = shard.text
-        for page in shard.pages:
-            result.append(Page(documentai_page=page, text=text))
+        for shard_page in shard.pages:
+            result.append(Page(documentai_page=shard_page, text=text))
 
     return result
 
@@ -174,6 +183,40 @@ def _text_from_shards(shards: List[documentai.Document]) -> str:
             total_text += shard.text
 
     return total_text
+
+
+def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page]):
+    """Convert OCR data from Document proto to AnnotateFileResponse proto (Vision API).
+
+    Args:
+        text (str):
+            Contents of document.
+         List[Page]:
+            A list of Pages.
+
+    Returns:
+        AnnotateFileResponse proto with a TextAnnotation per page.
+    """
+    responses = []
+    vision_file_response = AnnotateFileResponse()
+    page_idx = 0
+    while page_idx < len(pages):
+        page_info = PageInfo(pages[page_idx].documentai_page, text)
+        page_vision_annotation = _convert_document_page(page_info)
+        page_vision_annotation.text = _get_text_anchor_substring(
+            text, pages[page_idx].documentai_page.layout.text_anchor
+        )
+        responses.append(
+            AnnotateImageResponse(
+                full_text_annotation=page_vision_annotation,
+                context=ImageAnnotationContext(page_number=page_idx + 1),
+            )
+        )
+        page_idx += 1
+
+    vision_file_response.responses = responses
+
+    return vision_file_response
 
 
 @dataclasses.dataclass
@@ -299,12 +342,12 @@ class Document:
             )
 
         found_pages = []
-        for page in self.pages:
-            for paragraph in page.paragraphs:
+        for p in self.pages:
+            for paragraph in p.paragraphs:
                 if (target_string and target_string in paragraph.text) or (
                     pattern and re.search(pattern, paragraph.text)
                 ):
-                    found_pages.append(page)
+                    found_pages.append(p)
                     break
         return found_pages
 
@@ -321,8 +364,8 @@ class Document:
 
         """
         found_fields = []
-        for page in self.pages:
-            for form_field in page.form_fields:
+        for p in self.pages:
+            for form_field in p.form_fields:
                 if target_field.lower() in form_field.field_name.lower():
                     found_fields.append(form_field)
 

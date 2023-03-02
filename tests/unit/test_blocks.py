@@ -1,5 +1,4 @@
 from google.cloud import documentai
-from google.cloud.documentai_v1.types import geometry
 from google.cloud.documentai_toolbox.converters.config import blocks
 
 
@@ -61,7 +60,7 @@ def test_get_target_object_without_target():
         json_data=test_json_data, target_object="entities.text"
     )
 
-    assert text == None
+    assert text is None
 
 
 def test_load_blocks_from_scheme_type_1():

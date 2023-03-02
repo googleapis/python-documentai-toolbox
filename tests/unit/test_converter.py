@@ -20,7 +20,6 @@ except ImportError:  # pragma: NO COVER
     import mock
 
 from google.cloud.documentai_toolbox.converters import converter
-from google.cloud import documentai, storage
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
