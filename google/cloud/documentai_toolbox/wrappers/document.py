@@ -42,10 +42,6 @@ from google.cloud.documentai_toolbox.converters.vision_helpers import (
     PageInfo,
 )
 
-
-from google.cloud.vision import AnnotateFileResponse
-
-
 from pikepdf import Pdf
 
 
@@ -175,6 +171,15 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
 
 
 def _text_from_shards(shards: List[documentai.Document]) -> str:
+    r"""Gets text from shards.
+
+    Args:
+        shards (List[google.cloud.documentai.Document]):
+            Required. List of document shards.
+    Returns:
+        str:
+            Text in all shards.
+    """
     total_text = ""
     for shard in shards:
         if total_text == "":
@@ -186,16 +191,16 @@ def _text_from_shards(shards: List[documentai.Document]) -> str:
 
 
 def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page]):
-    """Convert OCR data from Document proto to AnnotateFileResponse proto (Vision API).
+    r"""Convert OCR data from Document.proto to AnnotateFileResponse.proto for Vision API.
 
     Args:
         text (str):
-            Contents of document.
-         List[Page]:
-            A list of Pages.
-
+            Required. Contents of document.
+        pages (List[Page]):
+            Required. A list of pages.
     Returns:
-        AnnotateFileResponse proto with a TextAnnotation per page.
+        AnnotateFileResponse:
+            Proto with TextAnnotations.
     """
     responses = []
     vision_file_response = AnnotateFileResponse()
@@ -490,11 +495,12 @@ class Document:
         return output_files
 
     def convert_document_to_annotate_file_response(self) -> AnnotateFileResponse:
-        """Convert OCR data from Document proto to AnnotateFileResponse proto (Vision API).
+        r"""Convert OCR data from Document.proto to AnnotateFileResponse.proto for Vision API.
 
         Args:
             None.
         Returns:
-            AnnotateFileResponse proto with a TextAnnotation per page.
+            AnnotateFileResponse:
+                Proto with TextAnnotations.
         """
         return _convert_to_vision_annotate_file_response(self.text, self.pages)
