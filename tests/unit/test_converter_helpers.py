@@ -44,7 +44,7 @@ def test_get_base_ocr(mock_docai):
     assert actual == "Done"
 
 
-def test_get_entitiy_content_type_3():
+def test_get_entity_content_type_3():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -61,13 +61,13 @@ def test_get_entitiy_content_type_3():
         input_data=invoice, input_schema=config, base_docproto=docproto
     )
 
-    actual = converter_helpers.get_entitiy_content(blocks=b, docproto=docproto)
+    actual = converter_helpers.get_entity_content(blocks=b, docproto=docproto)
 
     assert actual[0].type == "BusinessName"
     assert actual[0].mention_text == "normalized 411 I.T. Group"
 
 
-def test_get_entitiy_content_type_2():
+def test_get_entity_content_type_2():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -84,13 +84,13 @@ def test_get_entitiy_content_type_2():
         input_data=invoice, input_schema=config, base_docproto=docproto
     )
 
-    actual = converter_helpers.get_entitiy_content(blocks=b, docproto=docproto)
+    actual = converter_helpers.get_entity_content(blocks=b, docproto=docproto)
 
     assert actual[0].type == "invoice_id"
     assert actual[0].mention_text == "4748"
 
 
-def test_get_entitiy_content_type_1():
+def test_get_entity_content_type_1():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -107,7 +107,7 @@ def test_get_entitiy_content_type_1():
         input_data=invoice, input_schema=config, base_docproto=docproto
     )
 
-    actual = converter_helpers.get_entitiy_content(blocks=b, docproto=docproto)
+    actual = converter_helpers.get_entity_content(blocks=b, docproto=docproto)
 
     assert actual[0].type == "BusinessName"
     assert actual[0].mention_text == "411 I.T. Group"

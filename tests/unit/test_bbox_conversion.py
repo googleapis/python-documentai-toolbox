@@ -4,39 +4,32 @@ from google.cloud.documentai_toolbox.converters.config import bbox_conversion, b
 
 
 def test_midpoint_in_bpoly():
-    box_a = geometry.BoundingPoly()
-    vertex_a = geometry.NormalizedVertex()
-    vertex_a.x = 2
-    vertex_a.y = 2
-    box_a.normalized_vertices = [vertex_a]
-    box_b = geometry.BoundingPoly()
-    vertex_b = geometry.NormalizedVertex()
-    vertex_b.x = 1
-    vertex_b.y = 1
-    vertex_b_max = geometry.NormalizedVertex()
-    vertex_b_max.x = 4
-    vertex_b_max.y = 4
-    box_b.normalized_vertices = [vertex_b, vertex_b_max]
+    vertex_a = geometry.NormalizedVertex(x=2, y=2)
+    box_a = geometry.BoundingPoly(normalized_vertices=[vertex_a])
+
+    vertex_b = geometry.NormalizedVertex(x=1, y=1)
+    vertex_b_max = geometry.NormalizedVertex(x=4, y=4)
+    box_b = geometry.BoundingPoly(normalized_vertices=[vertex_b, vertex_b_max])
+
     actual = bbox_conversion._midpoint_in_bpoly(box_a=box_a, box_b=box_b)
     assert actual
 
 
 def test_merge_text_anchors():
-    text_anchor_1 = documentai.Document.TextAnchor()
-    text_segment_1 = documentai.Document.TextAnchor.TextSegment()
-    text_segment_1.start_index = "0"
-    text_segment_1.end_index = "100"
-    text_anchor_1.text_segments = [text_segment_1]
-    text_anchor_2 = documentai.Document.TextAnchor()
-    text_segment_2 = documentai.Document.TextAnchor.TextSegment()
-    text_segment_2.start_index = "100"
-    text_segment_2.end_index = "200"
-    text_anchor_2.text_segments = [text_segment_2]
-    expected = documentai.Document.TextAnchor()
-    text_segment_3 = documentai.Document.TextAnchor.TextSegment()
-    text_segment_3.start_index = "0"
-    text_segment_3.end_index = "200"
-    expected.text_segments = [text_segment_3]
+    text_segment_1 = documentai.Document.TextAnchor.TextSegment(
+        start_index="0", end_index="100"
+    )
+    text_anchor_1 = documentai.Document.TextAnchor(text_segments=[text_segment_1])
+
+    text_segment_2 = documentai.Document.TextAnchor.TextSegment(
+        start_index="100", end_index="200"
+    )
+    text_anchor_2 = documentai.Document.TextAnchor(text_segments=[text_segment_2])
+
+    text_segment_3 = documentai.Document.TextAnchor.TextSegment(
+        start_index="0", end_index="200"
+    )
+    expected = documentai.Document.TextAnchor(text_segments=[text_segment_3])
     actual = bbox_conversion._merge_text_anchors(
         text_anchor_1=text_anchor_1, text_anchor_2=text_anchor_2
     )
@@ -44,101 +37,76 @@ def test_merge_text_anchors():
 
 
 def test_get_text_anchor_in_bbox():
-    box_a = geometry.BoundingPoly()
-    vertex_a = geometry.NormalizedVertex()
-    vertex_a.x = 2
-    vertex_a.y = 2
-    vertex_a_max = geometry.NormalizedVertex()
-    vertex_a_max.x = 5
-    vertex_a_max.y = 5
-    box_a.normalized_vertices = [vertex_a, vertex_a_max]
-    box_b = geometry.BoundingPoly()
-    vertex_b = geometry.NormalizedVertex()
-    vertex_b.x = 1
-    vertex_b.y = 1
-    vertex_b_max = geometry.NormalizedVertex()
-    vertex_b_max.x = 8
-    vertex_b_max.y = 8
-    box_b.normalized_vertices = [vertex_b, vertex_b_max]
-    text_anchor_1 = documentai.Document.TextAnchor()
-    text_segment_1 = documentai.Document.TextAnchor.TextSegment()
-    text_segment_1.start_index = "0"
-    text_segment_1.end_index = "100"
-    text_anchor_1.text_segments = [text_segment_1]
-    text_anchor_2 = documentai.Document.TextAnchor()
-    text_segment_2 = documentai.Document.TextAnchor.TextSegment()
-    text_segment_2.start_index = "100"
-    text_segment_2.end_index = "200"
-    text_anchor_2.text_segments = [text_segment_2]
-    page = documentai.Document.Page()
-    token1 = documentai.Document.Page.Token()
-    token2 = documentai.Document.Page.Token()
-    layout1 = documentai.Document.Page.Layout()
-    layout1.bounding_poly = box_b
-    layout1.text_anchor = text_anchor_1
-    layout2 = documentai.Document.Page.Layout()
-    layout2.bounding_poly = box_b
-    layout2.text_anchor = text_anchor_2
-    token1.layout = layout1
-    token2.layout = layout2
-    page.tokens = [token1, token2]
+    vertex_a = geometry.NormalizedVertex(x=2, y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=5, y=5)
+    box_a = geometry.BoundingPoly(normalized_vertices=[vertex_a, vertex_a_max])
+
+    vertex_b = geometry.NormalizedVertex(x=1, y=1)
+    vertex_b_max = geometry.NormalizedVertex(x=8, y=8)
+    box_b = geometry.BoundingPoly(normalized_vertices=[vertex_b, vertex_b_max])
+
+    text_segment_1 = documentai.Document.TextAnchor.TextSegment(
+        start_index="0", end_index="100"
+    )
+    text_anchor_1 = documentai.Document.TextAnchor(text_segments=[text_segment_1])
+
+    text_segment_2 = documentai.Document.TextAnchor.TextSegment(
+        start_index="100", end_index="200"
+    )
+    text_anchor_2 = documentai.Document.TextAnchor(text_segments=[text_segment_2])
+
+    layout1 = documentai.Document.Page.Layout(
+        bounding_poly=box_b, text_anchor=text_anchor_1
+    )
+    layout2 = documentai.Document.Page.Layout(
+        bounding_poly=box_b, text_anchor=text_anchor_2
+    )
+
+    token1 = documentai.Document.Page.Token(layout=layout1)
+    token2 = documentai.Document.Page.Token(layout=layout2)
+
+    page = documentai.Document.Page(tokens=[token1, token2])
     actual = bbox_conversion._get_text_anchor_in_bbox(bbox=box_a, page=page)
-    expected = documentai.Document.TextAnchor()
-    text_segment_3 = documentai.Document.TextAnchor.TextSegment()
-    text_segment_3.start_index = "0"
-    text_segment_3.end_index = "200"
-    expected.text_segments = [text_segment_3]
+
+    text_segment_3 = documentai.Document.TextAnchor.TextSegment(
+        start_index="0", end_index="200"
+    )
+    expected = documentai.Document.TextAnchor(text_segments=[text_segment_3])
     assert actual == expected
 
 
 def test_get_norm_x_max():
-    bbox = geometry.BoundingPoly()
-    vertex_a_min = geometry.NormalizedVertex()
-    vertex_a_min.x = 2
-    vertex_a_min.y = 2
-    vertex_a_max = geometry.NormalizedVertex()
-    vertex_a_max.x = 4
-    vertex_a_max.y = 4
-    bbox.normalized_vertices = [vertex_a_min, vertex_a_max]
+    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+
+    bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_x_max(bbox=bbox)
     assert actual == 4
 
 
 def test_get_norm_x_min():
-    bbox = geometry.BoundingPoly()
-    vertex_a_min = geometry.NormalizedVertex()
-    vertex_a_min.x = 2
-    vertex_a_min.y = 2
-    vertex_a_max = geometry.NormalizedVertex()
-    vertex_a_max.x = 4
-    vertex_a_max.y = 4
-    bbox.normalized_vertices = [vertex_a_min, vertex_a_max]
+    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+
+    bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_x_min(bbox=bbox)
     assert actual == 2
 
 
 def test_get_norm_y_max():
-    bbox = geometry.BoundingPoly()
-    vertex_a_min = geometry.NormalizedVertex()
-    vertex_a_min.x = 2
-    vertex_a_min.y = 2
-    vertex_a_max = geometry.NormalizedVertex()
-    vertex_a_max.x = 4
-    vertex_a_max.y = 4
-    bbox.normalized_vertices = [vertex_a_min, vertex_a_max]
+    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+
+    bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_y_min(bbox=bbox)
     assert actual == 2
 
 
 def test_get_norm_y_min():
-    bbox = geometry.BoundingPoly()
-    vertex_a_min = geometry.NormalizedVertex()
-    vertex_a_min.x = 2
-    vertex_a_min.y = 2
-    vertex_a_max = geometry.NormalizedVertex()
-    vertex_a_max.x = 4
-    vertex_a_max.y = 4
-    bbox.normalized_vertices = [vertex_a_min, vertex_a_max]
+    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+
+    bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_y_max(bbox=bbox)
     assert actual == 4
 

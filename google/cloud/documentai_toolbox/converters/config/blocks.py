@@ -219,9 +219,8 @@ def load_blocks_from_schema(input_data, input_schema, base_docproto) -> List[Blo
             b.id_ = _get_target_object(entity, id_)
         if confidence:
             b.confidence = _get_target_object(entity, confidence)
-        if page_number:
-            if page_number in entity:
-                b.page_number = _get_target_object(entity, page_number)
+        if page_number and page_number in entity:
+            b.page_number = _get_target_object(entity, page_number)
         if bounding_width:
             b.bounding_width = _get_target_object(b.bounding_box, bounding_width)
         if bounding_height:

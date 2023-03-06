@@ -27,12 +27,12 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
     load_blocks_from_schema,
 )
 
-from google.cloud.documentai_toolbox import document
+from google.cloud.documentai_toolbox import document, constants
 from google.cloud import documentai
 
 
 def get_base_ocr(
-    project_id: str, location: str, processor_id: str, file_bytes, mime_type: str
+    project_id: str, location: str, processor_id: str, file_bytes: bytes, mime_type: str
 ) -> documentai.Document:
     r"""Returns documentai.Document from OCR processor.
 
@@ -52,20 +52,13 @@ def get_base_ocr(
             A documentai.Document from OCR processor.
 
     """
-    # You must set the api_endpoint if you use a location other than 'us', e.g.:
 
     client = documentai.DocumentProcessorServiceClient()
 
-    # The full resource name of the processor, e.g.:
-    # projects/project_id/locations/location/processor/processor_id
-    # You must create new processors in the Cloud Console first
     name = client.processor_path(project_id, location, processor_id)
 
-    # Read the file into memory
-    image_content = file_bytes
-
     # Load Binary Data into Document AI RawDocument Object
-    raw_document = documentai.RawDocument(content=image_content, mime_type=mime_type)
+    raw_document = documentai.RawDocument(content=file_bytes, mime_type=mime_type)
 
     # Configure the process request
     request = documentai.ProcessRequest(name=name, raw_document=raw_document)
@@ -74,7 +67,7 @@ def get_base_ocr(
     return result.document
 
 
-def get_entitiy_content(blocks, docproto):
+def get_entity_content(blocks, docproto):
     r"""Returns a list of documentai.Document entities.
 
     Args:
@@ -94,7 +87,7 @@ def get_entitiy_content(blocks, docproto):
     for block in blocks:
 
         docai_entity = documentai.Document.Entity()
-        if block.confidence is not None:
+        if block.confidence:
             docai_entity.confidence = block.confidence
 
         docai_entity.type = block.type_
@@ -103,7 +96,7 @@ def get_entitiy_content(blocks, docproto):
 
         entity_id += 1
         # Generates the text anchors from bounding boxes
-        if block.bounding_box is not None:
+        if block.bounding_box:
             # Converts external bounding box format to docproto bounding box
 
             b1 = _convert_bbox_to_docproto_bbox(block)
@@ -166,7 +159,7 @@ def convert_to_docproto_with_config(
             documentai.Document object.
 
     TODO: Depending on input type you will need to modify load_blocks.
-          Depening on input format, if your annoated data is not seperate from the base OCR data you will need to modify get_entitiy_content
+          Depending on input format, if your annotated data is not separate from the base OCR data you will need to modify get_entity_content
           Depending on input BoundingBox, if the input BoundingBox object is like https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#BoundingPoly then you will need to
             modify _convert_bbox_to_docproto_bbox since the objects are different.
     """
@@ -187,8 +180,8 @@ def convert_to_docproto_with_config(
             base_docproto=base_docproto,
         )
 
-        # # Gets List[documentai.Document.Entity]
-        entities = get_entitiy_content(blocks=blocks, docproto=base_docproto)
+        # Gets List[documentai.Document.Entity]
+        entities = get_entity_content(blocks=blocks, docproto=base_docproto)
 
         base_docproto.entities = entities
         print("Converted : %s\r" % name, end="")
@@ -257,7 +250,7 @@ def _get_bytes(
                 elif "pdf" in file_name:
                     doc_blob = blob
 
-        if metadata_blob is None and config_path is not None:
+        if metadata_blob and config_path:
             metadata_blob = bucket.get_blob(config_path)
 
         print("Downloaded : %s\r" % prefix.split("/")[-1], end="")
@@ -307,25 +300,25 @@ def _get_files(blob_list, output_prefix, output_bucket, config_path: str = None)
     for i, blob in enumerate(blob_list):
         if "DS_Store" in blob.name:
             continue
-        else:
-            file_path = blob.name.split("/")
-            file_path.pop()
-            doc_directory = file_path[-1]
-            file_path2 = "/".join(file_path)
-            if prev == doc_directory or f"{file_path2}/" == output_prefix:
-                continue
 
-            download = download_pool.submit(
-                _get_bytes,
-                output_bucket,
-                file_path2,
-                "annotation",
-                "config",
-                config_path,
-            )
-            downloads.append(download)
+        file_path = blob.name.split("/")
+        file_path.pop()
+        doc_directory = file_path[-1]
+        file_path2 = "/".join(file_path)
+        if prev == doc_directory or f"{file_path2}/" == output_prefix:
+            continue
 
-            prev = doc_directory
+        download = download_pool.submit(
+            _get_bytes,
+            output_bucket,
+            file_path2,
+            "annotation",
+            "config",
+            config_path,
+        )
+        downloads.append(download)
+
+        prev = doc_directory
 
     return downloads
 
@@ -372,9 +365,9 @@ def _upload(files, gcs_output_path):
     if output_prefix is None:
         output_prefix = "/"
 
-    file_check = re.match(r"(.*[.].*$)", output_prefix)
+    file_check = re.match(constants.FILE_CHECK_REGEX, output_prefix)
 
-    if file_check is not None:
+    if file_check:
         raise ValueError("gcs_prefix cannot contain file types")
 
     download_pool = futures.ThreadPoolExecutor(10)
@@ -435,9 +428,9 @@ def convert_documents_with_config(
     if output_prefix is None:
         output_prefix = "/"
 
-    file_check = re.match(r"(.*[.].*$)", output_prefix)
+    file_check = re.match(constants.FILE_CHECK_REGEX, output_prefix)
 
-    if file_check is not None:
+    if file_check:
         raise ValueError("gcs_prefix cannot contain file types")
 
     storage_client = document._get_storage_client()
