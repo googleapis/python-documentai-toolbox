@@ -76,8 +76,8 @@ def test_get_text_anchor_in_bbox():
 
 
 def test_get_norm_x_max():
-    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
-    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+    vertex_a_min = geometry.NormalizedVertex(x=2, y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4, y=4)
 
     bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_x_max(bbox=bbox)
@@ -85,8 +85,8 @@ def test_get_norm_x_max():
 
 
 def test_get_norm_x_min():
-    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
-    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+    vertex_a_min = geometry.NormalizedVertex(x=2, y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4, y=4)
 
     bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_x_min(bbox=bbox)
@@ -94,8 +94,8 @@ def test_get_norm_x_min():
 
 
 def test_get_norm_y_max():
-    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
-    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+    vertex_a_min = geometry.NormalizedVertex(x=2, y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4, y=4)
 
     bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_y_min(bbox=bbox)
@@ -103,8 +103,8 @@ def test_get_norm_y_max():
 
 
 def test_get_norm_y_min():
-    vertex_a_min = geometry.NormalizedVertex(x=2,y=2)
-    vertex_a_max = geometry.NormalizedVertex(x=4,y=4)
+    vertex_a_min = geometry.NormalizedVertex(x=2, y=2)
+    vertex_a_max = geometry.NormalizedVertex(x=4, y=4)
 
     bbox = geometry.BoundingPoly(normalized_vertices=[vertex_a_min, vertex_a_max])
     actual = bbox_conversion._get_norm_y_max(bbox=bbox)
