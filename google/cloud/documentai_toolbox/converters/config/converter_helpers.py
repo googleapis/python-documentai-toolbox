@@ -37,15 +37,15 @@ def get_base_ocr(
     r"""Returns documentai.Document from OCR processor.
 
     Args:
-        project_id (JSON):
+        project_id (str):
             Required.
-        location (documentai.Document):
+        location (str):
             Required.
-        processor_id (List[Block]):
+        processor_id (str):
             Required.
-        file_bytes (List[Block]):
+        file_bytes (bytes):
             Required. The bytes of the original pdf.
-        mime_type (List[Block]):
+        mime_type (str):
             Required. usually "application/pdf".
     Returns:
         documentai.Document:
