@@ -16,7 +16,7 @@
 """Document.proto converters."""
 
 from google.cloud.documentai_toolbox.converters.config.converter_helpers import (
-    convert_documents_with_config,
+    _convert_documents_with_config,
 )
 
 
@@ -28,7 +28,7 @@ def convert_from_config(
     gcs_output_path: str,
     config_path: str = None,
 ) -> None:
-    convert_documents_with_config(
+    _convert_documents_with_config(
         project_id=project_id,
         location=location,
         processor_id=processor_id,

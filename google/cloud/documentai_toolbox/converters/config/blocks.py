@@ -19,6 +19,8 @@ from typing import List
 import json
 from types import SimpleNamespace
 
+from google.cloud import documentai
+
 
 @dataclasses.dataclass
 class Block:
@@ -100,7 +102,19 @@ class Block:
         )
 
 
-def _get_target_object(json_data, target_object):
+def _get_target_object(json_data: any, target_object: str) -> SimpleNamespace:
+    r"""Returns SimpleNamespace of target_object.
+
+    Args:
+        json_data (str):
+            Required. data from JSON.loads .
+        target_object (str):
+            Required. The path to the target object.
+
+    Returns:
+        SimpleNamespace.
+
+    """
     json_data_s = SimpleNamespace(**json_data)
 
     target_object_parts = target_object.split(".")
@@ -119,9 +133,26 @@ def _get_target_object(json_data, target_object):
     return current_object
 
 
-def load_blocks_from_schema(input_data, input_schema, base_docproto) -> List[Block]:
+def _load_blocks_from_schema(
+    input_data: bytes, input_config: bytes, base_docproto: documentai.Document
+) -> List[Block]:
+    r"""Loads Blocks from original annotation data and provided config.
+
+    Args:
+        input_data (bytes):
+            Required.The bytes of the annotated data.
+        input_config (bytes):
+            Required.The bytes of config data.
+        base_docproto (bytes):
+            Required. The bytes of the original pdf.
+
+    Returns:
+        List[Block]:
+            From original annotation data and provided config.
+
+    """
     objects = json.loads(input_data)
-    schema_json = json.loads(input_schema, object_hook=lambda d: SimpleNamespace(**d))
+    schema_json = json.loads(input_config, object_hook=lambda d: SimpleNamespace(**d))
 
     entities = schema_json.entity_object
     type_ = schema_json.entity.type_

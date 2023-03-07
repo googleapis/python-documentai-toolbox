@@ -31,7 +31,7 @@ from google.cloud.documentai_toolbox.converters import converter
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._upload",
     return_value="Done",
 )
-def test_convert_documents_with_config(
+def test__convert_documents_with_config(
     mock_storage, mock_get_docproto_files, mock_upload, capfd
 ):
     client = mock_storage.Client.return_value

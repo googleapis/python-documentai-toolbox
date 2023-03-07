@@ -110,7 +110,26 @@ def _convert_to_pixels(x: float, conversion_rate: float) -> float:
 
 def _convert_bbox_units(
     coordinate, input_bbox_units, width=None, height=None, multiplier=1
-) -> any:
+) -> float:
+    r"""Returns a converted coordinate.
+
+    Args:
+        coordinate (float):
+            Required.The coordinate from document.proto 
+        input_bbox_units (str):
+            Required. The bounding box units.
+        width (float):
+            Optional.
+        height (float):
+            Optional.
+        multiplier (float):
+            Optional.
+        
+    Returns:
+        float:
+            A converted coordinate.
+
+    """
     final_coordinate = coordinate
     if input_bbox_units != "normalized":
         if input_bbox_units == "pxl":
@@ -134,22 +153,36 @@ def _convert_bbox_units(
     return final_coordinate * multiplier
 
 
-def _get_multiplier(docproto_x, y, input_bbox_units):
+def _get_multiplier(docproto_coordinate: float, external_coordinate: float, input_bbox_units: str) -> float:
+    r"""Returns a multiplier to use when converting bounding boxes.
+
+    Args:
+        docproto_coordinate (float):
+            Required.The coordinate from document.proto 
+        external_coordinate (float):
+            Required.The coordinate from external annotations.
+        input_bbox_units (str):
+            Required. The bounding box units.
+    Returns:
+        float:
+            multiplier to use when converting bounding boxes.
+
+    """
     if input_bbox_units == "inch":
-        converted = _convert_to_pixels(y, 96)
-        return docproto_x / converted
+        converted = _convert_to_pixels(external_coordinate, 96)
+        return docproto_coordinate / converted
     elif input_bbox_units == "cm":
-        converted = _convert_to_pixels(y, 37.795)
-        return docproto_x / converted
+        converted = _convert_to_pixels(external_coordinate, 37.795)
+        return docproto_coordinate / converted
     else:
-        return docproto_x / y
+        return docproto_coordinate / external_coordinate
 
 
 def _convert_bbox_to_docproto_bbox(block) -> geometry.BoundingPoly:
-    r"""Returns a converted bounding box from bounding box.
+    r"""Returns a converted bounding box from Block.
 
     Args:
-        external_bbox (str):
+        block (Block):
             Required.
     Returns:
         geometry.BoundingPoly:

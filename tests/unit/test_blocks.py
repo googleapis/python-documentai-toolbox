@@ -76,7 +76,7 @@ def test_load_blocks_from_scheme_type_1():
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
         config = f.read()
 
-    actual = blocks.load_blocks_from_schema(
+    actual = blocks._load_blocks_from_schema(
         input_data=invoice, input_schema=config, base_docproto=docproto
     )
 
@@ -97,7 +97,7 @@ def test_load_blocks_from_scheme_type_2():
     with open("tests/unit/resources/converters/test_config_type_2.json", "r") as (f):
         config = f.read()
 
-    actual = blocks.load_blocks_from_schema(
+    actual = blocks._load_blocks_from_schema(
         input_data=invoice, input_schema=config, base_docproto=docproto
     )
 
@@ -105,7 +105,7 @@ def test_load_blocks_from_scheme_type_2():
     assert actual[0].type_ == "invoice_id"
 
 
-def test_load_blocks_from_schema_type_3():
+def test__load_blocks_from_schema_type_3():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -118,7 +118,7 @@ def test_load_blocks_from_schema_type_3():
     with open("tests/unit/resources/converters/test_config_type_3.json", "r") as (f):
         config = f.read()
 
-    actual = blocks.load_blocks_from_schema(
+    actual = blocks._load_blocks_from_schema(
         input_data=invoice, input_schema=config, base_docproto=docproto
     )
 

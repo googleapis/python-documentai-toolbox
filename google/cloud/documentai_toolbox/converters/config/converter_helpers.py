@@ -17,21 +17,22 @@
 import re
 import time
 from concurrent import futures
-from typing import List
+from typing import List, Tuple
 
 from google.cloud.documentai_toolbox.converters.config.bbox_conversion import (
     _convert_bbox_to_docproto_bbox,
     _get_text_anchor_in_bbox,
 )
 from google.cloud.documentai_toolbox.converters.config.blocks import (
-    load_blocks_from_schema,
+    Block,
+    _load_blocks_from_schema,
 )
 
 from google.cloud.documentai_toolbox import document, constants
-from google.cloud import documentai
+from google.cloud import documentai, storage
 
 
-def get_base_ocr(
+def _get_base_ocr(
     project_id: str, location: str, processor_id: str, file_bytes: bytes, mime_type: str
 ) -> documentai.Document:
     r"""Returns documentai.Document from OCR processor.
@@ -67,16 +68,16 @@ def get_base_ocr(
     return result.document
 
 
-def get_entity_content(blocks, docproto):
+def _get_entity_content(
+    blocks: List[Block], docproto: documentai.Document
+) -> List[documentai.Document.Entity]:
     r"""Returns a list of documentai.Document entities.
 
     Args:
-        annotated_object (JSON):
-            Required.JSON object of the annotated data.
+        blocks (List[Block]):
+            Required.List of blocks from original annotation.
         docproto (documentai.Document):
             Required.The ocr docproto.
-        blocks (List[Block]):
-            Required. The bytes of the original pdf.
     Returns:
         List[documentai.Document.Entity]:
             A list of documentai.Document entities.
@@ -124,24 +125,24 @@ def get_entity_content(blocks, docproto):
     return entities
 
 
-def convert_to_docproto_with_config(
-    name,
-    annotated_bytes,
-    schema_bytes,
-    document_bytes,
-    project_id,
-    location,
-    processor_id,
-    retry_number,
+def _convert_to_docproto_with_config(
+    annotated_bytes: bytes,
+    schema_bytes: bytes,
+    document_bytes: bytes,
+    project_id: str,
+    location: str,
+    processor_id: str,
+    retry_number: str,
+    name: str = "",
 ) -> documentai.Document:
     r"""Converts a single document to docproto.
 
     Args:
-        annotated_bytes (str):
+        annotated_bytes (bytes):
             Required.The bytes of the annotated data.
-        ocr_bytes (str):
-            Required.The bytes of documentai.Document from OCR.
-        document_bytes (str):
+        schema_bytes (bytes):
+            Required.The bytes of config data.
+        document_bytes (bytes):
             Required. The bytes of the original pdf.
         project_id (str):
             Required.
@@ -159,12 +160,12 @@ def convert_to_docproto_with_config(
             documentai.Document object.
 
     TODO: Depending on input type you will need to modify load_blocks.
-          Depending on input format, if your annotated data is not separate from the base OCR data you will need to modify get_entity_content
+          Depending on input format, if your annotated data is not separate from the base OCR data you will need to modify _get_entity_content
           Depending on input BoundingBox, if the input BoundingBox object is like https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#BoundingPoly then you will need to
             modify _convert_bbox_to_docproto_bbox since the objects are different.
     """
     try:
-        base_docproto = get_base_ocr(
+        base_docproto = _get_base_ocr(
             project_id=project_id,
             location=location,
             processor_id=processor_id,
@@ -174,14 +175,14 @@ def convert_to_docproto_with_config(
 
         # Loads OCR data into Blocks
         # blocks = load_blocks(ocr_object=doc_object)
-        blocks = load_blocks_from_schema(
+        blocks = _load_blocks_from_schema(
             input_data=annotated_bytes,
             input_schema=schema_bytes,
             base_docproto=base_docproto,
         )
 
         # Gets List[documentai.Document.Entity]
-        entities = get_entity_content(blocks=blocks, docproto=base_docproto)
+        entities = _get_entity_content(blocks=blocks, docproto=base_docproto)
 
         base_docproto.entities = entities
         print("Converted : %s\r" % name, end="")
@@ -194,7 +195,7 @@ def convert_to_docproto_with_config(
             return None
         else:
             time.sleep(retry_number)
-            return convert_to_docproto_with_config(
+            return _convert_to_docproto_with_config(
                 name,
                 annotated_bytes,
                 schema_bytes,
@@ -223,10 +224,12 @@ def _get_bytes(
         annotation_file_prefix (str):
             Required. The prefix to search for annotation file.
         config_file_prefix (str):
-            Required. The prefix to search for config file
+            Required. The prefix to search for config file.
+        config_path (str):
+            Optional. The gcs path to a config file. This should be used when there is a single config file. 
 
     Returns:
-        List[Byte,Byte,Byte,str].
+        List[bytes].
 
     """
 
@@ -266,9 +269,9 @@ def _get_bytes(
 
 
 def _upload_file(
-    bucket_name,
-    output_prefix,
-    file,
+    bucket_name: str,
+    output_prefix: str,
+    file: str,
 ) -> None:
     r"""Uploads the converted docproto to gcs.
 
@@ -292,7 +295,28 @@ def _upload_file(
     blob.upload_from_string(file, content_type="application/json")
 
 
-def _get_files(blob_list, output_prefix, output_bucket, config_path: str = None):
+def _get_files(
+    blob_list: List[storage.blob.Blob],
+    input_bucket: str,
+    input_prefix: str,
+    config_path: str = None,
+):
+    r"""Returns a list of Futures of documents as bytes.
+
+    Args:
+        blob_list (List[storage.blob.Blob]):
+            Required. The list of Futures from _get_files.
+        input_bucket (str):
+            Required. The name of the input bucket.
+        input_prefix (str):
+            Required. The prefix for the location of the input folder.
+        config_path (str):
+            Required. The optional 
+    Returns:
+        Tuple[dict, list, list]:
+            Converted document.proto, unique entity types and documents that were not converted.
+
+    """
     download_pool = futures.ThreadPoolExecutor(10)
     downloads = []
     prev = None
@@ -305,12 +329,12 @@ def _get_files(blob_list, output_prefix, output_bucket, config_path: str = None)
         file_path.pop()
         doc_directory = file_path[-1]
         file_path2 = "/".join(file_path)
-        if prev == doc_directory or f"{file_path2}/" == output_prefix:
+        if prev == doc_directory or f"{file_path2}/" == input_prefix:
             continue
 
         download = download_pool.submit(
             _get_bytes,
-            output_bucket,
+            input_bucket,
             file_path2,
             "annotation",
             "config",
@@ -323,14 +347,34 @@ def _get_files(blob_list, output_prefix, output_bucket, config_path: str = None)
     return downloads
 
 
-def _get_docproto_files(f, project_id, location, processor_id, output_prefix):
+def _get_docproto_files(
+    f: List[futures.Future],
+    project_id: str,
+    location: str,
+    processor_id: str,
+)-> Tuple[dict, list, list]:
+    r"""Returns converted document.proto, unique entity types and documents that were not converted.
 
+    Args:
+        f (List[futures.Future]):
+            Required. The list of Futures from _get_files.
+        project_id (str):
+            Required.
+        location (str):
+            Required.
+        processor_id (str):
+            Required.
+    Returns:
+        Tuple[dict, list, list]:
+            Converted document.proto, unique entity types and documents that were not converted.
+
+    """
     did_not_convert = []
     files = {}
     unique_types = []
     for future in f:
         blobs = future.result()
-        docproto = convert_to_docproto_with_config(
+        docproto = _convert_to_docproto_with_config(
             annotated_bytes=blobs[0],
             document_bytes=blobs[1],
             schema_bytes=blobs[2],
@@ -342,7 +386,7 @@ def _get_docproto_files(f, project_id, location, processor_id, output_prefix):
         )
 
         if docproto is None:
-            did_not_convert.append(f"{output_prefix}/{blobs[3]}")
+            did_not_convert.append(f"{blobs[3]}")
             continue
 
         for entity in docproto.entities:
@@ -354,7 +398,20 @@ def _get_docproto_files(f, project_id, location, processor_id, output_prefix):
     return files, unique_types, did_not_convert
 
 
-def _upload(files, gcs_output_path):
+def _upload(files: dict, gcs_output_path: str) -> None:
+    r"""Upload converted document.proto to gcs location.
+
+    Args:
+        files (dict):
+            Required. The document.proto files to upload.
+        gcs_output_path (str):
+            Required. The gcs path to the folder to upload the converted docproto documents to.
+
+            Format: `gs://{bucket}/{optional_folder}`
+    Returns:
+        None.
+
+    """
     match = re.match(r"gs://(.*?)/(.*)", gcs_output_path)
 
     if match is None:
@@ -377,18 +434,18 @@ def _upload(files, gcs_output_path):
         op = output_prefix.split("/")
         op.pop()
         if "config" not in key and "annotations" not in key:
-            _upload = download_pool.submit(
+            upload = download_pool.submit(
                 _upload_file,
                 output_bucket,
                 f"{output_prefix}/{key}.json",
                 files[key],
             )
-            uploads.append(_upload)
+            uploads.append(upload)
 
     futures.wait(uploads)
 
 
-def convert_documents_with_config(
+def _convert_documents_with_config(
     gcs_input_path: str,
     gcs_output_path: str,
     project_id: str,
@@ -455,7 +512,7 @@ def convert_documents_with_config(
     labels = []
 
     files, labels, did_not_convert = _get_docproto_files(
-        f, project_id, location, processor_id, output_prefix
+        f, project_id, location, processor_id
     )
 
     print("-------- Finished Converting --------")
