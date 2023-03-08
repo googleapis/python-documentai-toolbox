@@ -115,7 +115,7 @@ def _convert_bbox_units(
 
     Args:
         coordinate (float):
-            Required.The coordinate from document.proto 
+            Required.The coordinate from document.proto
         input_bbox_units (str):
             Required. The bounding box units.
         width (float):
@@ -124,7 +124,7 @@ def _convert_bbox_units(
             Optional.
         multiplier (float):
             Optional.
-        
+
     Returns:
         float:
             A converted coordinate.
@@ -153,12 +153,14 @@ def _convert_bbox_units(
     return final_coordinate * multiplier
 
 
-def _get_multiplier(docproto_coordinate: float, external_coordinate: float, input_bbox_units: str) -> float:
+def _get_multiplier(
+    docproto_coordinate: float, external_coordinate: float, input_bbox_units: str
+) -> float:
     r"""Returns a multiplier to use when converting bounding boxes.
 
     Args:
         docproto_coordinate (float):
-            Required.The coordinate from document.proto 
+            Required.The coordinate from document.proto
         external_coordinate (float):
             Required.The coordinate from external annotations.
         input_bbox_units (str):
@@ -202,13 +204,13 @@ def _convert_bbox_to_docproto_bbox(block) -> geometry.BoundingPoly:
 
     if block.page_width and block.page_height:
         x_multiplier = _get_multiplier(
-            docproto_x=block.docproto_width,
-            y=block.page_width,
+            docproto_coordinate=block.docproto_width,
+            external_coordinate=block.page_width,
             input_bbox_units=block.bounding_unit,
         )
         y_multiplier = _get_multiplier(
-            docproto_x=block.docproto_height,
-            y=block.page_height,
+            docproto_coordinate=block.docproto_height,
+            external_coordinate=block.page_height,
             input_bbox_units=block.bounding_unit,
         )
 

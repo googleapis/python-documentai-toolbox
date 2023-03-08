@@ -132,7 +132,7 @@ def _convert_to_docproto_with_config(
     project_id: str,
     location: str,
     processor_id: str,
-    retry_number: str,
+    retry_number: int,
     name: str = "",
 ) -> documentai.Document:
     r"""Converts a single document to docproto.
@@ -177,7 +177,7 @@ def _convert_to_docproto_with_config(
         # blocks = load_blocks(ocr_object=doc_object)
         blocks = _load_blocks_from_schema(
             input_data=annotated_bytes,
-            input_schema=schema_bytes,
+            input_config=schema_bytes,
             base_docproto=base_docproto,
         )
 
@@ -196,13 +196,13 @@ def _convert_to_docproto_with_config(
         else:
             time.sleep(retry_number)
             return _convert_to_docproto_with_config(
-                name,
-                annotated_bytes,
-                schema_bytes,
-                document_bytes,
-                project_id,
-                location,
-                processor_id,
+                name=name,
+                annotated_bytes=annotated_bytes,
+                schema_bytes=schema_bytes,
+                document_bytes=document_bytes,
+                project_id=project_id,
+                location=location,
+                processor_id=processor_id,
                 retry_number=retry_number + 1,
             )
 
@@ -226,7 +226,7 @@ def _get_bytes(
         config_file_prefix (str):
             Required. The prefix to search for config file.
         config_path (str):
-            Optional. The gcs path to a config file. This should be used when there is a single config file. 
+            Optional. The gcs path to a config file. This should be used when there is a single config file.
 
     Returns:
         List[bytes].
@@ -311,7 +311,7 @@ def _get_files(
         input_prefix (str):
             Required. The prefix for the location of the input folder.
         config_path (str):
-            Required. The optional 
+            Required. The optional
     Returns:
         Tuple[dict, list, list]:
             Converted document.proto, unique entity types and documents that were not converted.
@@ -352,7 +352,7 @@ def _get_docproto_files(
     project_id: str,
     location: str,
     processor_id: str,
-)-> Tuple[dict, list, list]:
+) -> Tuple[dict, list, list]:
     r"""Returns converted document.proto, unique entity types and documents that were not converted.
 
     Args:
@@ -496,8 +496,8 @@ def _convert_documents_with_config(
 
     downloads = _get_files(
         blob_list=blob_list,
-        output_prefix=output_prefix,
-        output_bucket=output_bucket,
+        input_prefix=output_prefix,
+        input_bucket=output_bucket,
         config_path=config_path,
     )
 

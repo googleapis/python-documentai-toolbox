@@ -27,7 +27,7 @@ import pytest
 @mock.patch(
     "google.cloud.documentai_toolbox.converters.config.converter_helpers.documentai"
 )
-def test__get_base_ocr(mock_docai):
+def test_get_base_ocr(mock_docai):
     mock_client = mock_docai.DocumentProcessorServiceClient.return_value
 
     mock_client.process_document.return_value.document = "Done"
@@ -44,7 +44,7 @@ def test__get_base_ocr(mock_docai):
     assert actual == "Done"
 
 
-def test__get_entity_content_type_3():
+def test_get_entity_content_type_3():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -58,7 +58,7 @@ def test__get_entity_content_type_3():
         config = f.read()
 
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     actual = converter_helpers._get_entity_content(blocks=b, docproto=docproto)
@@ -67,7 +67,7 @@ def test__get_entity_content_type_3():
     assert actual[0].mention_text == "normalized 411 I.T. Group"
 
 
-def test__get_entity_content_type_2():
+def test_get_entity_content_type_2():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -81,7 +81,7 @@ def test__get_entity_content_type_2():
         config = f.read()
 
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     actual = converter_helpers._get_entity_content(blocks=b, docproto=docproto)
@@ -90,7 +90,7 @@ def test__get_entity_content_type_2():
     assert actual[0].mention_text == "4748"
 
 
-def test__get_entity_content_type_1():
+def test_get_entity_content_type_1():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -104,7 +104,7 @@ def test__get_entity_content_type_1():
         config = f.read()
 
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     actual = converter_helpers._get_entity_content(blocks=b, docproto=docproto)
@@ -116,7 +116,7 @@ def test__get_entity_content_type_1():
 @mock.patch(
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._get_base_ocr"
 )
-def test__convert_to_docproto_with_config(mock_ocr):
+def test_convert_to_docproto_with_config(mock_ocr):
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -153,7 +153,7 @@ def test__convert_to_docproto_with_config(mock_ocr):
 @mock.patch(
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._get_base_ocr"
 )
-def test__convert_to_docproto_with_config_with_error(mock_ocr, capfd):
+def test_convert_to_docproto_with_config_with_error(mock_ocr, capfd):
     mock_ocr.return_value = None
 
     with open("tests/unit/resources/converters/test_type_3.json", "rb") as (f):
@@ -183,7 +183,7 @@ def test__convert_to_docproto_with_config_with_error(mock_ocr, capfd):
 @mock.patch(
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._get_base_ocr"
 )
-def test__convert_to_docproto_with_config_with_error_and_retry(mock_ocr, capfd):
+def test_convert_to_docproto_with_config_with_error_and_retry(mock_ocr, capfd):
     mock_ocr.return_value = None
 
     with open("tests/unit/resources/converters/test_type_3.json", "rb") as (f):
@@ -314,7 +314,7 @@ def test_get_files(mock_storage, mock_get_bytes):
     blob_list = [mock_ds_store, mock_blob1, mock_blob2, mock_blob3]
 
     actual = converter_helpers._get_files(
-        blob_list=blob_list, output_prefix="", output_bucket="test-directory"
+        blob_list=blob_list, input_prefix="", input_bucket="test-directory"
     )
 
     assert actual[0].result() == "file_bytes"
@@ -346,7 +346,6 @@ def test_get_docproto_files(mocked_convert_docproto):
         f=[mock_result],
         project_id="project-id",
         processor_id="processor-id",
-        output_prefix="",
         location="us",
     )
     assert "test_type" in actual_files["document_1"]
@@ -386,10 +385,9 @@ def test_get_docproto_files_with_no_docproto(mocked_convert_docproto):
         f=[mock_result],
         project_id="project-id",
         processor_id="processor-id",
-        output_prefix="out",
         location="us",
     )
-    assert "out/document_1" in actual_did_not_convert
+    assert "document_1" in actual_did_not_convert
     mocked_convert_docproto.assert_called_with(
         annotated_bytes="annotated_bytes",
         document_bytes="document_bytes",
@@ -436,7 +434,7 @@ def test_upload_with_file_error():
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._upload",
     return_value="Done",
 )
-def test__convert_documents_with_config(
+def test_convert_documents_with_config(
     mock_storage, mock_get_docproto_files, mock_upload, capfd
 ):
     client = mock_storage.Client.return_value
@@ -470,7 +468,7 @@ def test__convert_documents_with_config(
     assert "document_2" in out
 
 
-def test__convert_documents_with_config_with_gcs_path_error():
+def test_convert_documents_with_config_with_gcs_path_error():
     with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
         converter_helpers._convert_documents_with_config(
             project_id="project-id",
@@ -481,7 +479,7 @@ def test__convert_documents_with_config_with_gcs_path_error():
         )
 
 
-def test__convert_documents_with_config_with_file_error():
+def test_convert_documents_with_config_with_file_error():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         converter_helpers._convert_documents_with_config(
             project_id="project-id",

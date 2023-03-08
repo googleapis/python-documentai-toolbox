@@ -151,21 +151,21 @@ def test_convert_bbox_units_with_cm():
 
 def test_get_multiplier_pxl():
     actual = bbox_conversion._get_multiplier(
-        docproto_x=1000, y=1000, input_bbox_units="pxl"
+        docproto_coordinate=1000, external_coordinate=1000, input_bbox_units="pxl"
     )
     assert actual == 1.0
 
 
 def test_get_multiplier_inch():
     actual = bbox_conversion._get_multiplier(
-        docproto_x=1000, y=10.416, input_bbox_units="inch"
+        docproto_coordinate=1000, external_coordinate=10.416, input_bbox_units="inch"
     )
     assert actual == 1.000064004096262
 
 
 def test_get_multiplier_cm():
     actual = bbox_conversion._get_multiplier(
-        docproto_x=1000, y=26.4585, input_bbox_units="cm"
+        docproto_coordinate=1000, external_coordinate=26.4585, input_bbox_units="cm"
     )
     assert actual == 1.000000992500985
 
@@ -183,7 +183,7 @@ def test_convert_bbox_to_docproto_bbox_empty_coordinate():
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
         config = f.read()
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
     b[0].bounding_box = []
 
@@ -205,7 +205,7 @@ def test_convert_bbox_to_docproto_bbox_type_1():
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
         config = f.read()
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
     actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=(b[0]))
 
@@ -228,7 +228,7 @@ def test_convert_bbox_to_docproto_bbox_type_2():
     with open("tests/unit/resources/converters/test_config_type_2.json", "r") as (f):
         config = f.read()
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
     actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=(b[0]))
 
@@ -251,7 +251,7 @@ def test_convert_bbox_to_docproto_bbox_type_3():
     with open("tests/unit/resources/converters/test_config_type_3.json", "r") as (f):
         config = f.read()
     b = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     print(b[0].bounding_type)

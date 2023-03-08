@@ -77,7 +77,7 @@ def test_load_blocks_from_scheme_type_1():
         config = f.read()
 
     actual = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     assert actual[0].text == "411 I.T. Group"
@@ -98,7 +98,7 @@ def test_load_blocks_from_scheme_type_2():
         config = f.read()
 
     actual = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     assert actual[0].text == "4748"
@@ -119,7 +119,7 @@ def test__load_blocks_from_schema_type_3():
         config = f.read()
 
     actual = blocks._load_blocks_from_schema(
-        input_data=invoice, input_schema=config, base_docproto=docproto
+        input_data=invoice, input_config=config, base_docproto=docproto
     )
 
     assert actual[0].text == "normalized 411 I.T. Group"
