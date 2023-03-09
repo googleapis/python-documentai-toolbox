@@ -68,4 +68,4 @@ def convert_external_annotations_sample(
     )
 
 
-# [END documentai_toolbox_convert_azure_document]
+# [END documentai_toolbox_convert_external_annotations]
