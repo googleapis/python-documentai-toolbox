@@ -24,8 +24,8 @@ from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.document import _get_storage_client
 
 
-def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
-    r"""Prints a tree of filenames in Cloud Storage folder.
+def list_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> List[str]:
+    r"""Returns a list path to files in Cloud Storage folder and prints the tree to terminal.
 
     Args:
         gcs_bucket_name (str):
@@ -37,7 +37,8 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
 
             Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
     Returns:
-        None.
+        List[str]:
+            The paths to documents in `gs://{gcs_bucket_name}/{gcs_prefix}`
 
     """
     FILENAME_TREE_MIDDLE = "├──"
@@ -72,6 +73,8 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
                 print(f"{FILENAME_TREE_LAST}{file_name}\n")
             elif idx <= FILES_TO_DISPLAY:
                 print(f"{FILENAME_TREE_MIDDLE}{file_name}")
+
+    return list(path_list.keys())
 
 
 def create_batches(

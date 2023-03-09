@@ -31,7 +31,7 @@ test_prefix = "documentai/input"
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
-def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
+def test_list_gcs_document_tree_with_one_folder(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -55,7 +55,9 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    utilities.print_gcs_document_tree(gcs_bucket_name="test-directory", gcs_prefix="/")
+    doc_list = utilities.list_gcs_document_tree(
+        gcs_bucket_name="test-directory", gcs_prefix="/"
+    )
 
     mock_storage.Client.assert_called_once()
 
@@ -68,9 +70,11 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
 └──test_shard3.json\n\n"""
     )
 
+    assert "gs://test-directory/1" in doc_list
+
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
-def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
+def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -94,7 +98,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    utilities.print_gcs_document_tree(
+    doc_list = utilities.list_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
@@ -109,9 +113,11 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 └──test_shard3.json\n\n"""
     )
 
+    assert "gs://test-directory/documentai/output/123456789/1" in doc_list
+
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
-def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
+def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -146,7 +152,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     ]
     client.list_blobs.return_value = blobs
 
-    utilities.print_gcs_document_tree(
+    doc_list = utilities.list_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
@@ -165,10 +171,12 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 └──test_shard6.json\n\n"""
     )
 
+    assert "gs://test-directory/documentai/output/123456789/1" in doc_list
 
-def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
+
+def test_list_gcs_document_tree_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        utilities.print_gcs_document_tree(
+        utilities.list_gcs_document_tree(
             gcs_bucket_name="test-directory",
             gcs_prefix="documentai/output/123456789/1/test_file.json",
         )
