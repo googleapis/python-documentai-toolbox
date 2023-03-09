@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# [START documentai_toolbox_convert_azure_document]
+# [START documentai_toolbox_convert_external_annotations]
 
 from google.cloud.documentai_toolbox import converter
 
