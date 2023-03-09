@@ -24,7 +24,9 @@ from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.document import _get_storage_client
 
 
-def list_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> List[str]:
+def list_gcs_document_tree(
+    gcs_bucket_name: str, gcs_prefix: str
+) -> Dict[str, List[str]]:
     r"""Returns a list path to files in Cloud Storage folder and prints the tree to terminal.
 
     Args:
@@ -37,14 +39,10 @@ def list_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> List[str]:
 
             Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
     Returns:
-        List[str]:
-            The paths to documents in `gs://{gcs_bucket_name}/{gcs_prefix}`
+        Dict[str, List[str]]:
+            The paths to documents in `gs://{gcs_bucket_name}/{gcs_prefix}`.
 
     """
-    FILENAME_TREE_MIDDLE = "├──"
-    FILENAME_TREE_LAST = "└──"
-    FILES_TO_DISPLAY = 4
-
     file_check = re.match(constants.FILE_CHECK_REGEX, gcs_prefix)
 
     if file_check is not None:
@@ -62,6 +60,33 @@ def list_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> List[str]:
             path_list[directory].append(file_name)
         else:
             path_list[directory] = [file_name]
+
+    return path_list
+
+
+def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
+    r"""Prints a tree of filenames in Cloud Storage folder..
+
+    Args:
+        gcs_bucket_name (str):
+            Required. The name of the gcs bucket.
+
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_bucket_name=`bucket`.
+        gcs_prefix (str):
+            Required. The prefix of the json files in the target_folder.
+
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
+    Returns:
+        None.
+
+    """
+    FILENAME_TREE_MIDDLE = "├──"
+    FILENAME_TREE_LAST = "└──"
+    FILES_TO_DISPLAY = 4
+
+    path_list = list_gcs_document_tree(
+        gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix
+    )
 
     for directory, files in path_list.items():
         print(f"{directory}")
