@@ -99,8 +99,6 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
             elif idx <= FILES_TO_DISPLAY:
                 print(f"{FILENAME_TREE_MIDDLE}{file_name}")
 
-    return list(path_list.keys())
-
 
 def create_batches(
     gcs_bucket_name: str,
