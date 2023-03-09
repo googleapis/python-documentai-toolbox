@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# [START documentai_toolbox_azure_document_to_docai]
+# [START documentai_toolbox_convert_azure_document]
 
 from google.cloud.documentai_toolbox import converter
 
