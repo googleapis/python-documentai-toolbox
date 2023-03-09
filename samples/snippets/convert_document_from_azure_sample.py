@@ -18,13 +18,13 @@
 from google.cloud.documentai_toolbox import converter
 
 # TODO(developer): Uncomment these variables before running the sample.
-# This sample will convert external annotations to a format Custom Document Workbench can use.
+# This sample will convert external annotations to the Document.json format used by Document AI Workbench for training.
 # To process this the external annotation must have these type of objects:
-#       1)Type
-#       2)Text
-#       3)Bounding Box (bounding boxes must be 1 of the 3 optional types)
+#       1) Type
+#       2) Text
+#       3) Bounding Box (bounding boxes must be 1 of the 3 optional types)
 #
-# This is the bair minumum requirment to convert the annotations but for better accuracy you will need to also have :
+# This is the bare minimum requirement to convert the annotations but for better accuracy you will need to also have:
 #       1) Document width & height
 #
 # Bounding Box Types:
@@ -35,7 +35,7 @@ from google.cloud.documentai_toolbox import converter
 #   Type 3:
 #       bounding_box: [1,2,2,2,2,3,1,3]
 #
-#   Note: If these types are not sufficient you can propose a feature request or contribute the new type and conver functionality.
+#   Note: If these types are not sufficient you can propose a feature request or contribute the new type and conversion functionality.
 #
 # Given a folders in gcs_input_path with the following structure :
 #
