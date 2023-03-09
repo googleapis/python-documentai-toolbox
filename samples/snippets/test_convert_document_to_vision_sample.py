@@ -24,7 +24,7 @@ gcs_bucket_name = "documentai_toolbox_samples"
 gcs_input_uri = "output/123456789/0"
 
 
-def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
+def test_convert_document_to_vision_sample(capsys: pytest.CaptureFixture) -> None:
     convert_document_to_vision_sample.convert_document_to_vision_sample(
         gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_input_uri
     )

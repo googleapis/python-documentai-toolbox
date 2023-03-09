@@ -16,14 +16,14 @@
 import os
 
 import pytest
-from samples.snippets import convert_document_from_azure_sample
+from samples.snippets import convert_external_annotations_sample
 
 location = "us"
 project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
 
 
-def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
-    convert_document_from_azure_sample.convert_external_annotations_sample(
+def test_convert_external_annotations_sample(capsys: pytest.CaptureFixture) -> None:
+    convert_external_annotations_sample.convert_external_annotations_sample(
         location=location,
         processor_id="52a38e080c1a7296",
         project_id="project_id",
