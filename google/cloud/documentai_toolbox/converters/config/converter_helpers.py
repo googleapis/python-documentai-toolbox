@@ -127,7 +127,7 @@ def _get_entity_content(
 
 def _convert_to_docproto_with_config(
     annotated_bytes: bytes,
-    schema_bytes: bytes,
+    config_bytes: bytes,
     document_bytes: bytes,
     project_id: str,
     location: str,
@@ -140,7 +140,7 @@ def _convert_to_docproto_with_config(
     Args:
         annotated_bytes (bytes):
             Required.The bytes of the annotated data.
-        schema_bytes (bytes):
+        config_bytes (bytes):
             Required.The bytes of config data.
         document_bytes (bytes):
             Required. The bytes of the original pdf.
@@ -177,7 +177,7 @@ def _convert_to_docproto_with_config(
         # blocks = load_blocks(ocr_object=doc_object)
         blocks = _load_blocks_from_schema(
             input_data=annotated_bytes,
-            input_config=schema_bytes,
+            input_config=config_bytes,
             base_docproto=base_docproto,
         )
 
@@ -198,7 +198,7 @@ def _convert_to_docproto_with_config(
             return _convert_to_docproto_with_config(
                 name=name,
                 annotated_bytes=annotated_bytes,
-                schema_bytes=schema_bytes,
+                config_bytes=config_bytes,
                 document_bytes=document_bytes,
                 project_id=project_id,
                 location=location,
@@ -377,7 +377,7 @@ def _get_docproto_files(
         docproto = _convert_to_docproto_with_config(
             annotated_bytes=blobs[0],
             document_bytes=blobs[1],
-            schema_bytes=blobs[2],
+            config_bytes=blobs[2],
             project_id=project_id,
             location=location,
             processor_id=processor_id,
@@ -470,6 +470,10 @@ def _convert_documents_with_config(
             Required.
         processor_id (str):
             Required.
+        config_path:
+            Optional. The gcs path to a single config file. This will work if all the documents in gcs_input_path are of the same config type.
+
+            Format: `gs://{bucket}/{optional_folder}/config.json`
 
     Returns:
         None.
@@ -480,24 +484,24 @@ def _convert_documents_with_config(
     if match is None:
         raise ValueError("gcs_prefix does not match accepted format")
 
-    output_bucket, output_prefix = match.groups()
+    input_bucket, input_prefix = match.groups()
 
-    if output_prefix is None:
-        output_prefix = "/"
+    if input_prefix is None:
+        input_prefix = "/"
 
-    file_check = re.match(constants.FILE_CHECK_REGEX, output_prefix)
+    file_check = re.match(constants.FILE_CHECK_REGEX, input_prefix)
 
     if file_check:
         raise ValueError("gcs_prefix cannot contain file types")
 
     storage_client = document._get_storage_client()
 
-    blob_list = storage_client.list_blobs(output_bucket, prefix=output_prefix)
+    blob_list = storage_client.list_blobs(input_bucket, prefix=input_prefix)
 
     downloads = _get_files(
         blob_list=blob_list,
-        input_prefix=output_prefix,
-        input_bucket=output_bucket,
+        input_prefix=input_prefix,
+        input_bucket=input_bucket,
         config_path=config_path,
     )
 

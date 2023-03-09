@@ -28,6 +28,31 @@ def convert_from_config(
     gcs_output_path: str,
     config_path: str = None,
 ) -> None:
+    r"""Converts all documents in gcs_input_path to docproto using configs.
+
+    Args:
+        project_id (str):
+            Required.
+        location (str):
+            Required.
+        processor_id (str):
+            Required.
+        gcs_input_path (str):
+            Required. The gcs path to the folder containing all non docproto documents.
+
+            Format: `gs://{bucket}/{optional_folder}`
+        gcs_output_path (str):
+            Required. The gcs path to the folder to upload the converted docproto documents to.
+
+            Format: `gs://{bucket}/{optional_folder}`
+        config_path:
+            Optional. The gcs path to a single config file. This will work if all the documents in gcs_input_path are of the same config type.
+
+            Format: `gs://{bucket}/{optional_folder}/config.json`
+    Returns:
+        None.
+
+    """
     _convert_documents_with_config(
         project_id=project_id,
         location=location,

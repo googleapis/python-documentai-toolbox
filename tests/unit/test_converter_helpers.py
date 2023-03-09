@@ -136,7 +136,7 @@ def test_convert_to_docproto_with_config(mock_ocr):
     actual = converter_helpers._convert_to_docproto_with_config(
         name="test_document",
         annotated_bytes=invoice,
-        schema_bytes=config,
+        config_bytes=config,
         document_bytes=pdf,
         project_id="project_id",
         processor_id="processor_id",
@@ -166,7 +166,7 @@ def test_convert_to_docproto_with_config_with_error(mock_ocr, capfd):
     actual = converter_helpers._convert_to_docproto_with_config(
         name="test_document",
         annotated_bytes=invoice,
-        schema_bytes=config,
+        config_bytes=config,
         document_bytes=pdf,
         project_id="project_id",
         processor_id="processor_id",
@@ -196,7 +196,7 @@ def test_convert_to_docproto_with_config_with_error_and_retry(mock_ocr, capfd):
     actual = converter_helpers._convert_to_docproto_with_config(
         name="test_document",
         annotated_bytes=invoice,
-        schema_bytes=config,
+        config_bytes=config,
         document_bytes=pdf,
         project_id="project_id",
         processor_id="processor_id",
@@ -329,7 +329,7 @@ def test_get_docproto_files(mocked_convert_docproto):
     mock_result.result.return_value = [
         "annotated_bytes",
         "document_bytes",
-        "schema_bytes",
+        "config_bytes",
         "document_1",
     ]
 
@@ -354,7 +354,7 @@ def test_get_docproto_files(mocked_convert_docproto):
     mocked_convert_docproto.assert_called_with(
         annotated_bytes="annotated_bytes",
         document_bytes="document_bytes",
-        schema_bytes="schema_bytes",
+        config_bytes="config_bytes",
         project_id="project-id",
         location="us",
         processor_id="processor-id",
@@ -372,7 +372,7 @@ def test_get_docproto_files_with_no_docproto(mocked_convert_docproto):
     mock_result.result.return_value = [
         "annotated_bytes",
         "document_bytes",
-        "schema_bytes",
+        "config_bytes",
         "document_1",
     ]
 
@@ -391,7 +391,7 @@ def test_get_docproto_files_with_no_docproto(mocked_convert_docproto):
     mocked_convert_docproto.assert_called_with(
         annotated_bytes="annotated_bytes",
         document_bytes="document_bytes",
-        schema_bytes="schema_bytes",
+        config_bytes="config_bytes",
         project_id="project-id",
         location="us",
         processor_id="processor-id",
