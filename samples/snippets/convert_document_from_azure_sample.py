@@ -36,7 +36,7 @@ from google.cloud.documentai_toolbox import converter
 def convert_document_from_azure_sample(
     location: str,
     processor_id: str,
-    project_id:str,
+    project_id: str,
     gcs_input_path: str,
     gcs_output_path: str,
 ) -> None:
