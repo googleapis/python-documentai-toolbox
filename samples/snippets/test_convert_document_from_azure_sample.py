@@ -23,7 +23,7 @@ project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
 
 
 def test_quickstart_sample(capsys: pytest.CaptureFixture) -> None:
-    convert_document_from_azure_sample.convert_document_from_azure_sample(
+    convert_document_from_azure_sample.convert_external_annotations_sample(
         location=location,
         processor_id="52a38e080c1a7296",
         project_id="project_id",

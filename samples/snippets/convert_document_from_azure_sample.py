@@ -18,6 +18,25 @@
 from google.cloud.documentai_toolbox import converter
 
 # TODO(developer): Uncomment these variables before running the sample.
+# This sample will convert external annotations to a format Custom Document Workbench can use.
+# To process this the external annotation must have these type of objects:
+#       1)Type
+#       2)Text
+#       3)Bounding Box (bounding boxes must be 1 of the 3 optional types)
+#
+# This is the bair minumum requirment to convert the annotations but for better accuracy you will need to also have :
+#       1) Document width & height
+#
+# Bounding Box Types:
+#   Type 1:
+#       bounding_box:[{"x":1,"y":2},{"x":2,"y":2},{"x":2,"y":3},{"x":1,"y":3}]
+#   Type 2:
+#       bounding_box:{ "Width": 1, "Height": 1, "Left": 1, "Top": 1}
+#   Type 3:
+#       bounding_box: [1,2,2,2,2,3,1,3]
+#
+#   Note: If these types are not sufficient you can propose a feature request or contribute the new type and conver functionality.
+#
 # Given a folders in gcs_input_path with the following structure :
 #
 # gs://path/to/input/folder
@@ -33,7 +52,7 @@ from google.cloud.documentai_toolbox import converter
 # gcs_output_path = "gs://path/to/input/folder"
 
 
-def convert_document_from_azure_sample(
+def convert_external_annotations_sample(
     location: str,
     processor_id: str,
     project_id: str,
