@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-# [START convert_document_from_azure_sample]
+# [START documentai_toolbox_azure_document_to_docai]
 
 from google.cloud.documentai_toolbox import converter
 
@@ -49,4 +49,4 @@ def convert_document_from_azure_sample(
     )
 
 
-# [END convert_document_from_azure_sample]
+# [END documentai_toolbox_azure_document_to_docai]
