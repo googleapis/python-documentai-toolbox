@@ -18,10 +18,13 @@
 from asyncio import futures
 import re
 from google.cloud.documentai_toolbox import converter, constants
-from google.cloud.documentai_toolbox.converters.custom.converter_helpers import _get_bytes, _upload_file
+from google.cloud.documentai_toolbox.converters.custom.converter_helpers import (
+    _get_bytes,
+    _upload_file,
+)
 
 
-def get_files(blob_list,input_prefix,input_bucket):
+def get_files(blob_list, input_prefix, input_bucket):
     r"""
     Custome get_files implementation
     """
@@ -51,7 +54,8 @@ def get_files(blob_list,input_prefix,input_bucket):
 
     return downloads
 
-def upload(files,gcs_output_path):
+
+def upload(files, gcs_output_path):
     r"""
     Custome _upload implementation
     """
@@ -87,6 +91,7 @@ def upload(files,gcs_output_path):
 
     futures.wait(uploads)
 
+
 def convert_external_annotations_sample(
     location: str,
     processor_id: str,
@@ -101,7 +106,7 @@ def convert_external_annotations_sample(
         gcs_input_path=gcs_input_path,
         gcs_output_path=gcs_output_path,
         _get_files=get_files,
-        _upload_file=upload
+        _upload_file=upload,
     )
 
 

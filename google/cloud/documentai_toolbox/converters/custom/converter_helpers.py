@@ -69,7 +69,9 @@ def _get_base_ocr(
 
 
 def _get_entity_content(
-    blocks: List[Block], docproto: documentai.Document, _convert_bbox_to_docproto_bbox: function= _convert_bbox_to_docproto_bbox
+    blocks: List[Block],
+    docproto: documentai.Document,
+    _convert_bbox_to_docproto_bbox=_convert_bbox_to_docproto_bbox,
 ) -> List[documentai.Document.Entity]:
     r"""Returns a list of documentai.Document entities.
 
@@ -133,8 +135,7 @@ def _convert_to_docproto_with_custom_function(
     processor_id: str,
     retry_number: int,
     name: str = "",
-    load_blocks: function = _load_blocks
-
+    load_blocks=_load_blocks,
 ) -> documentai.Document:
     r"""Converts a single document to docproto.
 
@@ -278,7 +279,7 @@ def _get_files(
     blob_list: List[storage.blob.Blob],
     input_bucket: str,
     input_prefix: str,
-    _get_bytes: function = _get_bytes,
+    _get_bytes=_get_bytes,
 ):
     r"""Returns a list of Futures of documents as bytes.
 
@@ -371,7 +372,7 @@ def _get_docproto_files(
     return files, unique_types, did_not_convert
 
 
-def _upload(files: dict, gcs_output_path: str,_upload_file: function= _upload_file ) -> None:
+def _upload(files: dict, gcs_output_path: str, _upload_file=_upload_file) -> None:
     r"""Upload converted document.proto to gcs location.
 
     Args:
@@ -424,9 +425,9 @@ def _convert_with_custom_functions(
     project_id: str,
     location: str,
     processor_id: str,
-    _get_files: function = _get_files,
-    _get_docproto_files: function = _get_docproto_files,
-    _upload: function = _upload
+    _get_files=_get_files,
+    _get_docproto_files=_get_docproto_files,
+    _upload=_upload,
 ) -> None:
     r"""Converts all documents in gcs_path to docproto.
 

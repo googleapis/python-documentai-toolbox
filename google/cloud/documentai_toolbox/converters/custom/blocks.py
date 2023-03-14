@@ -102,7 +102,9 @@ class Block:
         )
 
 
-def load_blocks(object,bounding_type,bounding_unit,docproto_width,docproto_height) -> List[Block]:
+def _load_blocks(
+    object, bounding_type, bounding_unit, docproto_width, docproto_height
+) -> List[Block]:
     r"""Returns a list of blocks.
 
     Args:
@@ -114,27 +116,25 @@ def load_blocks(object,bounding_type,bounding_unit,docproto_width,docproto_heigh
 
     """
     blocks = []
-    for i, block in enumerate(
-        object["entities"]
-    ):
-            
-        bounding_box=block["geometry"]["boundingBox"]
-        block_references=[]
-        block_id=block["id"]
-        confidence=block["confidence"] / 100
-        type_=block["blockType"]
-        text=block["text"]
-        page_number=block["page"]
-        page_width=object["page_width"]
-        page_height=object["page_width"]
-        bounding_width=block["geometry"]["boundingBox"]["width"]
-        bounding_height=block["geometry"]["boundingBox"]["height"]
-        bounding_type=bounding_type
-        bounding_unit=bounding_unit
-        bounding_x=bounding_height=block["geometry"]["boundingBox"]["x"]
-        bounding_y=bounding_height=block["geometry"]["boundingBox"]["y"]
-        docproto_width=docproto_width
-        docproto_height=docproto_height
+    for i, block in enumerate(object["entities"]):
+
+        bounding_box = block["geometry"]["boundingBox"]
+        block_references = []
+        block_id = block["id"]
+        confidence = block["confidence"] / 100
+        type_ = block["blockType"]
+        text = block["text"]
+        page_number = block["page"]
+        page_width = object["page_width"]
+        page_height = object["page_width"]
+        bounding_width = block["geometry"]["boundingBox"]["width"]
+        bounding_height = block["geometry"]["boundingBox"]["height"]
+        bounding_type = bounding_type
+        bounding_unit = bounding_unit
+        bounding_x = bounding_height = block["geometry"]["boundingBox"]["x"]
+        bounding_y = bounding_height = block["geometry"]["boundingBox"]["y"]
+        docproto_width = docproto_width
+        docproto_height = docproto_height
 
         blocks.append(
             Block.create(

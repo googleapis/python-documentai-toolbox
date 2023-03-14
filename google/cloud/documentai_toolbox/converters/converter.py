@@ -30,9 +30,9 @@ def convert_with_custom_functions(
     processor_id: str,
     gcs_input_path: str,
     gcs_output_path: str,
-    _get_files: function = None,
-    _get_docproto_files: function = None,
-    _upload: function = None
+    _get_files=None,
+    _get_docproto_files=None,
+    _upload=None,
 ) -> None:
 
     _convert_with_custom_functions(
@@ -43,7 +43,7 @@ def convert_with_custom_functions(
         processor_id=processor_id,
         _get_files=_get_files,
         _get_docproto_files=_get_docproto_files,
-        _upload=_upload
+        _upload=_upload,
     )
 
 
