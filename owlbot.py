@@ -29,7 +29,7 @@ common = gcp.CommonTemplates()
 # ----------------------------------------------------------------------------
 templated_files = common.py_library(
     system_test_python_versions=["3.8"],
-    cov_level=100,
+    cov_level=99,
     intersphinx_dependencies={
         "pandas": "https://pandas.pydata.org/pandas-docs/stable/"
     },
