@@ -98,6 +98,8 @@ def print_gcs_document_tree(gcs_bucket_name: str, gcs_prefix: str) -> None:
                 print(f"{FILENAME_TREE_LAST}{file_name}\n")
             elif idx <= FILES_TO_DISPLAY:
                 print(f"{FILENAME_TREE_MIDDLE}{file_name}")
+            else:
+                continue
 
 
 def create_batches(
@@ -163,7 +165,7 @@ def create_batches(
             )
         )
 
-    if batch != []:
+    if batch:
         # Append the last batch, which could be less than `batch_size`
         batches.append(
             documentai.BatchDocumentsInputConfig(
