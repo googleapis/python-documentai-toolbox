@@ -205,6 +205,17 @@ def test_search_page_with_multiple_pages(get_bytes_multiple_files_mock):
     assert len(actual_pages) == 48
 
 
+def test_search_page_with_no_results(get_bytes_single_file_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
+    )
+
+    actual_pages = doc.search_pages(target_string="Google")
+
+    get_bytes_single_file_mock.assert_called_once()
+    assert len(actual_pages) == 0
+
+
 def test_search_page_with_regex_and_str(get_bytes_single_file_mock):
     with pytest.raises(
         ValueError,
