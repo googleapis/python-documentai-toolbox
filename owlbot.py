@@ -35,3 +35,7 @@ templated_files = common.py_library(
     },
 )
 s.move(templated_files, excludes=["docs/multiprocessing.rst", "README.rst"])
+
+# run format session for all directories which have a noxfile
+for noxfile in pathlib.Path(".").glob("**/noxfile.py"):
+    s.shell.run(["nox", "-s", "blacken"], cwd=noxfile.parent, hide_output=False)
