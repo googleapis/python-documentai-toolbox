@@ -30,6 +30,7 @@ from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
+from google.cloud.documentai_toolbox.utilities import utilities
 
 from google.cloud.vision import AnnotateFileResponse, ImageAnnotationContext
 from google.cloud.vision import AnnotateImageResponse
@@ -256,6 +257,7 @@ class Document:
     shards: List[documentai.Document] = dataclasses.field(repr=False)
     gcs_bucket_name: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_prefix: Optional[str] = dataclasses.field(default=None, repr=False)
+    gcs_input_uri: Optional[str] = dataclasses.field(default=None, repr=False)
 
     pages: List[Page] = dataclasses.field(init=False, repr=False)
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
@@ -304,7 +306,7 @@ class Document:
         return cls(shards=[documentai_document])
 
     @classmethod
-    def from_gcs(cls, gcs_bucket_name: str, gcs_prefix: str):
+    def from_gcs(cls, gcs_bucket_name: str, gcs_prefix: str, gcs_input_uri: str = None):
         r"""Loads Document from Cloud Storage.
 
         Args:
@@ -316,14 +318,60 @@ class Document:
                 Required. The prefix to the location of the target folder.
 
                 Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where gcs_prefix=`{optional_folder}/{target_folder}`.
+            gcs_input_uri (str):
+                Optional. The gcs uri to the original input file.
+
+                Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
         Returns:
             Document:
                 A document from gcs.
         """
         shards = _get_shards(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
         return cls(
-            shards=shards, gcs_prefix=gcs_prefix, gcs_bucket_name=gcs_bucket_name
+            shards=shards,
+            gcs_bucket_name=gcs_bucket_name,
+            gcs_prefix=gcs_prefix,
+            gcs_input_uri=gcs_input_uri,
         )
+
+    @classmethod
+    def from_batch_process_metadata(cls, metadata: documentai.BatchProcessMetadata):
+        r"""Loads Documents from Cloud Storage, using the output from `BatchProcessMetadata`.
+
+            .. code-block:: python
+
+                from google.cloud import documentai
+
+                operation = client.batch_process_documents(request)
+                operation.result(timeout=timeout)
+                metadata = documentai.BatchProcessMetadata(operation.metadata)
+
+        Args:
+            metadata (documentai.BatchProcessMetadata):
+                Required. The operation metadata after a `batch_process_documents()` operation completes.
+
+        Returns:
+            List[Document]:
+                A list of wrapped documents from gcs. Each document corresponds to an input file.
+        """
+        if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
+            raise ValueError(f"Batch Process Failed: {metadata.state_message}")
+
+        documents: List[Document] = []
+        # Each process corresponds to one input document
+        for process in list(metadata.individual_process_statuses):
+            # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
+            gcs_bucket_name, gcs_prefix = utilities.split_gcs_uri(
+                process.output_gcs_destination
+            )
+
+            documents.append(
+                Document.from_gcs(
+                    gcs_bucket_name, gcs_prefix, gcs_input_uri=process.input_gcs_source
+                )
+            )
+
+        return documents
 
     def search_pages(
         self, target_string: Optional[str] = None, pattern: Optional[str] = None

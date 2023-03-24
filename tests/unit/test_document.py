@@ -62,6 +62,15 @@ def get_bytes_unordered_files_mock():
 
 
 @pytest.fixture
+def get_bytes_multiple_directories_mock():
+    with mock.patch.object(document, "_get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/0")
+        yield byte_factory
+        byte_factory.return_value = get_bytes("tests/unit/resources/1")
+        yield byte_factory
+
+
+@pytest.fixture
 def get_bytes_form_parser_mock():
     with mock.patch.object(document, "_get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/form_parser")
@@ -170,6 +179,37 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
 
     for page_index, page in enumerate(actual.pages):
         assert page.documentai_page.page_number == page_index + 1
+
+
+def test_document_from_batch_process_metadata_with_single_input_file(
+    get_bytes_multiple_directories_mock,
+):
+    mock_metadata = mock.Mock(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            mock.Mock(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+            ),
+            mock.Mock(
+                input_gcs_source="gs://test-directory/documentai/input2.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/2/",
+            ),
+        ],
+    )
+    documents = document.Document.from_batch_process_metadata(mock_metadata)
+
+    get_bytes_multiple_directories_mock.assert_called()
+    assert get_bytes_multiple_directories_mock.call_count == 2
+    assert len(documents) == 2
+
+    assert documents[0].gcs_bucket_name == "test-directory"
+    assert documents[0].gcs_prefix == "documentai/output/123456789/1/"
+    assert documents[0].gcs_input_uri == "gs://test-directory/documentai/input.pdf"
+
+    assert documents[1].gcs_bucket_name == "test-directory"
+    assert documents[1].gcs_prefix == "documentai/output/123456789/2/"
+    assert documents[0].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
 
 
 def test_search_page_with_target_string(get_bytes_single_file_mock):
