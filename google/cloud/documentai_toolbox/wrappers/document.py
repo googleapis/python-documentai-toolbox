@@ -226,12 +226,12 @@ def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page])
 
 @dataclasses.dataclass
 class Document:
-    r"""Represents a wrapped Document.
+    r"""Represents a wrapped `Document`.
 
-    This class hides away the complexities of using Document protobuf
-    response outputted by BatchProcessDocuments or ProcessDocument
+    This class hides away the complexities of using `Document` protobuf
+    response outputted by `BatchProcessDocuments` or `ProcessDocument`
     methods and implements convenient methods for searching and
-    extracting information within the Document.
+    extracting information within the `Document`.
 
     Attributes:
         shards: (List[google.cloud.documentai.Document]):

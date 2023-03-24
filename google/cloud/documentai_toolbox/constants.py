@@ -30,7 +30,8 @@ BATCH_MAX_REQUESTS = 5
 # https://cloud.google.com/document-ai/docs/file-types
 VALID_MIME_TYPES = {
     "application/pdf",
-    "image/bmp" "image/gif",
+    "image/bmp",
+    "image/gif",
     "image/jpeg",
     "image/png",
     "image/tiff",
