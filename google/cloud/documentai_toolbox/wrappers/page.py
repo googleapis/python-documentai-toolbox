@@ -109,10 +109,10 @@ def _table_wrapper_from_documentai_table(
     """
 
     header_rows = _table_rows_from_documentai_table_rows(
-        table_rows=List(documentai_table.header_rows), text=text
+        table_rows=list(documentai_table.header_rows), text=text
     )
     body_rows = _table_rows_from_documentai_table_rows(
-        table_rows=List(documentai_table.body_rows), text=text
+        table_rows=list(documentai_table.body_rows), text=text
     )
 
     return Table(
