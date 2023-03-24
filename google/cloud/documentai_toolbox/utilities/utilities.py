@@ -18,10 +18,61 @@ import os
 import re
 from typing import Dict, List, Tuple
 
+from google.api_core import client_info
 from google.cloud import documentai
+from google.cloud import storage
+from google.cloud import documentai_toolbox
 
 from google.cloud.documentai_toolbox import constants
-from google.cloud.documentai_toolbox.wrappers.document import _get_storage_client
+
+
+def _get_storage_client():
+    r"""Returns a Storage client with custom user agent header.
+
+    Returns:
+        storage.Client.
+
+    """
+    user_agent = f"{constants.USER_AGENT_PRODUCT}/{documentai_toolbox.__version__}"
+
+    info = client_info.ClientInfo(
+        client_library_version=documentai_toolbox.__version__,
+        user_agent=user_agent,
+    )
+
+    return storage.Client(client_info=info)
+
+
+def get_bytes(gcs_bucket_name: str, gcs_prefix: str) -> List[bytes]:
+    r"""Returns a list of bytes of json files from Cloud Storage.
+
+    Args:
+        gcs_bucket_name (str):
+            Required. The name of the gcs bucket.
+
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_bucket_name=`bucket`.
+        gcs_prefix (str):
+            Required. The prefix of the json files in the target_folder
+
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
+    Returns:
+        List[bytes]:
+            A list of bytes.
+
+    """
+    result = []
+
+    storage_client = _get_storage_client()
+    blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
+
+    for blob in blob_list:
+        if (
+            blob.name.endswith(constants.JSON_EXTENSION)
+            or blob.content_type == constants.JSON_MIMETYPE
+        ):
+            result.append(blob.download_as_bytes())
+
+    return result
 
 
 def split_gcs_uri(gcs_uri: str) -> Tuple[str, str]:
