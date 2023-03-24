@@ -29,6 +29,23 @@ test_bucket = "test-directory"
 test_prefix = "documentai/input"
 
 
+def test_split_gcs_uri_with_valid_format():
+    gcs_uri = "gs://test-bucket/test-directory/1/"
+    bucket, prefix = utilities.split_gcs_uri(gcs_uri)
+
+    assert bucket == "test-bucket"
+    assert prefix == "test-directory/1/"
+
+
+def test_split_gcs_uri_with_invalid_format():
+    with pytest.raises(
+        ValueError,
+        match="gcs_uri must follow format 'gs://{bucket_name}/{gcs_prefix}'.",
+    ):
+        gcs_uri = "test-bucket/test-directory/1/"
+        utilities.split_gcs_uri(gcs_uri)
+
+
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
 def test_list_gcs_document_tree_with_one_folder(mock_storage):
     client = mock_storage.Client.return_value
