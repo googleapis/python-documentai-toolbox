@@ -22,7 +22,7 @@ except ImportError:  # pragma: NO COVER
 from google.cloud.documentai_toolbox.converters import converter
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.storage")
 @mock.patch(
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._get_docproto_files",
     return_value=(["file1"], ["test_label"], []),
