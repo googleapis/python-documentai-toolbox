@@ -26,6 +26,7 @@ import pytest
 import glob
 
 from google.cloud.documentai_toolbox import document
+from google.cloud.documentai_toolbox import utilities
 
 from google.cloud import documentai
 from google.cloud.vision import AnnotateFileResponse
@@ -42,44 +43,42 @@ def get_bytes(file_name):
 
 @pytest.fixture
 def get_bytes_single_file_mock():
-    with mock.patch.object(document, "_get_bytes") as byte_factory:
+    with mock.patch.object(utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/0")
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_multiple_files_mock():
-    with mock.patch.object(document, "_get_bytes") as byte_factory:
+    with mock.patch.object(utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/1")
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_unordered_files_mock():
-    with mock.patch.object(document, "_get_bytes") as byte_factory:
+    with mock.patch.object(utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/unordered_shards")
         yield byte_factory
 
 
-@pytest.fixture
-def get_bytes_multiple_directories_mock():
-    with mock.patch.object(document, "_get_bytes") as byte_factory:
-        byte_factory.return_value = get_bytes("tests/unit/resources/0")
-        yield byte_factory
-        byte_factory.return_value = get_bytes("tests/unit/resources/1")
+@pytest.fixture(params=["tests/unit/resources/0", "tests/unit/resources/1"])
+def get_bytes_multiple_directories_mock(request):
+    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes(request.param)
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_form_parser_mock():
-    with mock.patch.object(document, "_get_bytes") as byte_factory:
+    with mock.patch.object(utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/form_parser")
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_splitter_mock():
-    with mock.patch.object(document, "_get_bytes") as byte_factory:
+    with mock.patch.object(utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/splitter")
         yield byte_factory
 
@@ -209,7 +208,7 @@ def test_document_from_batch_process_metadata_with_single_input_file(
 
     assert documents[1].gcs_bucket_name == "test-directory"
     assert documents[1].gcs_prefix == "documentai/output/123456789/2/"
-    assert documents[0].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
+    assert documents[1].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
 
 
 def test_search_page_with_target_string(get_bytes_single_file_mock):
@@ -296,42 +295,6 @@ def test_get_entity_by_type(get_bytes_single_file_mock):
     assert len(actual) == 1
     assert actual[0].type_ == "receiver_address"
     assert actual[0].mention_text == "222 Main Street\nAnytown, USA"
-
-
-@mock.patch("google.cloud.documentai_toolbox.wrappers.document.storage")
-def test_get_bytes(mock_storage):
-    client = mock_storage.Client.return_value
-    mock_bucket = mock.Mock()
-    client.Bucket.return_value = mock_bucket
-
-    mock_ds_store = mock.Mock(name=[])
-    mock_ds_store.name = "DS_Store"
-
-    mock_blob1 = mock.Mock(name=[])
-    mock_blob1.name = "gs://test-directory/1/test-annotations.json"
-    mock_blob1.download_as_bytes.return_value = (
-        "gs://test-directory/1/test-annotations.json"
-    )
-
-    mock_blob2 = mock.Mock(name=[])
-    mock_blob2.name = "gs://test-directory/1/test-config.json"
-    mock_blob2.download_as_bytes.return_value = "gs://test-directory/1/test-config.json"
-
-    mock_blob3 = mock.Mock(name=[])
-    mock_blob3.name = "gs://test-directory/1/test.pdf"
-    mock_blob3.download_as_bytes.return_value = "gs://test-directory/1/test.pdf"
-
-    client.list_blobs.return_value = [mock_ds_store, mock_blob1, mock_blob2, mock_blob3]
-
-    actual = document._get_bytes(
-        gcs_bucket_name="bucket",
-        gcs_prefix="prefix",
-    )
-
-    assert actual == [
-        "gs://test-directory/1/test-annotations.json",
-        "gs://test-directory/1/test-config.json",
-    ]
 
 
 def test_get_form_field_by_name(get_bytes_form_parser_mock):
