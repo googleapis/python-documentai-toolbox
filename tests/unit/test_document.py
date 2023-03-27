@@ -180,7 +180,7 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
         assert page.documentai_page.page_number == page_index + 1
 
 
-def test_document_from_batch_process_metadata_with_single_input_file(
+def test_document_from_batch_process_metadata_with_multiple_input_files(
     get_bytes_multiple_directories_mock,
 ):
     mock_metadata = mock.Mock(
@@ -209,6 +209,18 @@ def test_document_from_batch_process_metadata_with_single_input_file(
     assert documents[1].gcs_bucket_name == "test-directory"
     assert documents[1].gcs_prefix == "documentai/output/123456789/2/"
     assert documents[1].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
+
+
+def test_document_from_batch_process_metadata_with_failed_operation():
+    with pytest.raises(
+        ValueError,
+        match="Batch Process Failed: Internal Error Occured",
+    ):
+        mock_metadata = mock.Mock(
+            state=documentai.BatchProcessMetadata.State.FAILED,
+            state_message="Internal Error Occured",
+        )
+        document.Document.from_batch_process_metadata(mock_metadata)
 
 
 def test_search_page_with_target_string(get_bytes_single_file_mock):
