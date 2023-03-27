@@ -24,10 +24,11 @@ from google.cloud import bigquery
 from google.cloud import documentai
 
 from google.cloud.documentai_toolbox import constants
+from google.cloud.documentai_toolbox import utilities
+
 from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
-from google.cloud.documentai_toolbox.utilities import utilities
 
 from google.cloud.vision import AnnotateFileResponse, ImageAnnotationContext
 from google.cloud.vision import AnnotateImageResponse
