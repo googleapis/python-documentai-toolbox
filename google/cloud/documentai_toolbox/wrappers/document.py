@@ -223,6 +223,13 @@ class Document:
     ):
         r"""Loads Document from local document_path.
 
+            .. code-block:: python
+
+                from google.cloud.documentai_toolbox import document
+
+                document_path = "/path/to/local/file.json
+                wrapped_document = document.Document.from_document_path(document_path)
+
         Args:
             document_path (str):
                 Required. The path to the document.json file.
@@ -242,6 +249,14 @@ class Document:
         documentai_document: documentai.Document,
     ):
         r"""Loads Document from local documentai_document.
+
+            .. code-block:: python
+
+                from google.cloud import documentai
+                from google.cloud.documentai_toolbox import document
+
+                documentai_document = client.process_documents(request).document
+                wrapped_document = document.Document.from_documentai_document(documentai_document)
 
         Args:
             documentai_document (documentai.Document):
