@@ -28,7 +28,8 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
     _load_blocks_from_schema,
 )
 
-from google.cloud.documentai_toolbox import constants, utilities
+from google.cloud.documentai_toolbox import constants
+from google.cloud.documentai_toolbox.utilities import utilities
 
 from google.cloud import documentai, storage
 
