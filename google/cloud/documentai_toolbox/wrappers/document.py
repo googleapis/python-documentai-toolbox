@@ -24,7 +24,8 @@ from google.cloud import bigquery
 from google.cloud import documentai
 
 from google.cloud.documentai_toolbox import constants
-from google.cloud.documentai_toolbox import utilities
+
+from google.cloud.documentai_toolbox.utilities import gcs_utilities
 
 from google.cloud.documentai_toolbox.wrappers.page import Page
 from google.cloud.documentai_toolbox.wrappers.page import FormField
@@ -110,7 +111,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
     if file_check is not None:
         raise ValueError("gcs_prefix cannot contain file types")
 
-    byte_array = utilities.get_bytes(gcs_bucket_name, gcs_prefix)
+    byte_array = gcs_utilities.get_bytes(gcs_bucket_name, gcs_prefix)
 
     for byte in byte_array:
         shards.append(documentai.Document.from_json(byte, ignore_unknown_fields=True))
@@ -325,7 +326,7 @@ class Document:
         # Each process corresponds to one input document
         for process in list(metadata.individual_process_statuses):
             # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
-            gcs_bucket_name, gcs_prefix = utilities.split_gcs_uri(
+            gcs_bucket_name, gcs_prefix = gcs_utilities.split_gcs_uri(
                 process.output_gcs_destination
             )
 

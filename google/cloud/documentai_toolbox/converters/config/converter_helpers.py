@@ -29,7 +29,7 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
 )
 
 from google.cloud.documentai_toolbox import constants
-from google.cloud.documentai_toolbox import utilities
+from google.cloud.documentai_toolbox.utilities import gcs_utilities
 
 from google.cloud import documentai, storage
 
@@ -234,7 +234,7 @@ def _get_bytes(
 
     """
 
-    storage_client = utilities._get_storage_client()
+    storage_client = gcs_utilities._get_storage_client()
     bucket = storage_client.bucket(bucket_name=bucket_name)
     blobs = storage_client.list_blobs(bucket_or_name=bucket_name, prefix=prefix)
 
@@ -288,7 +288,7 @@ def _upload_file(
         None.
 
     """
-    storage_client = utilities._get_storage_client()
+    storage_client = gcs_utilities._get_storage_client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(output_prefix)
 
@@ -495,7 +495,7 @@ def _convert_documents_with_config(
     if file_check:
         raise ValueError("gcs_prefix cannot contain file types")
 
-    storage_client = utilities._get_storage_client()
+    storage_client = gcs_utilities._get_storage_client()
 
     blob_list = storage_client.list_blobs(input_bucket, prefix=input_prefix)
 

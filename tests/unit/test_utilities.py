@@ -29,7 +29,7 @@ test_bucket = "test-directory"
 test_prefix = "documentai/input"
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_get_bytes(mock_storage):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
@@ -82,7 +82,7 @@ def test_split_gcs_uri_with_invalid_format():
         utilities.split_gcs_uri(gcs_uri)
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_list_gcs_document_tree_with_one_folder(mock_storage):
     client = mock_storage.Client.return_value
 
@@ -116,7 +116,7 @@ def test_list_gcs_document_tree_with_one_folder(mock_storage):
     assert "gs://test-directory/1" in list(doc_list.keys())
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
@@ -152,7 +152,7 @@ def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
     assert "gs://test-directory/documentai/output/123456789/1" in list(doc_list.keys())
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
@@ -207,7 +207,7 @@ def test_list_gcs_document_tree_with_gcs_uri_contains_file_type():
         )
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
@@ -246,7 +246,7 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
     )
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
@@ -287,7 +287,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
     )
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     client = mock_storage.Client.return_value
 
@@ -351,7 +351,7 @@ def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
         )
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_create_batches_with_empty_directory(mock_storage, capfd):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
@@ -373,7 +373,7 @@ def test_create_batches_with_empty_directory(mock_storage, capfd):
     assert len(actual) == 0
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_create_batches_with_3_documents(mock_storage, capfd):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
@@ -410,7 +410,7 @@ def test_create_batches_with_invalid_batch_size():
         )
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_create_batches_with_large_folder(mock_storage, capfd):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
@@ -438,7 +438,7 @@ def test_create_batches_with_large_folder(mock_storage, capfd):
     assert len(actual[1].gcs_documents.documents) == 46
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_create_batches_with_invalid_file_type(mock_storage, capfd):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
@@ -461,7 +461,7 @@ def test_create_batches_with_invalid_file_type(mock_storage, capfd):
     assert not actual
 
 
-@mock.patch("google.cloud.documentai_toolbox.utilities.utilities.storage")
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
 def test_create_batches_with_large_file(mock_storage, capfd):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
