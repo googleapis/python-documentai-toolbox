@@ -16,7 +16,7 @@
 import pytest
 
 from google.cloud import storage
-from google.cloud.documentai_toolbox import utilities
+from google.cloud.documentai_toolbox import gcs_utilities
 
 # try/except added for compatibility with python < 3.8
 try:
@@ -54,7 +54,7 @@ def test_get_bytes(mock_storage):
 
     client.list_blobs.return_value = [mock_ds_store, mock_blob1, mock_blob2, mock_blob3]
 
-    actual = utilities.get_bytes(
+    actual = gcs_utilities.get_bytes(
         gcs_bucket_name="bucket",
         gcs_prefix="prefix",
     )
@@ -67,7 +67,7 @@ def test_get_bytes(mock_storage):
 
 def test_split_gcs_uri_with_valid_format():
     gcs_uri = "gs://test-bucket/test-directory/1/"
-    bucket, prefix = utilities.split_gcs_uri(gcs_uri)
+    bucket, prefix = gcs_utilities.split_gcs_uri(gcs_uri)
 
     assert bucket == "test-bucket"
     assert prefix == "test-directory/1/"
@@ -79,7 +79,7 @@ def test_split_gcs_uri_with_invalid_format():
         match="gcs_uri must follow format 'gs://{bucket_name}/{gcs_prefix}'.",
     ):
         gcs_uri = "test-bucket/test-directory/1/"
-        utilities.split_gcs_uri(gcs_uri)
+        gcs_utilities.split_gcs_uri(gcs_uri)
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
@@ -107,7 +107,7 @@ def test_list_gcs_document_tree_with_one_folder(mock_storage):
 
     client.list_blobs.return_value = blobs
 
-    doc_list = utilities.list_gcs_document_tree(
+    doc_list = gcs_utilities.list_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="/"
     )
 
@@ -141,7 +141,7 @@ def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    doc_list = utilities.list_gcs_document_tree(
+    doc_list = gcs_utilities.list_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
@@ -188,7 +188,7 @@ def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     ]
     client.list_blobs.return_value = blobs
 
-    doc_list = utilities.list_gcs_document_tree(
+    doc_list = gcs_utilities.list_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
@@ -201,7 +201,7 @@ def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
 def test_list_gcs_document_tree_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        utilities.list_gcs_document_tree(
+        gcs_utilities.list_gcs_document_tree(
             gcs_bucket_name="test-directory",
             gcs_prefix="documentai/output/123456789/1/test_file.json",
         )
@@ -232,7 +232,9 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    utilities.print_gcs_document_tree(gcs_bucket_name="test-directory", gcs_prefix="/")
+    gcs_utilities.print_gcs_document_tree(
+        gcs_bucket_name="test-directory", gcs_prefix="/"
+    )
 
     mock_storage.Client.assert_called_once()
 
@@ -271,7 +273,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     client.list_blobs.return_value = blobs
 
-    utilities.print_gcs_document_tree(
+    gcs_utilities.print_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
@@ -323,7 +325,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     ]
     client.list_blobs.return_value = blobs
 
-    utilities.print_gcs_document_tree(
+    gcs_utilities.print_gcs_document_tree(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
 
@@ -345,7 +347,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
 def test_print_gcs_document_tree_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        utilities.print_gcs_document_tree(
+        gcs_utilities.print_gcs_document_tree(
             gcs_bucket_name="test-directory",
             gcs_prefix="documentai/output/123456789/1/test_file.json",
         )
@@ -362,7 +364,7 @@ def test_create_batches_with_empty_directory(mock_storage, capfd):
 
     client.list_blobs.return_value = [mock_blob]
 
-    actual = utilities.create_batches(
+    actual = gcs_utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
 
@@ -388,7 +390,7 @@ def test_create_batches_with_3_documents(mock_storage, capfd):
         mock_blobs.append(mock_blob)
     client.list_blobs.return_value = mock_blobs
 
-    actual = utilities.create_batches(
+    actual = gcs_utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
 
@@ -405,7 +407,7 @@ def test_create_batches_with_invalid_batch_size():
         ValueError,
         match="Batch size must be less than 50. You provided 51.",
     ):
-        utilities.create_batches(
+        gcs_utilities.create_batches(
             gcs_bucket_name=test_bucket, gcs_prefix=test_prefix, batch_size=51
         )
 
@@ -425,7 +427,7 @@ def test_create_batches_with_large_folder(mock_storage, capfd):
         mock_blobs.append(mock_blob)
     client.list_blobs.return_value = mock_blobs
 
-    actual = utilities.create_batches(
+    actual = gcs_utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
 
@@ -450,7 +452,7 @@ def test_create_batches_with_invalid_file_type(mock_storage, capfd):
     mock_blob.name.endswith.return_value = False
     client.list_blobs.return_value = [mock_blob]
 
-    actual = utilities.create_batches(
+    actual = gcs_utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
 
@@ -473,7 +475,7 @@ def test_create_batches_with_large_file(mock_storage, capfd):
     mock_blob.name.endswith.return_value = False
     client.list_blobs.return_value = [mock_blob]
 
-    actual = utilities.create_batches(
+    actual = gcs_utilities.create_batches(
         gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
     )
 

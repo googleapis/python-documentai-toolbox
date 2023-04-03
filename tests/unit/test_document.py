@@ -26,7 +26,7 @@ import pytest
 import glob
 
 from google.cloud.documentai_toolbox import document
-from google.cloud.documentai_toolbox import utilities
+from google.cloud.documentai_toolbox import gcs_utilities
 
 from google.cloud import documentai
 from google.cloud.vision import AnnotateFileResponse
@@ -43,42 +43,42 @@ def get_bytes(file_name):
 
 @pytest.fixture
 def get_bytes_single_file_mock():
-    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/0")
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_multiple_files_mock():
-    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/1")
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_unordered_files_mock():
-    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/unordered_shards")
         yield byte_factory
 
 
 @pytest.fixture(params=["tests/unit/resources/0", "tests/unit/resources/1"])
 def get_bytes_multiple_directories_mock(request):
-    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes(request.param)
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_form_parser_mock():
-    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/form_parser")
         yield byte_factory
 
 
 @pytest.fixture
 def get_bytes_splitter_mock():
-    with mock.patch.object(utilities, "get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/splitter")
         yield byte_factory
 
