@@ -405,10 +405,10 @@ def test_create_batches_with_3_documents(mock_storage, capfd):
 def test_create_batches_with_invalid_batch_size():
     with pytest.raises(
         ValueError,
-        match="Batch size must be less than 50. You provided 51.",
+        match="Batch size must be less than 1000. You provided 1001.",
     ):
         gcs_utilities.create_batches(
-            gcs_bucket_name=test_bucket, gcs_prefix=test_prefix, batch_size=51
+            gcs_bucket_name=test_bucket, gcs_prefix=test_prefix, batch_size=1001
         )
 
 
@@ -428,7 +428,7 @@ def test_create_batches_with_large_folder(mock_storage, capfd):
     client.list_blobs.return_value = mock_blobs
 
     actual = gcs_utilities.create_batches(
-        gcs_bucket_name=test_bucket, gcs_prefix=test_prefix
+        gcs_bucket_name=test_bucket, gcs_prefix=test_prefix, batch_size=50
     )
 
     mock_storage.Client.assert_called_once()

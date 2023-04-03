@@ -21,8 +21,8 @@ JSON_MIMETYPE = "application/json"
 
 FILE_CHECK_REGEX = r"(.*[.].*$)"
 
-# https://cloud.google.com/document-ai/quotas
-BATCH_MAX_FILES = 50
+# https://cloud.google.com/document-ai/quotas#content_limits
+BATCH_MAX_FILES = 1000
 # 1GB in Bytes
 BATCH_MAX_FILE_SIZE = 1073741824
 BATCH_MAX_REQUESTS = 5
