@@ -127,6 +127,77 @@ def test_entities_from_shard():
     assert actual[1].normalized_text == "140 USD"
 
 
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
+def test_get_batch_process_metadata_with_valid_operation(
+    mock_docai,
+):
+    mock_client = mock_docai.DocumentProcessorServiceClient.return_value
+
+    metadata = documentai.BatchProcessMetadata(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            documentai.BatchProcessMetadata.IndividualProcessStatus(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+            )
+        ],
+    )
+
+    mock_operation = mock.Mock(
+        done=True,
+        metadata=mock.Mock(
+            type_url="type.googleapis.com/google.cloud.documentai.v1.BatchProcessMetadata",
+            value=documentai.BatchProcessMetadata.serialize(metadata),
+        ),
+    )
+
+    mock_client.get_operation.return_value = mock_operation
+
+    location = "us"
+    operation_name = "projects/123456/locations/us/operations/7890123"
+    document._get_batch_process_metadata(location, operation_name)
+
+    mock_client.get_operation.assert_called()
+    mock_docai.BatchProcessMetadata.deserialize.assert_called()
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
+def test_get_batch_process_metadata_with_no_metadata(mock_docai):
+    with pytest.raises(
+        ValueError,
+        match="Operation does not contain metadata:",
+    ):
+        mock_client = mock_docai.DocumentProcessorServiceClient.return_value
+
+        location = "us"
+        operation_name = "projects/123456/locations/us/operations/7890123"
+        mock_operation = mock.Mock(done=True, metadata=None)
+        mock_client.get_operation.return_value = mock_operation
+
+        document._get_batch_process_metadata(location, operation_name)
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
+def test_document_from_batch_process_operation_with_invalid_metadata_type(mock_docai):
+    with pytest.raises(
+        ValueError,
+        match="Operation metadata type is not",
+    ):
+        mock_client = mock_docai.DocumentProcessorServiceClient.return_value
+
+        location = "us"
+        operation_name = "projects/123456/locations/us/operations/7890123"
+        mock_operation = mock.Mock(
+            done=True,
+            metadata=mock.Mock(
+                type_url="type.googleapis.com/google.cloud.documentai.uiv1beta3.TrainProcessorVersionResponse",
+            ),
+        )
+        mock_client.get_operation.return_value = mock_operation
+
+        document._get_batch_process_metadata(location, operation_name)
+
+
 def test_document_from_document_path_with_single_shard():
     actual = document.Document.from_document_path(
         document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"

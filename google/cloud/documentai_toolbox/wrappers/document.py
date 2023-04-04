@@ -20,6 +20,8 @@ import os
 import re
 from typing import Dict, List, Optional
 
+from google.api_core.client_options import ClientOptions
+
 from google.cloud import bigquery
 from google.cloud import documentai
 
@@ -41,6 +43,8 @@ from google.cloud.documentai_toolbox.converters.vision_helpers import (
     _get_text_anchor_substring,
     PageInfo,
 )
+
+from google.longrunning.operations_pb2 import Operation, GetOperationRequest
 
 from pikepdf import Pdf
 
@@ -173,6 +177,54 @@ def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page])
     vision_file_response.responses = responses
 
     return vision_file_response
+
+
+def _get_batch_process_metadata(
+    location: str, operation_name: str
+) -> documentai.BatchProcessMetadata:
+    r"""Get `BatchProcessMetadata` from a `batch_process_documents()` long-running operation.
+
+    Args:
+        location (str):
+            Required. The location of the processor used for `batch_process_documents()`.
+
+        operation_name (str):
+            Required. The fully qualified operation name for a `batch_process_documents()` operation.
+    Returns:
+        documentai.BatchProcessMetadata:
+            Metadata from batch process.
+    """
+    client = documentai.DocumentProcessorServiceClient(
+        client_options=ClientOptions(
+            api_endpoint=f"{location}-documentai.googleapis.com"
+        )
+    )
+
+    while True:
+        operation: Operation = client.get_operation(
+            request=GetOperationRequest(name=operation_name)
+        )
+
+        if operation.done:
+            break
+
+    if not operation.metadata:
+        raise ValueError(f"Operation does not contain metadata: {operation}")
+
+    metadata_type = (
+        "type.googleapis.com/google.cloud.documentai.v1.BatchProcessMetadata"
+    )
+
+    if not operation.metadata.type_url or operation.metadata.type_url != metadata_type:
+        raise ValueError(
+            f"Operation metadata type is not `{metadata_type}`. Type is `{operation.metadata.type_url}`."
+        )
+
+    metadata: documentai.BatchProcessMetadata = (
+        documentai.BatchProcessMetadata.deserialize(operation.metadata.value)
+    )
+
+    return metadata
 
 
 @dataclasses.dataclass
@@ -337,6 +389,34 @@ class Document:
             )
 
         return documents
+
+    @classmethod
+    def from_batch_process_operation(cls, location: str, operation_name: str):
+        r"""Loads Documents from Cloud Storage, using the operation name returned from `batch_process_documents()`.
+
+            .. code-block:: python
+
+                from google.cloud import documentai
+
+                operation = client.batch_process_documents(request)
+                operation_name = operation.operation.name
+
+        Args:
+            location (str):
+                Required. The location of the processor used for `batch_process_documents()`.
+
+            operation_name (str):
+                Required. The fully qualified operation name for a `batch_process_documents()` operation.
+
+        Returns:
+            List[Document]:
+                A list of wrapped documents from gcs. Each document corresponds to an input file.
+        """
+        return cls.from_batch_process_metadata(
+            metadata=_get_batch_process_metadata(
+                location=location, operation_name=operation_name
+            )
+        )
 
     def search_pages(
         self, target_string: Optional[str] = None, pattern: Optional[str] = None
