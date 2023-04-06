@@ -86,7 +86,7 @@ def get_bytes_splitter_mock():
 
 @pytest.fixture
 def get_bytes_images_mock():
-    with mock.patch.object(gcs_utilities, "_get_bytes") as byte_factory:
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/images")
         yield byte_factory
 
