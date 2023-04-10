@@ -235,7 +235,7 @@ def _get_bytes(
 
     """
     if not storage_client:
-        storage_client = gcs_utilities._get_storage_client()
+        storage_client = gcs_utilities._get_storage_client(module="get-bytes")
 
     bucket = storage_client.bucket(bucket_name=bucket_name)
     blobs = storage_client.list_blobs(bucket_or_name=bucket_name, prefix=prefix)
@@ -292,7 +292,7 @@ def _upload_file(
 
     """
     if not storage_client:
-        storage_client = gcs_utilities._get_storage_client()
+        storage_client = gcs_utilities._get_storage_client(module="upload-file")
 
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(output_prefix)
