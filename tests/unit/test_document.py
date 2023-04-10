@@ -186,7 +186,7 @@ def test_get_batch_process_metadata_with_no_metadata(mock_docai):
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
-def test_document_from_batch_process_operation_with_invalid_metadata_type(mock_docai):
+def test_get_batch_process_metadata_with_invalid_metadata_type(mock_docai):
     with pytest.raises(
         ValueError,
         match="Operation metadata type is not",
@@ -204,6 +204,19 @@ def test_document_from_batch_process_operation_with_invalid_metadata_type(mock_d
         mock_client.get_operation.return_value = mock_operation
 
         document._get_batch_process_metadata(location, operation_name)
+
+
+def test_bigquery_column_name():
+    string_map = {
+        "Phone #:": "phone_num",
+        "Emergency Contact:": "emergency_contact",
+        "Marital Status:": "marital_status",
+        "Are you currently taking any medication? (If yes, please describe):": "are_you_currently_taking_any_medication_if_yes_please_describe",
+        "Describe your medical concerns (symptoms, diagnoses, etc):": "describe_your_medical_concerns_symptoms_diagnoses_etc",
+    }
+
+    for key, value in string_map.items():
+        assert document._bigquery_column_name(key) == value
 
 
 def test_document_from_document_path_with_single_shard():

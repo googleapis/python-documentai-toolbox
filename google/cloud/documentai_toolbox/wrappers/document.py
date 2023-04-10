@@ -265,6 +265,31 @@ def _insert_into_dictionary_with_list(dic: Dict, key: str, value: str) -> Dict:
     return dic
 
 
+def _bigquery_column_name(input_string: str) -> str:
+    r"""Converts a string into a BigQuery column name.
+        https://cloud.google.com/bigquery/docs/schemas#column_names
+
+    Args:
+        input_string (str):
+            Required: The string to convert.
+    Returns:
+        str
+            The converted string.
+
+    """
+    char_map: Dict[str, str] = {
+        r":|;|\(|\)|\[|\]|,|\.|\?|\!|\'|\n": "",
+        r"/| ": "_",
+        r"#": "num",
+        r"@": "at",
+    }
+
+    for key, value in char_map.items():
+        input_string = re.sub(key, value, input_string)
+
+    return input_string.lower()
+
+
 def _dict_to_bigquery(
     dic: Dict,
     dataset_name: str,
@@ -560,8 +585,7 @@ class Document:
         form_fields_dict: Dict = {}
         for p in self.pages:
             for form_field in p.form_fields:
-                field_name = re.sub(r":|\(|\)|,|\.", "", form_field.field_name)
-                field_name = re.sub(r"/|\s", "_", field_name).lower()
+                field_name = _bigquery_column_name(form_field.field_name)
                 form_fields_dict = _insert_into_dictionary_with_list(
                     form_fields_dict, field_name, form_field.field_value
                 )
@@ -617,7 +641,7 @@ class Document:
         """
         entities_dict: Dict = {}
         for entity in self.entities:
-            entity_type = entity.type_.replace("/", "_")
+            entity_type = _bigquery_column_name(entity.type_)
             entities_dict = _insert_into_dictionary_with_list(
                 entities_dict, entity_type, entity.mention_text
             )
