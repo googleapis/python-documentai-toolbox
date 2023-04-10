@@ -269,7 +269,7 @@ def _dict_to_bigquery(
     dic: Dict,
     dataset_name: str,
     table_name: str,
-    project_id: Optional[str] = None,
+    project_id: Optional[str],
 ) -> bigquery.job.LoadJob:
     r"""Loads dictionary to a BigQuery table.
 
@@ -560,7 +560,8 @@ class Document:
         form_fields_dict: Dict = {}
         for p in self.pages:
             for form_field in p.form_fields:
-                field_name = re.sub(r"/|\s", "_", form_field.field_name).lower()
+                field_name = re.sub(r":|\(|\)|,|\.", "", form_field.field_name)
+                field_name = re.sub(r"/|\s", "_", field_name).lower()
                 form_fields_dict = _insert_into_dictionary_with_list(
                     form_fields_dict, field_name, form_field.field_value
                 )

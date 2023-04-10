@@ -401,6 +401,43 @@ def test_get_form_field_by_name(get_bytes_form_parser_mock):
     assert actual[0].field_value == "(906) 917-3486"
 
 
+def test_form_fields_to_dict(get_bytes_form_parser_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+    actual = doc.form_fields_to_dict()
+
+    get_bytes_form_parser_mock.assert_called_once()
+
+    assert len(actual) == 17
+    assert actual.get("address") == "24 Barney Lane"
+    assert actual.get("city") == "Towaco"
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.bigquery")
+def test_form_fields_to_bigquery(mock_bigquery, get_bytes_form_parser_mock):
+    client = mock_bigquery.Client.return_value
+
+    mock_table = mock.Mock()
+    client.dataset.table.return_value = mock_table
+
+    mock_load_job = mock.Mock()
+    client.load_table_from_json.return_value = mock_load_job
+
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+
+    actual = doc.form_fields_to_bigquery(
+        dataset_name="test_dataset", table_name="test_table", project_id="test_project"
+    )
+
+    get_bytes_form_parser_mock.assert_called_once()
+    mock_bigquery.Client.assert_called_once()
+
+    assert actual
+
+
 def test_entities_to_dict(get_bytes_single_file_mock):
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
