@@ -35,7 +35,9 @@ def _get_storage_client(module: str = None):
     """
 
     if module:
-        user_agent = f"{constants.USER_AGENT_PRODUCT}/{documentai_toolbox.__version__}-{module}"
+        user_agent = (
+            f"{constants.USER_AGENT_PRODUCT}/{documentai_toolbox.__version__}-{module}"
+        )
 
         info = client_info.ClientInfo(
             client_library_version=f"{documentai_toolbox.__version__}-{module}",

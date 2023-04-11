@@ -275,7 +275,7 @@ def _upload_file(
     bucket_name: str,
     output_prefix: str,
     file: str,
-    storage_client: storage.Client = None
+    storage_client: storage.Client = None,
 ) -> None:
     r"""Uploads the converted docproto to gcs.
 
@@ -406,7 +406,9 @@ def _get_docproto_files(
     return files, unique_types, did_not_convert
 
 
-def _upload(files: dict, gcs_output_path: str, storage_client: storage.Client = None) -> None:
+def _upload(
+    files: dict, gcs_output_path: str, storage_client: storage.Client = None
+) -> None:
     r"""Upload converted document.proto to gcs location.
 
     Args:
@@ -534,7 +536,7 @@ def _convert_documents_with_config(
         print(f"Did not convert {len(did_not_convert)} documents")
         print(did_not_convert)
 
-    _upload(files, gcs_output_path,storage_client)
+    _upload(files, gcs_output_path, storage_client)
 
     print("-------- Finished Uploading --------")
     print("-------- Schema Information --------")
