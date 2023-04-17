@@ -312,7 +312,9 @@ def _dict_to_bigquery(
             The BigQuery LoadJob for adding the dictionary.
 
     """
-    bq_client = bigquery.Client(project=project_id)
+    bq_client = bigquery.Client(
+        project=project_id, client_info=gcs_utilities._get_client_info()
+    )
     table_ref = bigquery.DatasetReference(
         project=project_id, dataset_id=dataset_name
     ).table(table_name)
