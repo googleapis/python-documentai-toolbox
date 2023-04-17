@@ -175,9 +175,7 @@ def test_text_from_element_with_layout(docproto):
 def test_get_blocks(docproto):
     docproto_blocks = docproto.pages[0].blocks
 
-    blocks = page._get_blocks(
-        blocks=docproto_blocks, text=docproto.text
-    )
+    blocks = page._get_blocks(blocks=docproto_blocks, text=docproto.text)
 
     assert len(blocks) == 31
     assert blocks[0].text == "Invoice\n"
@@ -231,9 +229,7 @@ def test_FormField():
 
 def test_Block():
     docai_block = documentai.Document.Page.Block()
-    block = page.Block(
-        documentai_block=docai_block, text="test_block"
-    )
+    block = page.Block(documentai_block=docai_block, text="test_block")
 
     assert block.text == "test_block"
 

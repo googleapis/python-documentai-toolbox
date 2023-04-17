@@ -206,9 +206,7 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
     return result_text
 
 
-def _get_blocks(
-    blocks: List[documentai.Document.Page.Block], text: str
-) -> List[Block]:
+def _get_blocks(blocks: List[documentai.Document.Page.Block], text: str) -> List[Block]:
     r"""Returns a list of Block.
 
     Args:
@@ -417,7 +415,5 @@ class Page:
         self.paragraphs = _get_paragraphs(
             paragraphs=self.documentai_page.paragraphs, text=self.text
         )
-        self.blocks = _get_blocks(
-            blocks=self.documentai_page.blocks, text=self.text
-        )
+        self.blocks = _get_blocks(blocks=self.documentai_page.blocks, text=self.text)
         self.tables = tables
