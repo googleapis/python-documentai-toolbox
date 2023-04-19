@@ -36,8 +36,6 @@ from google.cloud.documentai_toolbox.wrappers.entity import Entity
 from google.cloud.vision import AnnotateFileResponse, ImageAnnotationContext
 from google.cloud.vision import AnnotateImageResponse
 
-from google.cloud.documentai_toolbox.wrappers import page
-
 from google.cloud.documentai_toolbox.converters.vision_helpers import (
     _convert_document_page,
     _get_text_anchor_substring,
@@ -64,14 +62,16 @@ def _entities_from_shards(
     """
     result = []
     for shard in shards:
-        for documentai_entity in shard.entities:
-            entity = Entity(documentai_entity=documentai_entity)
-            entity.crop_image(shard)
-            result.append(entity)
-            for documentai_prop in documentai_entity.properties:
-                prop = Entity(documentai_entity=documentai_prop)
-                prop.crop_image(shard)
-                result.append(prop)
+        shard_index = int(shard.shard_info.shard_index)
+        for entity in shard.entities:
+            result.append(Entity(shard_index=shard_index, documentai_entity=entity))
+            for prop in entity.properties:
+                result.append(
+                    Entity(
+                        shard_index=shard_index,
+                        documentai_entity=prop,
+                    )
+                )
 
     if len(result) > 1 and result[0].documentai_entity.id:
         result.sort(key=lambda x: int(x.documentai_entity.id))
@@ -91,10 +91,15 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     """
     result = []
     for shard in shards:
+        shard_index = int(shard.shard_info.shard_index)
         text = shard.text
         for shard_page in shard.pages:
-            result.append(Page(documentai_page=shard_page, text=text))
+            result.append(
+                Page(shard_index=shard_index, documentai_page=shard_page, text=text)
+            )
 
+    if len(result) > 1 and result[0].documentai_page.page_number:
+        result.sort(key=lambda x: int(x.documentai_page.page_number))
     return result
 
 
@@ -150,40 +155,6 @@ def _text_from_shards(shards: List[documentai.Document]) -> str:
             total_text += shard.text
 
     return total_text
-
-
-def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page]):
-    r"""Convert OCR data from Document.proto to AnnotateFileResponse.proto for Vision API.
-
-    Args:
-        text (str):
-            Required. Contents of document.
-        pages (List[Page]):
-            Required. A list of pages.
-    Returns:
-        AnnotateFileResponse:
-            Proto with TextAnnotations.
-    """
-    responses = []
-    vision_file_response = AnnotateFileResponse()
-    page_idx = 0
-    while page_idx < len(pages):
-        page_info = PageInfo(pages[page_idx].documentai_page, text)
-        page_vision_annotation = _convert_document_page(page_info)
-        page_vision_annotation.text = _get_text_anchor_substring(
-            text, pages[page_idx].documentai_page.layout.text_anchor
-        )
-        responses.append(
-            AnnotateImageResponse(
-                full_text_annotation=page_vision_annotation,
-                context=ImageAnnotationContext(page_number=page_idx + 1),
-            )
-        )
-        page_idx += 1
-
-    vision_file_response.responses = responses
-
-    return vision_file_response
 
 
 def _get_batch_process_metadata(
@@ -725,7 +696,26 @@ class Document:
             AnnotateFileResponse:
                 Proto with TextAnnotations.
         """
-        return _convert_to_vision_annotate_file_response(self.text, self.pages)
+        responses: List[AnnotateImageResponse] = []
+
+        for shard in self.shards:
+            for docai_page in shard.pages:
+                page_vision_annotation = _convert_document_page(
+                    PageInfo(docai_page, self.text)
+                )
+                page_vision_annotation.text = _get_text_anchor_substring(
+                    self.text, docai_page.layout.text_anchor
+                )
+                responses.append(
+                    AnnotateImageResponse(
+                        full_text_annotation=page_vision_annotation,
+                        context=ImageAnnotationContext(
+                            page_number=docai_page.page_number
+                        ),
+                    )
+                )
+
+        return AnnotateFileResponse(responses=responses)
 
     def export_images(
         self, output_path: str, output_file_prefix: str, output_file_extension: str
@@ -749,13 +739,14 @@ class Document:
         output_filenames: List[str] = []
         index = 0
         for entity in self.entities:
-            if not entity.image:
-                continue
+            image = entity.crop_image(
+                documentai_document=self.shards[entity.shard_index]
+            )
 
             output_filename = (
                 f"{output_file_prefix}_{index}_{entity.type_}.{output_file_extension}"
             )
-            entity.image.save(os.path.join(output_path, output_filename))
+            image.save(os.path.join(output_path, output_filename))
             output_filenames.append(output_filename)
             index += 1
 

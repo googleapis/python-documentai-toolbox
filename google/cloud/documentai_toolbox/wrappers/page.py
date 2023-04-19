@@ -389,8 +389,9 @@ class Page:
             page.
     """
 
-    documentai_page: documentai.Document.Page = dataclasses.field(repr=False)
-    text: str = dataclasses.field(repr=False)
+    shard_index: int = dataclasses.field()
+    documentai_page: dataclasses.InitVar[documentai.Document.Page]
+    text: dataclasses.InitVar[str]
 
     form_fields: List[FormField] = dataclasses.field(init=False, repr=False)
     lines: List[Line] = dataclasses.field(init=False, repr=False)
@@ -398,22 +399,19 @@ class Page:
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
     tables: List[Table] = dataclasses.field(init=False, repr=False)
 
-    def __post_init__(self):
-        tables = []
-
-        for table in self.documentai_page.tables:
-            tables.append(
-                _table_wrapper_from_documentai_table(
-                    documentai_table=table, text=self.text
-                )
-            )
-
+    def __post_init__(self, documentai_page, text):
         self.form_fields = _get_form_fields(
-            form_fields=self.documentai_page.form_fields, text=self.text
+            form_fields=documentai_page.form_fields, text=text
         )
-        self.lines = _get_lines(lines=self.documentai_page.lines, text=self.text)
+        self.lines = _get_lines(lines=documentai_page.lines, text=text)
         self.paragraphs = _get_paragraphs(
-            paragraphs=self.documentai_page.paragraphs, text=self.text
+            paragraphs=documentai_page.paragraphs, text=text
         )
-        self.blocks = _get_blocks(blocks=self.documentai_page.blocks, text=self.text)
+        self.blocks = _get_blocks(blocks=documentai_page.blocks, text=text)
+
+        tables = []
+        for table in documentai_page.tables:
+            tables.append(
+                _table_wrapper_from_documentai_table(documentai_table=table, text=text)
+            )
         self.tables = tables

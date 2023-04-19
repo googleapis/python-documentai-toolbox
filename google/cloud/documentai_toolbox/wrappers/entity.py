@@ -18,6 +18,7 @@
 import dataclasses
 
 from io import BytesIO
+from typing import List
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox import constants
@@ -26,7 +27,7 @@ from PIL import Image
 
 @dataclasses.dataclass
 class Entity:
-    r"""Represents a wrapped documentai.Document.Entity.
+    """Represents a wrapped `documentai.Document.Entity`.
 
     Attributes:
         documentai_entity (google.cloud.documentai.Document.Entity):
@@ -38,32 +39,44 @@ class Entity:
             If the entity is not present in
             the document, this field will be empty.
     """
-    documentai_entity: documentai.Document.Entity = dataclasses.field(repr=False)
+
+    shard_index: int = dataclasses.field()
+    documentai_entity: dataclasses.InitVar[documentai.Document.Entity]
+
+    id: int = dataclasses.field(init=False)
     type_: str = dataclasses.field(init=False)
     mention_text: str = dataclasses.field(init=False, default="")
     normalized_text: str = dataclasses.field(init=False, default="")
 
-    # Only Populated for Splitter/Classifier Output
     start_page: int = dataclasses.field(init=False)
+    # Only Populated for Splitter/Classifier Output
     end_page: int = dataclasses.field(init=False)
 
-    # Only Populated for Identity Documents
-    image: Image.Image = dataclasses.field(init=False, default=None)
+    normalized_vertices: List[documentai.NormalizedVertex] = dataclasses.field(
+        init=False, default=[]
+    )
 
-    def __post_init__(self):
-        self.type_ = self.documentai_entity.type_
-        self.mention_text = self.documentai_entity.mention_text
+    def __post_init__(self, documentai_entity):
+        self.id = documentai_entity.id
+        self.type_ = documentai_entity.type_
+        self.mention_text = documentai_entity.mention_text
         if (
-            self.documentai_entity.normalized_value
-            and self.documentai_entity.normalized_value.text
+            documentai_entity.normalized_value
+            and documentai_entity.normalized_value.text
         ):
-            self.normalized_text = self.documentai_entity.normalized_value.text
+            self.normalized_text = documentai_entity.normalized_value.text
 
-        if self.documentai_entity.page_anchor.page_refs:
-            self.start_page = int(self.documentai_entity.page_anchor.page_refs[0].page)
-            self.end_page = int(self.documentai_entity.page_anchor.page_refs[-1].page)
+        page_refs = documentai_entity.page_anchor.page_refs
+        if page_refs:
+            self.start_page = int(page_refs[0].page)
+            self.end_page = int(page_refs[-1].page)
 
-    def crop_image(self, documentai_document: documentai.Document):
+            if page_refs[0].bounding_poly:
+                self.normalized_vertices = page_refs[
+                    0
+                ].bounding_poly.normalized_vertices
+
+    def crop_image(self, documentai_document: documentai.Document) -> Image.Image:
         r"""Return image cropped from page image for detected entity.
 
         Args:
@@ -74,17 +87,17 @@ class Entity:
                 Image from `Document.Entity`. Returns `None` if there is no image.
         """
         if self.type_ not in constants.IMAGE_ENTITIES or self.mention_text:
-            return
+            return None
 
-        page_ref = self.documentai_entity.page_anchor.page_refs[0]
-        doc_page = documentai_document.pages[page_ref.page]
-        image_content = doc_page.image.content
+        doc_page = documentai_document.pages[self.start_page]
 
-        doc_image = Image.open(BytesIO(image_content))
+        if not doc_page.image:
+            raise ValueError("Document does not contain images.")
+
+        doc_image = Image.open(BytesIO(doc_page.image.content))
         w, h = doc_image.size
         vertices = [
-            (int(v.x * w + 0.5), int(v.y * h + 0.5))
-            for v in page_ref.bounding_poly.normalized_vertices
+            (int(v.x * w + 0.5), int(v.y * h + 0.5)) for v in self.normalized_vertices
         ]
         (top, left), (bottom, right) = vertices[0], vertices[2]
-        self.image = doc_image.crop((top, left, bottom, right))
+        return doc_image.crop((top, left, bottom, right))
