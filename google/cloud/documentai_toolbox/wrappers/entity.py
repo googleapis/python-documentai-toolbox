@@ -53,7 +53,7 @@ class Entity:
     end_page: int = dataclasses.field(init=False)
 
     normalized_vertices: List[documentai.NormalizedVertex] = dataclasses.field(
-        init=False, default=[]
+        init=False, default_factory=list
     )
 
     def __post_init__(self, documentai_entity):
