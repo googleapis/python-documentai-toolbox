@@ -393,6 +393,7 @@ class Page:
     documentai_page: dataclasses.InitVar[documentai.Document.Page]
     text: dataclasses.InitVar[str]
 
+    page_number: int = dataclasses.field(init=False, repr=False)
     form_fields: List[FormField] = dataclasses.field(init=False, repr=False)
     lines: List[Line] = dataclasses.field(init=False, repr=False)
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
@@ -400,6 +401,7 @@ class Page:
     tables: List[Table] = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self, documentai_page, text):
+        self.page_number = int(documentai_page.page_number)
         self.form_fields = _get_form_fields(
             form_fields=documentai_page.form_fields, text=text
         )

@@ -73,8 +73,8 @@ def _entities_from_shards(
                     )
                 )
 
-    if len(result) > 1 and result[0].documentai_entity.id:
-        result.sort(key=lambda x: int(x.documentai_entity.id))
+    if len(result) > 1 and result[0].id:
+        result.sort(key=lambda x: int(x.id))
     return result
 
 
@@ -98,8 +98,8 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
                 Page(shard_index=shard_index, documentai_page=shard_page, text=text)
             )
 
-    if len(result) > 1 and result[0].documentai_page.page_number:
-        result.sort(key=lambda x: int(x.documentai_page.page_number))
+    if len(result) > 1 and result[0].page_number:
+        result.sort(key=lambda x: int(x.page_number))
     return result
 
 
@@ -742,7 +742,8 @@ class Document:
             image = entity.crop_image(
                 documentai_document=self.shards[entity.shard_index]
             )
-
+            if not image:
+                continue
             output_filename = (
                 f"{output_file_prefix}_{index}_{entity.type_}.{output_file_extension}"
             )

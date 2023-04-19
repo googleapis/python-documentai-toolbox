@@ -266,7 +266,9 @@ def test_Table():
 
 def test_Page(docproto):
     docproto_page = docproto.pages[0]
-    wrapped_page = page.Page(documentai_page=docproto_page, text=docproto.text)
+    wrapped_page = page.Page(
+        shard_index=0, documentai_page=docproto_page, text=docproto.text
+    )
 
     assert len(wrapped_page.lines) == 37
     assert len(wrapped_page.paragraphs) == 31
