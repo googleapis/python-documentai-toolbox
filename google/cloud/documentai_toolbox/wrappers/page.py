@@ -35,7 +35,7 @@ class Table:
             Required. A list of header rows.
     """
 
-    documentai_table: documentai.Document.Page.Table = dataclasses.field(repr=False)
+    documentai_table: dataclasses.InitVar[documentai.Document.Page.Table]
     body_rows: List[List[str]] = dataclasses.field(repr=False)
     header_rows: List[List[str]] = dataclasses.field(repr=False)
 
@@ -131,7 +131,7 @@ class Block:
             Required. UTF-8 encoded text.
     """
 
-    documentai_block: documentai.Document.Page.Block
+    documentai_block: dataclasses.InitVar[documentai.Document.Page.Block]
     text: str
 
 
@@ -146,7 +146,7 @@ class Paragraph:
             Required. UTF-8 encoded text.
     """
 
-    documentai_paragraph: documentai.Document.Page.Paragraph
+    documentai_paragraph: dataclasses.InitVar[documentai.Document.Page.Paragraph]
     text: str
 
 
@@ -161,7 +161,7 @@ class Line:
             Required. UTF-8 encoded text.
     """
 
-    documentai_line: documentai.Document.Page.Line
+    documentai_line: dataclasses.InitVar[documentai.Document.Page.Line]
     text: str
 
 
@@ -178,7 +178,7 @@ class FormField:
             Required. The form field value
     """
 
-    documentai_formfield: documentai.Document.Page.FormField
+    documentai_formfield: dataclasses.InitVar[documentai.Document.Page.FormField]
     field_name: str
     field_value: str
 

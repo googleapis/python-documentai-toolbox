@@ -35,7 +35,7 @@ def table_sample(document_path: str, output_file_prefix: str) -> None:
             # Write table to CSV file
             output_file = f"{output_file_prefix}-{page_number}-{table_number}.csv"
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(wrapped_document.pages[0].tables[0].to_csv())
+                f.write(table.to_csv())
 
 
 # [END documentai_toolbox_table]
