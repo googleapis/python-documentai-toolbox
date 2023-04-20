@@ -30,14 +30,31 @@ class Entity:
     """Represents a wrapped `documentai.Document.Entity`.
 
     Attributes:
+        shard_index (int):
+            Required. The index of the `google.cloud.documentai.Document` containing
+            the `google.cloud.documentai.Document.Entity`.
         documentai_entity (google.cloud.documentai.Document.Entity):
-            Required. The original google.cloud.documentai.Document.Entity object.
+            Required. The original `google.cloud.documentai.Document.Entity` object.
+        id (int):
+            Required. The unique identifier of the `Entity` in the `Document`.
         type_ (str):
             Required. Entity type from a schema e.g. "Address".
         mention_text (str):
             Optional. Text value in the document e.g. "1600 Amphitheatre Pkwy".
             If the entity is not present in
             the document, this field will be empty.
+        normalized_text (str):
+            Optional. Normalized text value in the document e.g. "1970-01-01".
+            If the entity is not present in
+            the document, this field will be empty.
+        start_page (int):
+            Required. `Page` containing the `Entity` or the first page of the
+            classification (for Splitter/Classifier processors).
+        end_page (int):
+            Required. Last page of the classification
+            (for Splitter/Classifier processors). Default is `0` for other processors.
+        normalized_vertices (List[documentai.NormalizedVertex]):
+            Optional. Vertices for bounding box of `Entity`.
     """
 
     shard_index: int = dataclasses.field()

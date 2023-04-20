@@ -309,15 +309,15 @@ def _dict_to_bigquery(
 class Document:
     r"""Represents a wrapped `Document`.
 
-    This class hides away the complexities of using `Document` protobuf
+    This class hides away the complexities of using the `Document` protobuf
     response outputted by `BatchProcessDocuments` or `ProcessDocument`
     methods and implements convenient methods for searching and
     extracting information within the `Document`.
 
     Attributes:
         shards: (List[google.cloud.documentai.Document]):
-            Optional. A list of documentai.Document shards of the same Document.
-            Each shard consists of a number of pages in the Document.
+            Optional. A list of `documentai.Document` shards of the same `Document`.
+            Each shard consists of a number of pages in the `Document`.
         gcs_bucket_name (Optional[str]):
             Optional. The name of the gcs bucket.
 
@@ -327,11 +327,17 @@ class Document:
 
             Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
 
-            For more information please take a look at https://cloud.google.com/storage/docs/json_api/v1/objects/list .
+            For more information please take a look at https://cloud.google.com/storage/docs/json_api/v1/objects/list
+        gcs_input_uri (str):
+            Optional. The gcs uri to the original input file.
+
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
         pages: (List[Page]):
-            A list of Pages in the Document.
+            A list of `Pages` in the `Document`.
         entities: (List[Entity]):
-            A list of Entities in the Document.
+            A list of `Entities` in the `Document`.
+        text: (str):
+            The full text of the `Document`.
     """
 
     shards: List[documentai.Document] = dataclasses.field(repr=False)
@@ -353,7 +359,7 @@ class Document:
         cls,
         document_path: str,
     ):
-        r"""Loads Document from local document_path.
+        r"""Loads `Document` from local `document_path`.
 
             .. code-block:: python
 
@@ -364,10 +370,10 @@ class Document:
 
         Args:
             document_path (str):
-                Required. The path to the document.json file.
+                Required. The path to the `document.json` file.
         Returns:
             Document:
-                A document from local document_path.
+                A document from local `document_path`.
         """
 
         with open(document_path, "r", encoding="utf-8") as f:
@@ -380,7 +386,7 @@ class Document:
         cls,
         documentai_document: documentai.Document,
     ):
-        r"""Loads Document from local documentai_document.
+        r"""Loads `Document` from local `documentai_document`.
 
             .. code-block:: python
 
@@ -392,10 +398,10 @@ class Document:
 
         Args:
             documentai_document (documentai.Document):
-                Optional. The Document.proto response.
+                Required. The `Document.proto` response.
         Returns:
             Document:
-                A document from local documentai_document.
+                A document from local `documentai_document`.
         """
 
         return cls(shards=[documentai_document])
@@ -486,6 +492,7 @@ class Document:
             operation_name (str):
                 Required. The fully qualified operation name for a `batch_process_documents()` operation.
 
+                Format: `projects/{project}/locations/{location}/operations/{operation}`
         Returns:
             List[Document]:
                 A list of wrapped documents from gcs. Each document corresponds to an input file.
@@ -528,7 +535,7 @@ class Document:
         return found_pages
 
     def get_form_field_by_name(self, target_field: str) -> List[FormField]:
-        r"""Returns the list of FormFields named target_field.
+        r"""Returns the list of `FormFields` named `target_field`.
 
         Args:
             target_field (str):
@@ -536,7 +543,7 @@ class Document:
 
         Returns:
             List[FormField]:
-                A list of FormField matching target_field.
+                A list of `FormField` matching `target_field`.
 
         """
         found_fields = []
@@ -548,7 +555,7 @@ class Document:
         return found_fields
 
     def form_fields_to_dict(self) -> Dict:
-        r"""Returns Dictionary of form fields in document.
+        r"""Returns dictionary of form fields in document.
 
         Returns:
             Dict:
@@ -579,7 +586,7 @@ class Document:
                 Optional. Project ID containing the BigQuery table. If not passed, falls back to the default inferred from the environment.
         Returns:
             bigquery.job.LoadJob:
-                The BigQuery LoadJob for adding the form fields.
+                The BigQuery `LoadJob` for adding the form fields.
 
         """
 
@@ -591,15 +598,15 @@ class Document:
         )
 
     def get_entity_by_type(self, target_type: str) -> List[Entity]:
-        r"""Returns the list of Entities of target_type.
+        r"""Returns the list of `Entities` of `target_type`.
 
         Args:
             target_type (str):
-                Required. target_type.
+                Required. Target entity type.
 
         Returns:
             List[Entity]:
-                A list of Entity matching target_type.
+                A list of `Entity` matching `target_type`.
 
         """
         return [entity for entity in self.entities if entity.type_ == target_type]
@@ -635,7 +642,7 @@ class Document:
                 Optional. Project ID containing the BigQuery table. If not passed, falls back to the default inferred from the environment.
         Returns:
             bigquery.job.LoadJob:
-                The BigQuery LoadJob for adding the entities.
+                The BigQuery `LoadJob` for adding the entities.
 
         """
 
@@ -688,13 +695,13 @@ class Document:
         return output_files
 
     def convert_document_to_annotate_file_response(self) -> AnnotateFileResponse:
-        r"""Convert OCR data from Document.proto to AnnotateFileResponse.proto for Vision API.
+        r"""Convert OCR data from `Document.proto` to `AnnotateFileResponse.proto` for Vision API.
 
         Args:
             None.
         Returns:
             AnnotateFileResponse:
-                Proto with TextAnnotations.
+                Proto with `TextAnnotations`.
         """
         responses: List[AnnotateImageResponse] = []
 

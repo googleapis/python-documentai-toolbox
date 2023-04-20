@@ -365,10 +365,15 @@ class Page:
     """Represents a wrapped documentai.Document.Page .
 
     Attributes:
+        shard_index (int):
+            Required. The index of the `google.cloud.documentai.Document` containing
+            the `google.cloud.documentai.Document.Page`.
         documentai_page (google.cloud.documentai.Document.Page):
-            Required. The original google.cloud.documentai.Document.Page object.
-        text: (str):
-            Required. The full text of the Document containing the Page.
+            Required. The original `google.cloud.documentai.Document.Page` object.
+        text (str):
+            Required. The full text of the `Document` containing the `Page`.
+        page_number (int):
+            Required. The page number of the `Page`.
         form_fields (List[FormField]):
             Required. A list of visually detected form fields on the
             page.
