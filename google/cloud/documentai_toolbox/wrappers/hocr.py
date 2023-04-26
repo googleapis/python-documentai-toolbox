@@ -8,7 +8,7 @@
 import dataclasses
 from typing import List, Union
 from google.cloud import documentai
-from google.cloud.documentai_toolbox import document
+
 ElementWithLayout = Union[(
  documentai.Document.Page.Paragraph,
  documentai.Document.Page,
@@ -207,49 +207,35 @@ class hOCR:
         self.hocr_pages = _load_pages(pages=(self.documentai_pages), document_text=(self.documentai_text))
 
     def export_hocr(cls):
-        f = open(f"{cls.filename}.hocr","w")
-        f.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-        f.write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">")
-        f.write("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"unknown\" lang=\"unknown\">")
-        f.write("<head>")
-        f.write(f"<title>{cls.filename}</title>")
-        f.write("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" />")
-        f.write("<meta name=\"ocr-system\" content=\"Document AI OCR\" />")
-        f.write("<meta name=\"ocr-langs\" content=\"unknown\" />")
-        f.write(f"<meta name=\"ocr-number-of-pages\" content=\"{len(cls.documentai_pages)}\" />")
-        f.write("<meta name=\"ocr-capabilities\" content=\"ocr_page ocr_carea ocr_par ocr_line ocrx_word\" />")
-        f.write("</head>")
-        f.write("<body>")
+        f = ""
+        f += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        f += "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
+        f += "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"unknown\" lang=\"unknown\">\n"
+        f += "<head>\n"
+        f += f"<title>{cls.filename}</title>\n"
+        f += "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" />\n"
+        f += "<meta name=\"ocr-system\" content=\"Document AI OCR\" />\n"
+        f += "<meta name=\"ocr-langs\" content=\"unknown\" />\n"
+        f += f"<meta name=\"ocr-number-of-pages\" content=\"{len(cls.documentai_pages)}\" />\n"
+        f += "<meta name=\"ocr-capabilities\" content=\"ocr_page ocr_carea ocr_par ocr_line ocrx_word\" />\n"
+        f += "</head>\n"
+        f += "<body>\n"
         for pidx,page in enumerate(cls.hocr_pages):
-            f.write(f"<div class='ocr_page' lang='unknown' title='image \"{cls.filename}\";{page.bounding_box}'>")
+            f += f"<div class='ocr_page' lang='unknown' title='image \"{cls.filename}\";{page.bounding_box}'>\n"
             for bidx,block in enumerate(page.hocr_blocks):
-                f.write(f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block.bounding_box}'>")
+                f += f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block.bounding_box}'>\n"
                 for paridx, paragraph in enumerate(block.hocr_paragraphs):
-                    f.write(f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph.bounding_box}'>")
+                    f += f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph.bounding_box}'>\n"
                     for lidx, line in enumerate(paragraph.hocr_lines):
                         line_text = line.text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-                        f.write(f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line.bounding_box}'>{line_text}</span>")
+                        f += f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line.bounding_box}'>{line_text}</span>\n"
                         for widx, word in enumerate(line.hocr_words):
                             word_text = word.text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-                            f.write(f"<span class='ocrx_word' id='word_{pidx}_{bidx}_{paridx}_{lidx}_{widx}' title='{word.bounding_box}'>{word_text}</span>")
-                    f.write("</span>")
-                f.write("</span>")
-            f.write("</div>")
-        f.write("</body>")
-        f.write("</html>")
+                            f += f"<span class='ocrx_word' id='word_{pidx}_{bidx}_{paridx}_{lidx}_{widx}' title='{word.bounding_box}'>{word_text}</span>\n"
+                    f += "</span>\n"
+                f += "</span>\n"
+            f += "</div>\n"
+        f += "</body>\n"
+        f += "</html>\n"
 
-
-def main():
-    d = document.Document.from_document_path(document_path="/Users/galzahavi/Documents/GitHub/gal/python-documentai-toolbox/hocr-resource/2695900_rotated_2.json")
-    hocr = hOCR(documentai_pages=d.pages, documentai_text=d.text,filename="2695900_rotated_2")
-    hocr.export_hocr()
-
-    d = document.Document.from_document_path(document_path="/Users/galzahavi/Documents/GitHub/gal/python-documentai-toolbox/hocr-resource/2715577-docproto.json")
-    hocr = hOCR(documentai_pages=d.pages, documentai_text=d.text, filename="2715577-docproto")
-    hocr.export_hocr()
-
-    d = document.Document.from_document_path(document_path="/Users/galzahavi/Documents/GitHub/gal/python-documentai-toolbox/hocr-resource/INE_0000004-docproto.json")
-    hocr = hOCR(documentai_pages=d.pages, documentai_text=d.text,filename="INE_0000004-docproto")
-    hocr.export_hocr()
-
-main()
+        return f

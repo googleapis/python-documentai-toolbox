@@ -48,6 +48,8 @@ from google.longrunning.operations_pb2 import Operation, GetOperationRequest
 
 from pikepdf import Pdf
 
+from google.cloud.documentai_toolbox.wrappers.hocr import hOCR
+
 
 def _entities_from_shards(
     shards: List[documentai.Document],
@@ -638,3 +640,8 @@ class Document:
             index += 1
 
         return output_filenames
+
+    def to_hocr(self,filename: str) -> str:
+        hocr = hOCR(documentai_pages=self.pages, documentai_text=self.text,filename=filename)
+        
+        return hocr.export_hocr()
