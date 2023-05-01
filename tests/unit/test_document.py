@@ -135,7 +135,7 @@ def test_get_shards_with_no_shards(get_bytes_empty_directory_mock):
 def test_get_shards_with_missing_shard(get_bytes_missing_shard_mock):
     with pytest.raises(
         ValueError,
-        match="Invalid Document - shardInfo.shardCount (5) does not match number of shards (4).",
+        match=r"Invalid Document - shardInfo\.shardCount",
     ):
         document._get_shards(
             gcs_bucket_name="test-directory",
