@@ -27,22 +27,21 @@ from google.cloud import documentai
 
 from google.cloud.documentai_toolbox import constants
 
+from google.cloud.documentai_toolbox.converters import vision_helpers
+
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
 
-from google.cloud.documentai_toolbox.wrappers.page import Page
-from google.cloud.documentai_toolbox.wrappers.page import FormField
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
+from google.cloud.documentai_toolbox.wrappers.page import FormField
+from google.cloud.documentai_toolbox.wrappers.page import Page
 
-from google.cloud.vision import AnnotateFileResponse, ImageAnnotationContext
-from google.cloud.vision import AnnotateImageResponse
-
-from google.cloud.documentai_toolbox.converters.vision_helpers import (
-    _convert_document_page,
-    _get_text_anchor_substring,
-    PageInfo,
+from google.cloud.vision import (
+    AnnotateFileResponse,
+    AnnotateImageResponse,
+    ImageAnnotationContext,
 )
 
-from google.longrunning.operations_pb2 import Operation, GetOperationRequest
+from google.longrunning.operations_pb2 import GetOperationRequest, Operation
 
 from pikepdf import Pdf
 
@@ -132,8 +131,22 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
     for byte in byte_array:
         shards.append(documentai.Document.from_json(byte, ignore_unknown_fields=True))
 
-    if len(shards) > 1:
-        shards.sort(key=lambda x: int(x.shard_info.shard_index))
+    if not shards:
+        raise ValueError("Incomplete Document - No JSON files found.")
+
+    total_shards = len(shards)
+
+    if total_shards == 1:
+        return shards
+
+    shards.sort(key=lambda x: int(x.shard_info.shard_index))
+
+    for shard in shards:
+        if int(shard.shard_info.shard_count) != total_shards:
+            raise ValueError(
+                f"Invalid Document - shardInfo.shardCount ({shard.shard_info.shard_count}) does not match number of shards ({total_shards})."
+            )
+
     return shards
 
 
@@ -315,28 +328,28 @@ class Document:
     extracting information within the `Document`.
 
     Attributes:
-        shards: (List[google.cloud.documentai.Document]):
+        shards (List[google.cloud.documentai.Document]):
             Optional. A list of `documentai.Document` shards of the same `Document`.
             Each shard consists of a number of pages in the `Document`.
         gcs_bucket_name (Optional[str]):
             Optional. The name of the gcs bucket.
 
-            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_bucket_name=`bucket`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where `gcs_bucket_name=bucket`.
         gcs_prefix (Optional[str]):
             Optional. The prefix of the json files in the target_folder.
 
-            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where `gcs_prefix={optional_folder}/{target_folder}`.
 
-            For more information please take a look at https://cloud.google.com/storage/docs/json_api/v1/objects/list
+            For more information, refer to https://cloud.google.com/storage/docs/json_api/v1/objects/list
         gcs_input_uri (str):
             Optional. The gcs uri to the original input file.
 
             Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
-        pages: (List[Page]):
+        pages (List[Page]):
             A list of `Pages` in the `Document`.
-        entities: (List[Entity]):
+        entities (List[Entity]):
             A list of `Entities` in the `Document`.
-        text: (str):
+        text (str):
             The full text of the `Document`.
     """
 
@@ -414,11 +427,11 @@ class Document:
             gcs_bucket_name (str):
                 Required. The gcs bucket.
 
-                Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where gcs_bucket_name=`{bucket_name}`.
+                Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
             gcs_prefix (str):
                 Required. The prefix to the location of the target folder.
 
-                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where gcs_prefix=`{optional_folder}/{target_folder}`.
+                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
             gcs_input_uri (str):
                 Optional. The gcs uri to the original input file.
 
@@ -707,12 +720,10 @@ class Document:
 
         for shard in self.shards:
             for docai_page in shard.pages:
-                page_vision_annotation = _convert_document_page(
-                    PageInfo(docai_page, self.text)
+                page_vision_annotation = vision_helpers._convert_document_page(
+                    docai_page, self.text
                 )
-                page_vision_annotation.text = _get_text_anchor_substring(
-                    self.text, docai_page.layout.text_anchor
-                )
+
                 responses.append(
                     AnnotateImageResponse(
                         full_text_annotation=page_vision_annotation,

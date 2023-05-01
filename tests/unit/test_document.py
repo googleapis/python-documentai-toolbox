@@ -91,6 +91,20 @@ def get_bytes_images_mock():
         yield byte_factory
 
 
+@pytest.fixture
+def get_bytes_empty_directory_mock():
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/fake_directory")
+        yield byte_factory
+
+
+@pytest.fixture
+def get_bytes_missing_shard_mock():
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/missing_shard")
+        yield byte_factory
+
+
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document._get_shards(
@@ -107,6 +121,24 @@ def test_get_shards_with_valid_gcs_uri(get_bytes_single_file_mock):
     get_bytes_single_file_mock.assert_called_once()
     # We are testing only one of the fields to make sure the file content could be loaded.
     assert actual[0].pages[0].page_number == 1
+
+
+def test_get_shards_with_no_shards(get_bytes_empty_directory_mock):
+    with pytest.raises(ValueError, match="Incomplete Document - No JSON files found."):
+        document._get_shards(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0/",
+        )
+        get_bytes_empty_directory_mock.assert_called_once()
+
+
+def test_get_shards_with_missing_shard(get_bytes_missing_shard_mock):
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
+        document._get_shards(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0/",
+        )
+        get_bytes_missing_shard_mock.assert_called_once()
 
 
 def test_pages_from_shards():

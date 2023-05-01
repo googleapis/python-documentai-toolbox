@@ -290,18 +290,19 @@ def _convert_document_block(
 
 
 def _convert_document_page(
-    page_info: PageInfo,
+    docai_page: Document.Page, document_text: str
 ) -> TextAnnotation:
     """Extracts OCR related data in `page` and converts it to TextAnnotation.
 
     Args:
-      page_info (PageInfo): Current page information, including document page to be converted,
-      its text, and the position of reading cursor.
+      docai_page (documentai.Document.Page): Document page to be converted.
+      document_text (str): Full text of the document to convert.
 
     Returns:
         TextAnnotation:
             Proto that only contains one page OCR data.
     """
+    page_info = PageInfo(page=docai_page, text=document_text)
     detected_languages = []
     for language in page_info.page.detected_languages:
         detected_languages.append(
@@ -320,7 +321,9 @@ def _convert_document_page(
         property=text_property,
     )
 
-    text_annotation = TextAnnotation()
-    text_annotation.pages = [page]
+    text_annotation = TextAnnotation(
+        pages=[page],
+        text=_get_text_anchor_substring(document_text, docai_page.layout.text_anchor),
+    )
 
     return text_annotation
