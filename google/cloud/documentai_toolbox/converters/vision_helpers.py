@@ -24,6 +24,8 @@ from google.cloud.documentai import Document
 from google.cloud.vision import TextAnnotation, Symbol, Word, Paragraph, Block, Page
 from google.cloud import vision
 
+from google.cloud.documentai_toolbox.constants import ElementWithLayout
+
 
 _BREAK_TYPE_MAP = immutabledict.immutabledict(
     {
@@ -38,15 +40,6 @@ _BREAK_TYPE_MAP = immutabledict.immutabledict(
         ),
     }
 )
-
-
-ElementWithLayout = Union[
-    Document.Page.Paragraph,
-    Document.Page,
-    Document.Page.Token,
-    Document.Page.Block,
-    Document.Page.Symbol,
-]
 
 
 @dataclasses.dataclass
