@@ -29,6 +29,8 @@ class Table:
     Attributes:
         documentai_table (google.cloud.documentai.Document.Page.Table):
             Required. The original google.cloud.documentai.Document.Page.Table object.
+        text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         body_rows (List[List[str]]):
             Required. A list of body rows.
         header_rows (List[List[str]]):
@@ -36,8 +38,18 @@ class Table:
     """
 
     documentai_table: dataclasses.InitVar[documentai.Document.Page.Table]
-    body_rows: List[List[str]] = dataclasses.field(repr=False)
-    header_rows: List[List[str]] = dataclasses.field(repr=False)
+    text: dataclasses.InitVar[str]
+
+    body_rows: List[List[str]] = dataclasses.field(init=False)
+    header_rows: List[List[str]] = dataclasses.field(init=False)
+
+    def __post_init__(self, documentai_table, text):
+        self.header_rows = _table_rows_from_documentai_table_rows(
+            table_rows=list(documentai_table.header_rows), text=text
+        )
+        self.body_rows = _table_rows_from_documentai_table_rows(
+            table_rows=list(documentai_table.body_rows), text=text
+        )
 
     def to_dataframe(self) -> pd.DataFrame:
         r"""Returns pd.DataFrame from documentai.table
@@ -88,36 +100,6 @@ class Table:
 
         """
         return self.to_dataframe().to_csv(index=False)
-
-
-def _table_wrapper_from_documentai_table(
-    documentai_table: documentai.Document.Page.Table, text: str
-) -> Table:
-    r"""Returns a Table.
-
-    Args:
-        documentai_table (documentai.Document.Page.Table):
-            Required. A documentai.Document.Page.Table.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-
-    Returns:
-        Table:
-            A Table.
-
-    """
-
-    header_rows = _table_rows_from_documentai_table_rows(
-        table_rows=list(documentai_table.header_rows), text=text
-    )
-    body_rows = _table_rows_from_documentai_table_rows(
-        table_rows=list(documentai_table.body_rows), text=text
-    )
-
-    return Table(
-        documentai_table=documentai_table, body_rows=body_rows, header_rows=header_rows
-    )
 
 
 @dataclasses.dataclass
@@ -416,9 +398,6 @@ class Page:
         )
         self.blocks = _get_blocks(blocks=documentai_page.blocks, text=text)
 
-        tables = []
-        for table in documentai_page.tables:
-            tables.append(
-                _table_wrapper_from_documentai_table(documentai_table=table, text=text)
-            )
-        self.tables = tables
+        self.tables = [
+            Table(documentai_table=table, text=text) for table in documentai_page.tables
+        ]

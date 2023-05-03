@@ -28,12 +28,11 @@ def table_sample(document_path: str, output_file_prefix: str) -> None:
     wrapped_document = document.Document.from_document_path(document_path=document_path)
 
     print("Tables in Document")
-    for page_number, page in enumerate(wrapped_document.pages):
-        for table_number, table in enumerate(page.tables):
+    for page in wrapped_document.pages:
+        for table_index, table in enumerate(page.tables):
             print(table.to_dataframe())
-
             # Write table to CSV file
-            output_file = f"{output_file_prefix}-{page_number}-{table_number}.csv"
+            output_file = f"{output_file_prefix}-{page.page_number}-{table_index}.csv"
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(table.to_csv())
 

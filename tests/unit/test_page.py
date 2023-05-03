@@ -39,85 +39,81 @@ def docproto_form_parser():
         return documentai.Document.from_json(f.read())
 
 
-def test_table_to_csv():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
-    table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
-    )
-    contents = table.to_csv()
-
-    assert (
-        contents
-        == """This,Is,A,Header,Test
-,,A,Sub,Header
-This,Is,A,Body,Test
-1,2,3,4,5
-"""
-    )
-
-
-def test_table_to_csv_with_empty_body_rows():
-    header_rows = [["This", "Is", "A", "Header", "Test"]]
-    table = page.Table(documentai_table=None, header_rows=header_rows, body_rows=[])
+def test_table_to_csv(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
 
     contents = table.to_csv()
 
     assert (
         contents
-        == """This,Is,A,Header,Test
+        == """Item Description,Quantity,Price,Amount
+Tool A,500,$1.00,$500.00
+Service B,1,$900.00,$900.00
+Resource C,50,$12.00,$600.00
+,,Subtotal,$2000.00
+,,Tax,$140.00
+,,BALANCE DUE,$2140.00
 """
     )
 
 
-def test_table_to_csv_with_empty_header_rows():
-    body_rows = [["This"], ["Is"], ["A"], ["Body"], ["Test"]]
-    table = page.Table(documentai_table=None, header_rows=[], body_rows=body_rows)
+def test_table_to_csv_with_empty_body_rows(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table.body_rows = None
 
     contents = table.to_csv()
 
+    assert (
+        contents
+        == """Item Description,Quantity,Price,Amount
+"""
+    )
+
+
+def test_table_to_csv_with_empty_header_rows(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table.header_rows = None
+
+    contents = table.to_csv()
+
+    assert (
+        contents
+        == """,,,
+Tool A,500,$1.00,$500.00
+Service B,1,$900.00,$900.00
+Resource C,50,$12.00,$600.00
+,,Subtotal,$2000.00
+,,Tax,$140.00
+,,BALANCE DUE,$2140.00
+"""
+    )
+
+
+def test_table_to_csv_with_empty_header_rows_and_single_body(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table.header_rows = []
+    table.body_rows = [[table.body_rows[0][0]]]
+
+    contents = table.to_csv()
     assert (
         contents
         == """""
-This
-Is
-A
-Body
-Test
+Tool A
 """
     )
 
 
-def test_table_to_csv_with_empty_header_rows_and_single_body():
-    body_rows = [["Body"]]
-    table = page.Table(documentai_table=None, header_rows=[], body_rows=body_rows)
-
-    contents = table.to_csv()
-
-    assert (
-        contents
-        == """""
-Body
-"""
-    )
-
-
-def test_table_to_dataframe():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
-    table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
-    )
+def test_table_to_dataframe(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
     contents = table.to_dataframe()
 
-    assert len(contents.columns) == 5
-    assert len(contents.values) == 2
+    assert len(contents.columns) == 4
+    assert len(contents.values) == 6
 
 
 def test_trim_text():
@@ -125,16 +121,6 @@ def test_trim_text():
     output_text = page._trim_text(input_text)
 
     assert output_text == "Sally Walker"
-
-
-def test_table_wrapper_from_documentai_table(docproto):
-    docproto_page = docproto.pages[0]
-
-    table = page._table_wrapper_from_documentai_table(
-        documentai_table=docproto_page.tables[0], text=docproto.text
-    )
-    assert len(table.body_rows) == 6
-    assert len(table.header_rows[0]) == 4
 
 
 def test_header_for_table_rows_from_documentai_table_rows(docproto):
@@ -250,18 +236,12 @@ def test_Line():
     assert line.text == "test_line"
 
 
-def test_Table():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
-    table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
-    )
+def test_Table(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
 
-    assert len(table.body_rows) == 2
-    assert len(table.header_rows[0]) == 5
+    assert len(table.body_rows) == 6
+    assert len(table.header_rows[0]) == 4
 
 
 def test_Page(docproto):
