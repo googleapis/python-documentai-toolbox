@@ -18,7 +18,7 @@
 import dataclasses
 
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox import constants
@@ -93,7 +93,9 @@ class Entity:
                     0
                 ].bounding_poly.normalized_vertices
 
-    def crop_image(self, documentai_document: documentai.Document) -> Image.Image:
+    def crop_image(
+        self, documentai_document: documentai.Document
+    ) -> Optional[Image.Image]:
         r"""Return image cropped from page image for detected entity.
 
         Args:
