@@ -154,6 +154,8 @@ class FormField:
     Attributes:
         documentai_formfield (google.cloud.documentai.Document.Page.FormField):
             Required. The original google.cloud.documentai.Document.Page.FormField object.
+        text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         field_name (str):
             Required. The form field name
         field_value (str):
@@ -161,8 +163,18 @@ class FormField:
     """
 
     documentai_formfield: dataclasses.InitVar[documentai.Document.Page.FormField]
-    field_name: str
-    field_value: str
+    text: dataclasses.InitVar[str]
+
+    field_name: str = dataclasses.field(init=False)
+    field_value: str = dataclasses.field(init=False)
+
+    def __post_init__(self, documentai_formfield, text):
+        self.field_name = _trim_text(
+            _text_from_layout(documentai_formfield.field_name, text)
+        )
+        self.field_value = _trim_text(
+            _text_from_layout(documentai_formfield.field_value, text)
+        )
 
 
 def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str:
@@ -282,37 +294,6 @@ def _trim_text(text: str) -> str:
     return text.strip().replace("\n", " ")
 
 
-def _get_form_fields(
-    form_fields: List[documentai.Document.Page.FormField], text: str
-) -> List[FormField]:
-    r"""Returns a list of FormField.
-
-    Args:
-        form_fields (List[documentai.Document.Page.FormField]):
-            Required. A list of documentai.Document.Page.FormField objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-    Returns:
-        List[FormField]:
-            A list of FormFields.
-    """
-    result = []
-
-    for form_field in form_fields:
-        result.append(
-            FormField(
-                documentai_formfield=form_field,
-                field_name=_trim_text(_text_from_layout(form_field.field_name, text)),
-                field_value=_trim_text(
-                    _text_from_layout(form_field.field_value, text),
-                ),
-            )
-        )
-
-    return result
-
-
 def _table_rows_from_documentai_table_rows(
     table_rows: List[documentai.Document.Page.Table.TableRow], text: str
 ) -> List[List[str]]:
@@ -389,9 +370,10 @@ class Page:
 
     def __post_init__(self, documentai_page, text):
         self.page_number = int(documentai_page.page_number)
-        self.form_fields = _get_form_fields(
-            form_fields=documentai_page.form_fields, text=text
-        )
+        self.form_fields = [
+            FormField(documentai_formfield=form_field, text=text)
+            for form_field in documentai_page.form_fields
+        ]
         self.lines = _get_lines(lines=documentai_page.lines, text=text)
         self.paragraphs = _get_paragraphs(
             paragraphs=documentai_page.paragraphs, text=text

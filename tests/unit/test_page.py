@@ -187,30 +187,17 @@ def test_get_lines(docproto):
     assert lines[36].text == "Supplies used for Project Q.\n"
 
 
-def test_get_form_fields(docproto_form_parser):
-    docproto_form_fields = docproto_form_parser.pages[0].form_fields
-
-    form_fields = page._get_form_fields(
-        form_fields=docproto_form_fields, text=docproto_form_parser.text
-    )
-
-    assert len(form_fields) == 17
-    assert form_fields[4].field_name == "Occupation:"
-    assert form_fields[4].field_value == "Software Engineer"
-
-
 # Class init Tests
 
 
-def test_FormField():
-    docai_form_field = documentai.Document.Page.FormField()
+def test_FormField(docproto_form_parser):
+    documentai_formfield = docproto_form_parser.pages[0].form_fields[4]
     form_field = page.FormField(
-        documentai_formfield=docai_form_field,
-        field_name="Name:",
-        field_value="Sally Walker",
+        documentai_formfield=documentai_formfield, text=docproto_form_parser.text
     )
-    assert form_field.field_name == "Name:"
-    assert form_field.field_value == "Sally Walker"
+
+    assert form_field.field_name == "Occupation:"
+    assert form_field.field_value == "Software Engineer"
 
 
 def test_Block():
@@ -253,6 +240,10 @@ def test_Page(docproto):
     assert len(wrapped_page.lines) == 37
     assert len(wrapped_page.paragraphs) == 31
     assert len(wrapped_page.blocks) == 31
+    assert len(wrapped_page.form_fields) == 13
+
     assert wrapped_page.lines[0].text == "Invoice\n"
     assert wrapped_page.paragraphs[30].text == "Supplies used for Project Q.\n"
     assert wrapped_page.blocks[30].text == "Supplies used for Project Q.\n"
+    assert wrapped_page.form_fields[0].field_name == "BALANCE DUE"
+    assert wrapped_page.form_fields[0].field_value == "$2140.00"
