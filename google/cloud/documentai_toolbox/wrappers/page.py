@@ -43,7 +43,7 @@ class Table:
     body_rows: List[List[str]] = dataclasses.field(init=False)
     header_rows: List[List[str]] = dataclasses.field(init=False)
 
-    def __post_init__(self, documentai_table, text):
+    def __post_init__(self, documentai_table, text) -> None:
         self.header_rows = _table_rows_from_documentai_table_rows(
             table_rows=list(documentai_table.header_rows), text=text
         )
@@ -109,12 +109,20 @@ class Block:
     Attributes:
         documentai_block (google.cloud.documentai.Document.Page.Block):
             Required. The original google.cloud.documentai.Document.Page.Block object.
+        document_text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         text (str):
-            Required. UTF-8 encoded text.
+            Required. UTF-8 encoded text of the block.
     """
 
     documentai_block: dataclasses.InitVar[documentai.Document.Page.Block]
-    text: str
+    document_text: dataclasses.InitVar[str]
+    text: str = dataclasses.field(init=False)
+
+    def __post_init__(self, documentai_block, document_text) -> None:
+        self.text = _text_from_layout(
+            layout=documentai_block.layout, text=document_text
+        )
 
 
 @dataclasses.dataclass
@@ -124,12 +132,20 @@ class Paragraph:
     Attributes:
         documentai_paragraph (google.cloud.documentai.Document.Page.Paragraph):
             Required. The original google.cloud.documentai.Document.Page.Paragraph object.
+        document_text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         text (str):
             Required. UTF-8 encoded text.
     """
 
     documentai_paragraph: dataclasses.InitVar[documentai.Document.Page.Paragraph]
-    text: str
+    document_text: dataclasses.InitVar[str]
+    text: str = dataclasses.field(init=False)
+
+    def __post_init__(self, documentai_paragraph, document_text) -> None:
+        self.text = _text_from_layout(
+            layout=documentai_paragraph.layout, text=document_text
+        )
 
 
 @dataclasses.dataclass
@@ -139,12 +155,18 @@ class Line:
     Attributes:
         documentai_line (google.cloud.documentai.Document.Page.Line):
             Required. The original google.cloud.documentai.Document.Page.Line object.
+        document_text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         text (str):
             Required. UTF-8 encoded text.
     """
 
     documentai_line: dataclasses.InitVar[documentai.Document.Page.Line]
-    text: str
+    document_text: dataclasses.InitVar[str]
+    text: str = dataclasses.field(init=False)
+
+    def __post_init__(self, documentai_line, document_text) -> None:
+        self.text = _text_from_layout(layout=documentai_line.layout, text=document_text)
 
 
 @dataclasses.dataclass
@@ -168,7 +190,7 @@ class FormField:
     field_name: str = dataclasses.field(init=False)
     field_value: str = dataclasses.field(init=False)
 
-    def __post_init__(self, documentai_formfield, text):
+    def __post_init__(self, documentai_formfield, text) -> None:
         self.field_name = _trim_text(
             _text_from_layout(documentai_formfield.field_name, text)
         )
@@ -198,86 +220,6 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
         result_text += text[int(text_segment.start_index) : int(text_segment.end_index)]
 
     return result_text
-
-
-def _get_blocks(blocks: List[documentai.Document.Page.Block], text: str) -> List[Block]:
-    r"""Returns a list of Block.
-
-    Args:
-        blocks (List[documentai.Document.Page.Block]):
-            Required. A list of documentai.Document.Page.Block objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-    Returns:
-        List[Block]:
-             A list of Blocks.
-    """
-    result = []
-
-    for block in blocks:
-        result.append(
-            Block(
-                documentai_block=block,
-                text=_text_from_layout(layout=block.layout, text=text),
-            )
-        )
-
-    return result
-
-
-def _get_paragraphs(
-    paragraphs: List[documentai.Document.Page.Paragraph], text: str
-) -> List[Paragraph]:
-    r"""Returns a list of Paragraph.
-
-    Args:
-        paragraphs (List[documentai.Document.Page.Paragraph]):
-            Required. A list of documentai.Document.Page.Paragraph objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-    Returns:
-        List[Paragraph]:
-             A list of Paragraphs.
-    """
-    result = []
-
-    for paragraph in paragraphs:
-        result.append(
-            Paragraph(
-                documentai_paragraph=paragraph,
-                text=_text_from_layout(layout=paragraph.layout, text=text),
-            )
-        )
-
-    return result
-
-
-def _get_lines(lines: List[documentai.Document.Page.Line], text: str) -> List[Line]:
-    r"""Returns a list of Line.
-
-    Args:
-        lines (List[documentai.Document.Page.Line]):
-            Required. A list of documentai.Document.Page.Line objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-    Returns:
-        List[Line]:
-            A list of Lines.
-    """
-    result = []
-
-    for line in lines:
-        result.append(
-            Line(
-                documentai_line=line,
-                text=_text_from_layout(layout=line.layout, text=text),
-            )
-        )
-
-    return result
 
 
 def _trim_text(text: str) -> str:
@@ -368,18 +310,24 @@ class Page:
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
     tables: List[Table] = dataclasses.field(init=False, repr=False)
 
-    def __post_init__(self, documentai_page, text):
+    def __post_init__(self, documentai_page, text) -> None:
         self.page_number = int(documentai_page.page_number)
         self.form_fields = [
             FormField(documentai_formfield=form_field, text=text)
             for form_field in documentai_page.form_fields
         ]
-        self.lines = _get_lines(lines=documentai_page.lines, text=text)
-        self.paragraphs = _get_paragraphs(
-            paragraphs=documentai_page.paragraphs, text=text
-        )
-        self.blocks = _get_blocks(blocks=documentai_page.blocks, text=text)
-
+        self.lines = [
+            Line(documentai_line=line, document_text=text)
+            for line in documentai_page.lines
+        ]
+        self.paragraphs = [
+            Paragraph(documentai_paragraph=paragraph, document_text=text)
+            for paragraph in documentai_page.paragraphs
+        ]
+        self.blocks = [
+            Block(documentai_block=block, document_text=text)
+            for block in documentai_page.blocks
+        ]
         self.tables = [
             Table(documentai_table=table, text=text) for table in documentai_page.tables
         ]
