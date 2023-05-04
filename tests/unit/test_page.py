@@ -158,35 +158,6 @@ def test_text_from_element_with_layout(docproto):
     assert text == "Invoice\n"
 
 
-def test_get_blocks(docproto):
-    docproto_blocks = docproto.pages[0].blocks
-
-    blocks = page._get_blocks(blocks=docproto_blocks, text=docproto.text)
-
-    assert len(blocks) == 31
-    assert blocks[0].text == "Invoice\n"
-
-
-def test_get_paragraphs(docproto):
-    docproto_paragraphs = docproto.pages[0].paragraphs
-
-    paragraphs = page._get_paragraphs(
-        paragraphs=docproto_paragraphs, text=docproto.text
-    )
-
-    assert len(paragraphs) == 31
-    assert paragraphs[0].text == "Invoice\n"
-
-
-def test_get_lines(docproto):
-    docproto_lines = docproto.pages[0].lines
-
-    lines = page._get_lines(lines=docproto_lines, text=docproto.text)
-
-    assert len(lines) == 37
-    assert lines[36].text == "Supplies used for Project Q.\n"
-
-
 # Class init Tests
 
 
@@ -200,27 +171,27 @@ def test_FormField(docproto_form_parser):
     assert form_field.field_value == "Software Engineer"
 
 
-def test_Block():
-    docai_block = documentai.Document.Page.Block()
-    block = page.Block(documentai_block=docai_block, text="test_block")
+def test_Block(docproto):
+    docai_block = docproto.pages[0].blocks[0]
+    block = page.Block(documentai_block=docai_block, document_text=docproto.text)
 
-    assert block.text == "test_block"
+    assert block.text == "Invoice\n"
 
 
-def test_Paragraph():
-    docai_paragraph = documentai.Document.Page.Paragraph()
+def test_Paragraph(docproto):
+    docai_paragraph = docproto.pages[0].paragraphs[0]
     paragraph = page.Paragraph(
-        documentai_paragraph=docai_paragraph, text="test_paragraph"
+        documentai_paragraph=docai_paragraph, document_text=docproto.text
     )
 
-    assert paragraph.text == "test_paragraph"
+    assert paragraph.text == "Invoice\n"
 
 
-def test_Line():
-    docai_line = documentai.Document.Page.Line()
-    line = page.Line(documentai_line=docai_line, text="test_line")
+def test_Line(docproto):
+    docai_line = docproto.pages[0].lines[36]
+    line = page.Paragraph(documentai_paragraph=docai_line, document_text=docproto.text)
 
-    assert line.text == "test_line"
+    assert line.text == "Supplies used for Project Q.\n"
 
 
 def test_Table(docproto):
