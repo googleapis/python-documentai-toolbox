@@ -522,7 +522,11 @@ def test_convert_document_to_annotate_file_response():
 
     actual = doc.convert_document_to_annotate_file_response()
 
-    assert actual != AnnotateFileResponse()
+    assert actual.responses[0].text_annotations[0].description == "Invoice"
+    assert len(actual.responses[0].text_annotations) == 86
+
+    assert len(actual.responses[0].full_text_annotation.pages) == 1
+    assert actual.responses[0].full_text_annotation.text != None
 
 
 def test_export_images(get_bytes_images_mock):
