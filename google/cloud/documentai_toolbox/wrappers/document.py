@@ -170,10 +170,6 @@ def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page])
     page_idx = 0
     while page_idx < len(pages):
         page_info = PageInfo(pages[page_idx].documentai_page, text)
-        page_vision_annotation = _convert_document_page(page_info)
-        page_vision_annotation.text = _get_text_anchor_substring(
-            text, pages[page_idx].documentai_page.layout.text_anchor
-        )
 
         full_text_annotation = _convert_document_page(page_info)
         full_text_annotation.text = _get_text_anchor_substring(

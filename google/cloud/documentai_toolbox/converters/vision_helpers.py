@@ -249,9 +249,9 @@ def _generate_entity_annotations(
       A list of EntityAnnotations with descriptions and bounding box populated. A
       EntityAnnotation has a word level information.
     """
-    text_annotations = []
+    entity_annotations: List[EntityAnnotation] = []
     for token in page_info.page.tokens:
-        v = []
+        v: vision.Vertex = []
         bounding_box = geometry.BoundingPoly()
         if token.layout.bounding_poly.vertices:
             for vertex in token.layout.bounding_poly.vertices:
@@ -264,7 +264,7 @@ def _generate_entity_annotations(
                         "y": int(normalized_vertex.y * page_info.page.dimension.height),
                     }
                 )
-        bounding_box.vertices = v
+        bounding_box = geometry.BoundingPoly(vertices=v)
 
         text_start_index = token.layout.text_anchor.text_segments[0].start_index
         text_end_index = token.layout.text_anchor.text_segments[0].end_index
@@ -275,13 +275,13 @@ def _generate_entity_annotations(
         ):
             text_end_index -= 1
 
-        text_annotations.append(
+        entity_annotations.append(
             EntityAnnotation(
                 description=page_info.text[text_start_index:text_end_index],
                 bounding_poly=bounding_box,
             )
         )
-    return text_annotations
+    return entity_annotations
 
 
 def _convert_document_paragraph(
