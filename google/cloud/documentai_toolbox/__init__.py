@@ -22,6 +22,7 @@ from .wrappers import (
     document,
     page,
     entity,
+    document_revision
 )
 
 from .converters import (
@@ -32,4 +33,4 @@ from .utilities import (
     gcs_utilities,
 )
 
-__all__ = (document, page, entity, converter, gcs_utilities)
+__all__ = (document, page, entity, converter, gcs_utilities, document_revision)
