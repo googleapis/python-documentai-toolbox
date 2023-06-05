@@ -769,6 +769,21 @@ class Document:
         return output_filenames
 
     def to_hocr(self,filename: str) -> str:
-        hocr = _Hocr(documentai_pages=self.pages, documentai_text=self.text,filename=filename)
-        
-        return hocr.export_hocr()
+        f = ""
+        f += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        f += "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
+        f += "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"unknown\" lang=\"unknown\">\n"
+        f += "<head>\n"
+        f += f"<title>{filename}</title>\n"
+        f += "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" />\n"
+        f += "<meta name=\"ocr-system\" content=\"Document AI OCR\" />\n"
+        f += "<meta name=\"ocr-langs\" content=\"unknown\" />\n"
+        f += f"<meta name=\"ocr-number-of-pages\" content=\"{len(self.pages)}\" />\n"
+        f += "<meta name=\"ocr-capabilities\" content=\"ocr_page ocr_carea ocr_par ocr_line ocrx_word\" />\n"
+        f += "</head>\n"
+        f += "<body>\n"
+        for page in self.pages:
+            f += page.to_hocr(filename)
+        f += "</body>\n"
+        f += "</html>\n"
+        return f
