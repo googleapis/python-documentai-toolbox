@@ -514,7 +514,7 @@ class Page:
                 f += f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph_bounding_box}'>\n"
                 for lidx,line in enumerate(paragraph.lines):
                     line_bounding_box = _get_bounding_box(element_with_layout=(line.documentai_line), dimensions=(dimensions))
-                    line_text = self.text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+                    line_text = line.text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
                     f += f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line_bounding_box}'>{line_text}</span>\n"   
                     for tidx,token in enumerate(line.tokens):
                         token_bounding_box = _get_bounding_box(element_with_layout=(token.documentai_token), dimensions=(dimensions))

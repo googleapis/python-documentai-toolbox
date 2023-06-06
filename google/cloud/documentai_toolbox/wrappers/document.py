@@ -49,8 +49,6 @@ from google.longrunning.operations_pb2 import Operation, GetOperationRequest
 
 from pikepdf import Pdf
 
-from google.cloud.documentai_toolbox.wrappers.hocr import _Hocr
-
 
 def _entities_from_shards(
     shards: List[documentai.Document],
