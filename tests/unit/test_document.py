@@ -557,3 +557,16 @@ def test_export_images(get_bytes_images_mock):
     assert actual == [
         "exported_photo_0_Portrait.png",
     ]
+
+
+def test_export_hocr_str():
+    wrapped_document = document.Document.from_document_path(
+        document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
+    )
+
+    actual_hocr = wrapped_document.export_hocr_str(filename="toolbox_invoice_test-0")
+
+    with open("tests/unit/resources/expected_export_hocr_str.txt", "r") as f:
+        expected = f.read()
+
+    assert actual_hocr == expected

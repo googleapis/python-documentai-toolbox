@@ -174,8 +174,13 @@ def test_text_from_element_with_layout(docproto):
 
 def test_get_blocks(docproto):
     docproto_blocks = docproto.pages[0].blocks
+    document_paragraphs = page._get_paragraphs(
+        paragraphs=docproto.pages[0].paragraphs, text=docproto.text, lines=[]
+    )
 
-    blocks = page._get_blocks(blocks=docproto_blocks, text=docproto.text)
+    blocks = page._get_blocks(
+        blocks=docproto_blocks, text=docproto.text, paragraphs=document_paragraphs
+    )
 
     assert len(blocks) == 31
     assert blocks[0].text == "Invoice\n"
@@ -183,9 +188,12 @@ def test_get_blocks(docproto):
 
 def test_get_paragraphs(docproto):
     docproto_paragraphs = docproto.pages[0].paragraphs
+    document_lines = page._get_lines(
+        lines=docproto.pages[0].lines, text=docproto.text, tokens=[]
+    )
 
     paragraphs = page._get_paragraphs(
-        paragraphs=docproto_paragraphs, text=docproto.text
+        paragraphs=docproto_paragraphs, text=docproto.text, lines=document_lines
     )
 
     assert len(paragraphs) == 31
@@ -194,8 +202,13 @@ def test_get_paragraphs(docproto):
 
 def test_get_lines(docproto):
     docproto_lines = docproto.pages[0].lines
+    document_tokens = page._get_tokens(
+        tokens=docproto.pages[0].tokens, text=docproto.text
+    )
 
-    lines = page._get_lines(lines=docproto_lines, text=docproto.text)
+    lines = page._get_lines(
+        lines=docproto_lines, text=docproto.text, tokens=document_tokens
+    )
 
     assert len(lines) == 37
     assert lines[36].text == "Supplies used for Project Q.\n"
@@ -229,25 +242,47 @@ def test_FormField():
 
 def test_Block():
     docai_block = documentai.Document.Page.Block()
-    block = page.Block(documentai_block=docai_block, text="test_block")
+    paragraphs = [
+        page.Paragraph(
+            documentai_paragraph=documentai.Document.Page.Paragraph(),
+            text="test paragraph",
+            lines=[],
+        )
+    ]
+    block = page.Block(
+        documentai_block=docai_block, text="test block", paragraphs=paragraphs
+    )
 
-    assert block.text == "test_block"
+    assert block.text == "test block"
+    assert block.paragraphs[0].text == "test paragraph"
 
 
 def test_Paragraph():
     docai_paragraph = documentai.Document.Page.Paragraph()
+    lines = [
+        page.Line(
+            documentai_line=documentai.Document.Page.Line(), text="test line", tokens=[]
+        )
+    ]
     paragraph = page.Paragraph(
-        documentai_paragraph=docai_paragraph, text="test_paragraph"
+        documentai_paragraph=docai_paragraph, text="test paragraph", lines=lines
     )
 
-    assert paragraph.text == "test_paragraph"
+    assert paragraph.text == "test paragraph"
+    assert paragraph.lines[0].text == "test line"
 
 
 def test_Line():
     docai_line = documentai.Document.Page.Line()
-    line = page.Line(documentai_line=docai_line, text="test_line")
+    tokens = [
+        page.Token(documentai_token=documentai.Document.Page.Token(), text="test"),
+        page.Token(documentai_token=documentai.Document.Page.Token(), text="line"),
+    ]
+    line = page.Line(documentai_line=docai_line, text="test line", tokens=tokens)
 
-    assert line.text == "test_line"
+    assert line.text == "test line"
+    assert line.tokens[0].text == "test"
+    assert line.tokens[1].text == "line"
 
 
 def test_Table():
@@ -262,6 +297,24 @@ def test_Table():
 
     assert len(table.body_rows) == 2
     assert len(table.header_rows[0]) == 5
+
+
+def test_to_hocr(docproto):
+    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+    hocr_str = wrapped_page.to_hocr("docproto-test")
+
+    with open("tests/unit/resources/expected_hocr_page_0.txt", "r") as f:
+        expected = f.read()
+
+    assert hocr_str == expected
+
+
+def test_get_hocr_bounding_box(docproto):
+    hocr_bounding_box = page._get_hocr_bounding_box(
+        element_with_layout=docproto.pages[0], dimensions=docproto.pages[0].dimension
+    )
+
+    assert hocr_bounding_box == "bbox 0 0 1758 2275"
 
 
 def test_Page(docproto):
