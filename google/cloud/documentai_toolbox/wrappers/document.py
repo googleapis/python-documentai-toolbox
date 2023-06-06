@@ -790,8 +790,8 @@ class Document:
         f += '<meta name="ocr-capabilities" content="ocr_page ocr_carea ocr_par ocr_line ocrx_word" />\n'
         f += "</head>\n"
         f += "<body>\n"
-        for page in self.pages:
-            f += page.to_hocr(filename)
+        for page_to_export in self.pages:
+            f += page_to_export.to_hocr(filename)
         f += "</body>\n"
         f += "</html>\n"
         return f

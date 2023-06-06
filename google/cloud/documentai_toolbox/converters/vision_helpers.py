@@ -16,7 +16,7 @@
 """Helper functions for docproto to vision conversion."""
 
 import dataclasses
-from typing import List, Union
+from typing import List
 
 import immutabledict
 
