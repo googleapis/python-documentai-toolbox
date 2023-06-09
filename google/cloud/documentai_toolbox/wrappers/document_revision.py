@@ -30,6 +30,8 @@ from google.cloud.documentai_toolbox.wrappers.document import Document
 
 _OP_TYPE = documentai.Document.Provenance.OperationType
 
+DocumentWithRevisions=TypeVar("DocumentWithRevisions")
+
 def _get_base_and_revision_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     r"""Returns a list of shards as bytes.
 
@@ -206,6 +208,7 @@ class DocumentWithRevisions:
         init=True, repr=False
     )
     gcs_prefix: str = dataclasses.field(init=True, repr=False, default=None)
+    parent_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
 
     next_: Document = dataclasses.field(init=False, repr=False, default=None)
     last: Document = dataclasses.field(init=False, repr=False, default=None)
@@ -213,53 +216,89 @@ class DocumentWithRevisions:
     history: List[str] = dataclasses.field(init=False, repr=False, default_factory=list)
     root_revision: Document = dataclasses.field(init=False, repr=False, default=None)
 
+    parent: DocumentWithRevisions = dataclasses.field(init=False, repr=False, default=None)
+
+    children: List[DocumentWithRevisions] = dataclasses.field(init=False, repr=False, default_factory=list)
+    root_revision_nodes: List[DocumentWithRevisions] = dataclasses.field(init=False, repr=False, default_factory=list)
+
     @classmethod
     def from_gcs_prefix_with_revisions(self, gcs_prefix: str):
         base_docproto, revs = _get_base_docproto(gcs_prefix)
 
         revisions = [r.revisions for r in revs]
+        parent_ids = [r.revisions[0].id for r in revs]
         
         immutable_doc = Document(shards=base_docproto, gcs_prefix=gcs_prefix)
-        immutable_revision_doc = DocumentWithRevisions(document=immutable_doc,revision_nodes=revisions,gcs_prefix=gcs_prefix)
+        immutable_revision_doc = DocumentWithRevisions(document=immutable_doc,revision_nodes=revisions,gcs_prefix=gcs_prefix,parent_ids=parent_ids)
+        print(revisions)
+        root_revision_nodes = []
 
         for rev in revs:
             copied_doc = copy.deepcopy(immutable_doc)
             d = Document(shards=copied_doc.shards, gcs_prefix=copied_doc.gcs_prefix)
             d.entities, history = _get_revised_documents(rev)
 
-            revision_doc = DocumentWithRevisions(document=d,revision_nodes=revisions,gcs_prefix=gcs_prefix)
+            revision_doc = DocumentWithRevisions(document=d,revision_nodes=revisions,gcs_prefix=gcs_prefix,parent_ids=parent_ids)
             revision_doc.history += history
 
             revision_doc.revision_id = rev.revisions[0].id
+            print(rev.revisions[0].parent)
+            if (rev.revisions[0].parent):
+                print("in")
+                root_revision_nodes[rev.revisions[0].parent[0]].children.append(revision_doc)
+            
+            root_revision_nodes.append(revision_doc)
+        
+        for r in root_revision_nodes:
+            r.root_revision_nodes = root_revision_nodes
+        
+        print(len(root_revision_nodes[0].children),root_revision_nodes[0].revision_id)
 
-            immutable_revision_doc.next_ = revision_doc
-            revision_doc.last = immutable_revision_doc
-
-            immutable_revision_doc = immutable_revision_doc.next_
-
-            if rev.revisions[0].parent == []:
-                self.root_revision = immutable_revision_doc
-
-        return immutable_revision_doc
+        return root_revision_nodes[-1]
 
     def at_revision(self, id):
-        while self.last != None and id != self.revision_id:
-            m_next = self
-            self = self.last
-            self.next_ = m_next
-
         if id == self.revision_id:
             return self
 
-        while self.next_ != None and id != self.revision_id:
-            m_last = self
-            self = self.next_
-            self.last = m_last
-
-        if id == self.revision_id:
-            return self
+        if id in self.parent_ids:
+            return self.root_revision_nodes[self.parent_ids.index(id)]
 
         return "Not Found"
 
     def get_revisions(cls):
         return cls.revision_nodes
+
+    def LevelOrderTraversal(cls):
+        seen_id = []
+        for root in cls.root_revision_nodes:
+            if (root == None or root.revision_id == None or root.revision_id in seen_id):
+                continue;
+            
+            if root.children:
+                tab = "\t"
+                # Standard level order traversal code
+                # using queue
+                print(f"Parent ID : {root.revision_id}")
+                q = root.children
+                while (len(q) != 0):
+                    n = len(q)
+                    # If this node has children
+                    print(f"{tab}  ->", end=' ')
+                    while (n > 0):
+                        # Dequeue an item from queue and print it
+                        p = q[0]
+                        seen_id.append(p.revision_id)
+                        print(p.revision_id, end=' ')
+                        q.pop(0);
+            
+                        # Enqueue all children of the dequeued item
+                        for i in range(len(p.children)):
+                            q.append(p.children[i]);
+                        n -= 1
+                        
+            
+                    print() # Print new line between two levels
+                    tab += "\t"
+            else:
+                print("-----")
+                print(f"Parent ID : {root.revision_id}")
