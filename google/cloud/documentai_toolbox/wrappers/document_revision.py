@@ -184,6 +184,28 @@ def _get_revised_documents(revision: documentai.Document):
     )
     return revised_entities, history
 
+def get_level(doc: DocumentWithRevisions):
+        try:
+            level = 0 
+            p = doc.parent
+            if p.revision_id:
+                while p :
+                    p = p.parent
+                    level += 1
+            return level 
+        except:
+            return 0
+    
+def _print_child_tree(currect_revision: DocumentWithRevisions, doc:DocumentWithRevisions,seen):
+    if currect_revision.revision_id == doc.revision_id:
+        print(' '*get_level(doc) + '*|--', end = '')
+    else:
+        print('  '*get_level(doc) + '|--', end = '')
+    print(doc.revision_id)
+    if doc.children:
+        for each in doc.children:
+            seen.append(each.revision_id)
+            _print_child_tree(currect_revision,each,seen)
 
 @dataclasses.dataclass
 class DocumentWithRevisions:
@@ -219,6 +241,7 @@ class DocumentWithRevisions:
     parent: DocumentWithRevisions = dataclasses.field(init=False, repr=False, default=None)
 
     children: List[DocumentWithRevisions] = dataclasses.field(init=False, repr=False, default_factory=list)
+    children_ids: List[str] = dataclasses.field(init=False, repr=False, default_factory=list)
     root_revision_nodes: List[DocumentWithRevisions] = dataclasses.field(init=False, repr=False, default_factory=list)
 
     @classmethod
@@ -229,8 +252,6 @@ class DocumentWithRevisions:
         parent_ids = [r.revisions[0].id for r in revs]
         
         immutable_doc = Document(shards=base_docproto, gcs_prefix=gcs_prefix)
-        immutable_revision_doc = DocumentWithRevisions(document=immutable_doc,revision_nodes=revisions,gcs_prefix=gcs_prefix,parent_ids=parent_ids)
-        print(revisions)
         root_revision_nodes = []
 
         for rev in revs:
@@ -242,21 +263,40 @@ class DocumentWithRevisions:
             revision_doc.history += history
 
             revision_doc.revision_id = rev.revisions[0].id
-            print(rev.revisions[0].parent)
             if (rev.revisions[0].parent):
-                print("in")
                 root_revision_nodes[rev.revisions[0].parent[0]].children.append(revision_doc)
+                root_revision_nodes[rev.revisions[0].parent[0]].children_ids.append(revision_doc.revision_id)
+                revision_doc.parent = root_revision_nodes[rev.revisions[0].parent[0]]
+            else:
+                revision_doc.parent = None
             
             root_revision_nodes.append(revision_doc)
         
         for r in root_revision_nodes:
             r.root_revision_nodes = root_revision_nodes
         
-        print(len(root_revision_nodes[0].children),root_revision_nodes[0].revision_id)
-
         return root_revision_nodes[-1]
+    
+    def last_revision(self):
+        if self.parent:
+            current_index = self.parent.children_ids.index(self.revision_id)
+            if current_index != 0:
+                return self.parent.children[current_index-1]
+            elif current_index != None:
+                print("hi")
+                return self.parent
+        return self
+    
+    def next_revision(self):
+        if self.children:
+            return self.children[0]
+        elif self.parent:
+            current_index = self.parent.children_ids.index(self.revision_id)
+            if current_index < len(self.parent.children) - 1:
+                return self.parent.children[current_index+1]
+        return self
 
-    def at_revision(self, id):
+    def jump_to_revision(self, id):
         if id == self.revision_id:
             return self
 
@@ -267,38 +307,23 @@ class DocumentWithRevisions:
 
     def get_revisions(cls):
         return cls.revision_nodes
-
-    def LevelOrderTraversal(cls):
+    
+    def print_tree(self):
         seen_id = []
-        for root in cls.root_revision_nodes:
+
+        for root in self.root_revision_nodes:
             if (root == None or root.revision_id == None or root.revision_id in seen_id):
-                continue;
-            
+                continue
+
             if root.children:
-                tab = "\t"
-                # Standard level order traversal code
-                # using queue
-                print(f"Parent ID : {root.revision_id}")
-                q = root.children
-                while (len(q) != 0):
-                    n = len(q)
-                    # If this node has children
-                    print(f"{tab}  ->", end=' ')
-                    while (n > 0):
-                        # Dequeue an item from queue and print it
-                        p = q[0]
-                        seen_id.append(p.revision_id)
-                        print(p.revision_id, end=' ')
-                        q.pop(0);
-            
-                        # Enqueue all children of the dequeued item
-                        for i in range(len(p.children)):
-                            q.append(p.children[i]);
-                        n -= 1
-                        
-            
-                    print() # Print new line between two levels
-                    tab += "\t"
+                _print_child_tree(self,root,seen_id)
             else:
-                print("-----")
-                print(f"Parent ID : {root.revision_id}")
+                if self.revision_id == root.revision_id:
+                    print('*|--', end = '')
+                else:
+                    print('|--', end = '')
+                print(root.revision_id)
+
+            seen_id.append(root.revision_id)
+
+    
