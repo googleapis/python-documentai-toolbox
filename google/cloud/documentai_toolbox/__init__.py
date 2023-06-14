@@ -18,12 +18,7 @@ from google.cloud.documentai_toolbox import version as package_version
 
 __version__ = package_version.__version__
 
-from .wrappers import (
-    document,
-    page,
-    entity,
-    document_revision
-)
+from .wrappers import document, page, entity, document_revision
 
 from .converters import (
     converter,
