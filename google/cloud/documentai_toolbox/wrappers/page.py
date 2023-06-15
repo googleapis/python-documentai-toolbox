@@ -29,7 +29,7 @@ class Table:
     Attributes:
         documentai_table (google.cloud.documentai.Document.Page.Table):
             Required. The original google.cloud.documentai.Document.Page.Table object.
-        text (str):
+        document_text (str):
             Required. UTF-8 encoded text in reading order from the document.
         body_rows (List[List[str]]):
             Required. A list of body rows.
@@ -37,18 +37,18 @@ class Table:
             Required. A list of header rows.
     """
 
-    documentai_table: dataclasses.InitVar[documentai.Document.Page.Table]
-    text: dataclasses.InitVar[str]
+    documentai_table: documentai.Document.Page.Table = dataclasses.field(repr=False)
+    document_text: dataclasses.InitVar[str]
 
-    body_rows: List[List[str]] = dataclasses.field(init=False)
-    header_rows: List[List[str]] = dataclasses.field(init=False)
+    body_rows: List[List[str]] = dataclasses.field(init=False, repr=False)
+    header_rows: List[List[str]] = dataclasses.field(init=False, repr=False)
 
-    def __post_init__(self, documentai_table, text) -> None:
+    def __post_init__(self, document_text) -> None:
         self.header_rows = _table_rows_from_documentai_table_rows(
-            table_rows=list(documentai_table.header_rows), text=text
+            table_rows=list(self.documentai_table.header_rows), text=document_text
         )
         self.body_rows = _table_rows_from_documentai_table_rows(
-            table_rows=list(documentai_table.body_rows), text=text
+            table_rows=list(self.documentai_table.body_rows), text=document_text
         )
 
     def to_dataframe(self) -> pd.DataFrame:
@@ -115,13 +115,13 @@ class Block:
             Required. UTF-8 encoded text of the block.
     """
 
-    documentai_block: dataclasses.InitVar[documentai.Document.Page.Block]
+    documentai_block: documentai.Document.Page.Block
     document_text: dataclasses.InitVar[str]
     text: str = dataclasses.field(init=False)
 
-    def __post_init__(self, documentai_block, document_text) -> None:
+    def __post_init__(self, document_text) -> None:
         self.text = _text_from_layout(
-            layout=documentai_block.layout, text=document_text
+            layout=self.documentai_block.layout, text=document_text
         )
 
 
@@ -138,13 +138,13 @@ class Paragraph:
             Required. UTF-8 encoded text.
     """
 
-    documentai_paragraph: dataclasses.InitVar[documentai.Document.Page.Paragraph]
+    documentai_paragraph: documentai.Document.Page.Paragraph
     document_text: dataclasses.InitVar[str]
     text: str = dataclasses.field(init=False)
 
-    def __post_init__(self, documentai_paragraph, document_text) -> None:
+    def __post_init__(self, document_text) -> None:
         self.text = _text_from_layout(
-            layout=documentai_paragraph.layout, text=document_text
+            layout=self.documentai_paragraph.layout, text=document_text
         )
 
 
@@ -161,12 +161,14 @@ class Line:
             Required. UTF-8 encoded text.
     """
 
-    documentai_line: dataclasses.InitVar[documentai.Document.Page.Line]
+    documentai_line: documentai.Document.Page.Line
     document_text: dataclasses.InitVar[str]
     text: str = dataclasses.field(init=False)
 
-    def __post_init__(self, documentai_line, document_text) -> None:
-        self.text = _text_from_layout(layout=documentai_line.layout, text=document_text)
+    def __post_init__(self, document_text) -> None:
+        self.text = _text_from_layout(
+            layout=self.documentai_line.layout, text=document_text
+        )
 
 
 @dataclasses.dataclass
@@ -176,7 +178,7 @@ class FormField:
     Attributes:
         documentai_formfield (google.cloud.documentai.Document.Page.FormField):
             Required. The original google.cloud.documentai.Document.Page.FormField object.
-        text (str):
+        document_text (str):
             Required. UTF-8 encoded text in reading order from the document.
         field_name (str):
             Required. The form field name
@@ -184,18 +186,18 @@ class FormField:
             Required. The form field value
     """
 
-    documentai_formfield: dataclasses.InitVar[documentai.Document.Page.FormField]
-    text: dataclasses.InitVar[str]
+    documentai_formfield: documentai.Document.Page.FormField
+    document_text: dataclasses.InitVar[str]
 
     field_name: str = dataclasses.field(init=False)
     field_value: str = dataclasses.field(init=False)
 
-    def __post_init__(self, documentai_formfield, text) -> None:
+    def __post_init__(self, document_text) -> None:
         self.field_name = _trim_text(
-            _text_from_layout(documentai_formfield.field_name, text)
+            _text_from_layout(self.documentai_formfield.field_name, document_text)
         )
         self.field_value = _trim_text(
-            _text_from_layout(documentai_formfield.field_value, text)
+            _text_from_layout(self.documentai_formfield.field_value, document_text)
         )
 
 
@@ -270,13 +272,12 @@ class Page:
     """Represents a wrapped documentai.Document.Page .
 
     Attributes:
-        shard_index (int):
-            Required. The index of the `google.cloud.documentai.Document` containing
-            the `google.cloud.documentai.Document.Page`.
         documentai_page (google.cloud.documentai.Document.Page):
             Required. The original `google.cloud.documentai.Document.Page` object.
-        text (str):
+        document_text (str):
             Required. The full text of the `Document` containing the `Page`.
+        text (str):
+            Required. UTF-8 encoded text of the page.
         page_number (int):
             Required. The page number of the `Page`.
         form_fields (List[FormField]):
@@ -299,10 +300,10 @@ class Page:
             page.
     """
 
-    shard_index: int = dataclasses.field()
-    documentai_page: dataclasses.InitVar[documentai.Document.Page]
-    text: dataclasses.InitVar[str]
+    documentai_page: documentai.Document.Page = dataclasses.field(repr=False)
+    document_text: dataclasses.InitVar[str]
 
+    text: str = dataclasses.field(init=False, repr=False)
     page_number: int = dataclasses.field(init=False, repr=False)
     form_fields: List[FormField] = dataclasses.field(init=False, repr=False)
     lines: List[Line] = dataclasses.field(init=False, repr=False)
@@ -310,24 +311,26 @@ class Page:
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
     tables: List[Table] = dataclasses.field(init=False, repr=False)
 
-    def __post_init__(self, documentai_page, text) -> None:
-        self.page_number = int(documentai_page.page_number)
+    def __post_init__(self, document_text) -> None:
+        self.text = _text_from_layout(self.documentai_page.layout, text=document_text)
+        self.page_number = int(self.documentai_page.page_number)
         self.form_fields = [
-            FormField(documentai_formfield=form_field, text=text)
-            for form_field in documentai_page.form_fields
+            FormField(documentai_formfield=form_field, document_text=document_text)
+            for form_field in self.documentai_page.form_fields
         ]
         self.lines = [
-            Line(documentai_line=line, document_text=text)
-            for line in documentai_page.lines
+            Line(documentai_line=line, document_text=document_text)
+            for line in self.documentai_page.lines
         ]
         self.paragraphs = [
-            Paragraph(documentai_paragraph=paragraph, document_text=text)
-            for paragraph in documentai_page.paragraphs
+            Paragraph(documentai_paragraph=paragraph, document_text=document_text)
+            for paragraph in self.documentai_page.paragraphs
         ]
         self.blocks = [
-            Block(documentai_block=block, document_text=text)
-            for block in documentai_page.blocks
+            Block(documentai_block=block, document_text=document_text)
+            for block in self.documentai_page.blocks
         ]
         self.tables = [
-            Table(documentai_table=table, text=text) for table in documentai_page.tables
+            Table(documentai_table=table, document_text=document_text)
+            for table in self.documentai_page.tables
         ]

@@ -60,20 +60,17 @@ def _entities_from_shards(
             a list of Entities.
     """
     result = []
+    # Needed to load the correct page index for sharded documents.
+    page_offset = 0
     for shard in shards:
-        shard_index = int(shard.shard_info.shard_index)
         for entity in shard.entities:
-            result.append(Entity(shard_index=shard_index, documentai_entity=entity))
+            result.append(Entity(documentai_entity=entity, page_offset=page_offset))
             for prop in entity.properties:
-                result.append(
-                    Entity(
-                        shard_index=shard_index,
-                        documentai_entity=prop,
-                    )
-                )
+                result.append(Entity(documentai_entity=prop, page_offset=page_offset))
+        page_offset += len(shard.pages)
 
-    if len(result) > 1 and result[0].id:
-        result.sort(key=lambda x: int(x.id))
+    if len(result) > 1 and result[0].documentai_entity.id:
+        result.sort(key=lambda x: int(x.documentai_entity.id))
     return result
 
 
@@ -90,15 +87,11 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     """
     result = []
     for shard in shards:
-        shard_index = int(shard.shard_info.shard_index)
-        text = shard.text
         for shard_page in shard.pages:
-            result.append(
-                Page(shard_index=shard_index, documentai_page=shard_page, text=text)
-            )
+            result.append(Page(documentai_page=shard_page, document_text=shard.text))
 
     if len(result) > 1 and result[0].page_number:
-        result.sort(key=lambda x: int(x.page_number))
+        result.sort(key=lambda x: x.page_number)
     return result
 
 
@@ -758,7 +751,7 @@ class Document:
         index = 0
         for entity in self.entities:
             image = entity.crop_image(
-                documentai_document=self.shards[entity.shard_index]
+                documentai_page=self.pages[entity.start_page].documentai_page
             )
             if not image:
                 continue

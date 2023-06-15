@@ -41,7 +41,9 @@ def docproto_form_parser():
 
 def test_table_to_csv(docproto):
     docproto_page = docproto.pages[0]
-    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table = page.Table(
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
+    )
 
     contents = table.to_csv()
 
@@ -60,7 +62,9 @@ Resource C,50,$12.00,$600.00
 
 def test_table_to_csv_with_empty_body_rows(docproto):
     docproto_page = docproto.pages[0]
-    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table = page.Table(
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
+    )
     table.body_rows = None
 
     contents = table.to_csv()
@@ -74,7 +78,9 @@ def test_table_to_csv_with_empty_body_rows(docproto):
 
 def test_table_to_csv_with_empty_header_rows(docproto):
     docproto_page = docproto.pages[0]
-    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table = page.Table(
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
+    )
     table.header_rows = None
 
     contents = table.to_csv()
@@ -94,7 +100,9 @@ Resource C,50,$12.00,$600.00
 
 def test_table_to_csv_with_empty_header_rows_and_single_body(docproto):
     docproto_page = docproto.pages[0]
-    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table = page.Table(
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
+    )
     table.header_rows = []
     table.body_rows = [[table.body_rows[0][0]]]
 
@@ -109,7 +117,9 @@ Tool A
 
 def test_table_to_dataframe(docproto):
     docproto_page = docproto.pages[0]
-    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table = page.Table(
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
+    )
     contents = table.to_dataframe()
 
     assert len(contents.columns) == 4
@@ -164,7 +174,8 @@ def test_text_from_element_with_layout(docproto):
 def test_FormField(docproto_form_parser):
     documentai_formfield = docproto_form_parser.pages[0].form_fields[4]
     form_field = page.FormField(
-        documentai_formfield=documentai_formfield, text=docproto_form_parser.text
+        documentai_formfield=documentai_formfield,
+        document_text=docproto_form_parser.text,
     )
 
     assert form_field.field_name == "Occupation:"
@@ -196,7 +207,9 @@ def test_Line(docproto):
 
 def test_Table(docproto):
     docproto_page = docproto.pages[0]
-    table = page.Table(documentai_table=docproto_page.tables[0], text=docproto.text)
+    table = page.Table(
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
+    )
 
     assert len(table.body_rows) == 6
     assert len(table.header_rows[0]) == 4
@@ -204,9 +217,10 @@ def test_Table(docproto):
 
 def test_Page(docproto):
     docproto_page = docproto.pages[0]
-    wrapped_page = page.Page(
-        shard_index=0, documentai_page=docproto_page, text=docproto.text
-    )
+    wrapped_page = page.Page(documentai_page=docproto_page, document_text=docproto.text)
+
+    assert "Invoice" in wrapped_page.text
+    assert wrapped_page.page_number == 1
 
     assert len(wrapped_page.lines) == 37
     assert len(wrapped_page.paragraphs) == 31

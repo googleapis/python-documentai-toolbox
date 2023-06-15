@@ -18,7 +18,7 @@
 import dataclasses
 
 from io import BytesIO
-from typing import List, Optional
+from typing import Optional
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox import constants
@@ -30,13 +30,11 @@ class Entity:
     """Represents a wrapped `documentai.Document.Entity`.
 
     Attributes:
-        shard_index (int):
-            Required. The index of the `google.cloud.documentai.Document` containing
-            the `google.cloud.documentai.Document.Entity`.
         documentai_entity (google.cloud.documentai.Document.Entity):
             Required. The original `google.cloud.documentai.Document.Entity` object.
-        id (int):
-            Required. The unique identifier of the `Entity` in the `Document`.
+        page_offset (int):
+            Optional. The page offset (for sharded Documents) of the `google.cloud.documentai.Document` containing
+            the `google.cloud.documentai.Document.Entity`. `page_refs.page` is relative to the shard, not the entire Document.
         type_ (str):
             Required. Entity type from a schema e.g. "Address".
         mention_text (str):
@@ -57,10 +55,9 @@ class Entity:
             Optional. Vertices for bounding box of `Entity`.
     """
 
-    shard_index: int = dataclasses.field()
-    documentai_entity: dataclasses.InitVar[documentai.Document.Entity]
+    documentai_entity: documentai.Document.Entity = dataclasses.field(repr=False)
+    page_offset: dataclasses.InitVar[Optional[int]] = 0
 
-    id: int = dataclasses.field(init=False)
     type_: str = dataclasses.field(init=False)
     mention_text: str = dataclasses.field(init=False, default="")
     normalized_text: str = dataclasses.field(init=False, default="")
@@ -69,38 +66,28 @@ class Entity:
     # Only Populated for Splitter/Classifier Output
     end_page: int = dataclasses.field(init=False)
 
-    normalized_vertices: List[documentai.NormalizedVertex] = dataclasses.field(
-        init=False, default_factory=list
-    )
-
-    def __post_init__(self, documentai_entity):
-        self.id = documentai_entity.id
-        self.type_ = documentai_entity.type_
-        self.mention_text = documentai_entity.mention_text
+    def __post_init__(self, page_offset: int) -> None:
+        self.type_ = self.documentai_entity.type_
+        self.mention_text = self.documentai_entity.mention_text
         if (
-            documentai_entity.normalized_value
-            and documentai_entity.normalized_value.text
+            self.documentai_entity.normalized_value
+            and self.documentai_entity.normalized_value.text
         ):
-            self.normalized_text = documentai_entity.normalized_value.text
+            self.normalized_text = self.documentai_entity.normalized_value.text
 
-        page_refs = documentai_entity.page_anchor.page_refs
+        page_refs = self.documentai_entity.page_anchor.page_refs
         if page_refs:
-            self.start_page = int(page_refs[0].page)
-            self.end_page = int(page_refs[-1].page)
-
-            if page_refs[0].bounding_poly:
-                self.normalized_vertices = page_refs[
-                    0
-                ].bounding_poly.normalized_vertices
+            self.start_page = int(page_refs[0].page) + page_offset
+            self.end_page = int(page_refs[-1].page) + page_offset
 
     def crop_image(
-        self, documentai_document: documentai.Document
+        self, documentai_page: documentai.Document.Page
     ) -> Optional[Image.Image]:
         r"""Return image cropped from page image for detected entity.
 
         Args:
-            documentai_document (documentai.Document):
-                Required. The `Document` containing the `Entity`.
+            documentai_page (documentai.Document):
+                Required. The `Document.Page` containing the `Entity`.
         Returns:
             PIL.Image.Image:
                 Image from `Document.Entity`. Returns `None` if there is no image.
@@ -108,15 +95,16 @@ class Entity:
         if self.type_ not in constants.IMAGE_ENTITIES or self.mention_text:
             return None
 
-        doc_page = documentai_document.pages[self.start_page]
+        page_ref = self.documentai_entity.page_anchor.page_refs[0]
 
-        if not doc_page.image:
+        if not documentai_page.image:
             raise ValueError("Document does not contain images.")
 
-        doc_image = Image.open(BytesIO(doc_page.image.content))
+        doc_image = Image.open(BytesIO(documentai_page.image.content))
         w, h = doc_image.size
         vertices = [
-            (int(v.x * w + 0.5), int(v.y * h + 0.5)) for v in self.normalized_vertices
+            (int(v.x * w + 0.5), int(v.y * h + 0.5))
+            for v in page_ref.bounding_poly.normalized_vertices
         ]
         (top, left), (bottom, right) = vertices[0], vertices[2]
         return doc_image.crop((top, left, bottom, right))

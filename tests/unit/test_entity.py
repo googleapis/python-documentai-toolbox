@@ -32,7 +32,7 @@ def test_Entity():
     documentai_entity = documentai.Document.Entity(
         type_="some_entity_type", mention_text="some_mention_text"
     )
-    wrapper_entity = entity.Entity(0, documentai_entity)
+    wrapper_entity = entity.Entity(documentai_entity)
 
     assert wrapper_entity.type_ == "some_entity_type"
     assert wrapper_entity.mention_text == "some_mention_text"
@@ -46,7 +46,7 @@ def test_Entity_with_normalized_value():
             text="normalized_text"
         ),
     )
-    wrapper_entity = entity.Entity(0, documentai_entity)
+    wrapper_entity = entity.Entity(documentai_entity)
     assert wrapper_entity.type_ == "another_entity_type"
     assert wrapper_entity.mention_text == "another_mention_text"
     assert wrapper_entity.normalized_text == "normalized_text"
@@ -64,7 +64,7 @@ def test_Entity_splitter():
             ]
         ),
     )
-    wrapper_entity = entity.Entity(0, documentai_entity)
+    wrapper_entity = entity.Entity(documentai_entity)
     assert wrapper_entity.type_ == "invoice_statement"
     assert wrapper_entity.start_page == 0
     assert wrapper_entity.end_page == 2
@@ -72,6 +72,6 @@ def test_Entity_splitter():
 
 def test_crop_image(docproto):
     doc = document.Document.from_documentai_document(docproto)
-    actual = doc.entities[0].crop_image(documentai_document=docproto)
+    actual = doc.entities[0].crop_image(documentai_page=docproto.pages[0])
 
     assert actual
