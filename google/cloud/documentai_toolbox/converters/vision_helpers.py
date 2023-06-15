@@ -30,7 +30,6 @@ from google.cloud.vision import (
     Paragraph,
     Block,
     Page,
-    AnnotateFileResponse,
     AnnotateImageResponse,
     ImageAnnotationContext,
 )
@@ -353,6 +352,7 @@ def _convert_document_page(
     page_info: PageInfo,
 ) -> TextAnnotation:
     """Extracts OCR related data in `page` and converts it to TextAnnotation.
+
     Args:
       page_info (PageInfo): Current page information, including document page to be converted,
       its text, and the position of reading cursor.
