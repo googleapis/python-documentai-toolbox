@@ -197,15 +197,23 @@ def get_level(doc: DocumentWithRevisions):
             return 0
     
 def _print_child_tree(currect_revision: DocumentWithRevisions, doc:DocumentWithRevisions,seen):
-    if currect_revision.revision_id == doc.revision_id:
-        print(' '*get_level(doc) + '*|--', end = '')
-    else:
-        print('  '*get_level(doc) + '|--', end = '')
-    print(doc.revision_id)
+    tab = '  '*get_level(doc)
+
     if doc.children:
+        if currect_revision.revision_id == doc.revision_id:
+            print(tab + '└──>', end = '')
+        else:
+            print(tab + '└──', end = '')
+        print(doc.revision_id)
         for each in doc.children:
             seen.append(each.revision_id)
             _print_child_tree(currect_revision,each,seen)
+    else:
+        if currect_revision.revision_id == doc.revision_id:
+            print(tab + '└──>', end = '')
+        else:
+            print(tab + '└──', end = '')
+        print(doc.revision_id)
 
 @dataclasses.dataclass
 class DocumentWithRevisions:
@@ -231,7 +239,7 @@ class DocumentWithRevisions:
     )
     gcs_prefix: str = dataclasses.field(init=True, repr=False, default=None)
     parent_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
-
+    all_node_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
     next_: Document = dataclasses.field(init=False, repr=False, default=None)
     last: Document = dataclasses.field(init=False, repr=False, default=None)
     revision_id: str = dataclasses.field(init=False, repr=False, default=None)
@@ -249,7 +257,8 @@ class DocumentWithRevisions:
         base_docproto, revs = _get_base_docproto(gcs_prefix)
 
         revisions = [r.revisions for r in revs]
-        parent_ids = [r.revisions[0].id for r in revs]
+        parent_ids = [r.revisions[0].id for r in revs if not r.revisions[0].parent]
+        all_node_ids = [r.revisions[0].id for r in revs]
         
         immutable_doc = Document(shards=base_docproto, gcs_prefix=gcs_prefix)
         root_revision_nodes = []
@@ -259,7 +268,7 @@ class DocumentWithRevisions:
             d = Document(shards=copied_doc.shards, gcs_prefix=copied_doc.gcs_prefix)
             d.entities, history = _get_revised_documents(rev)
 
-            revision_doc = DocumentWithRevisions(document=d,revision_nodes=revisions,gcs_prefix=gcs_prefix,parent_ids=parent_ids)
+            revision_doc = DocumentWithRevisions(document=d,revision_nodes=revisions,gcs_prefix=gcs_prefix,parent_ids=parent_ids, all_node_ids=all_node_ids)
             revision_doc.history += history
 
             revision_doc.revision_id = rev.revisions[0].id
@@ -283,8 +292,14 @@ class DocumentWithRevisions:
             if current_index != 0:
                 return self.parent.children[current_index-1]
             elif current_index != None:
-                print("hi")
                 return self.parent
+        elif self.revision_id in self.parent_ids:
+            non_parent_index = self.parent_ids.index(self.revision_id)
+            index = self.all_node_ids.index(self.revision_id)
+            if non_parent_index > 0:
+                return self.root_revision_nodes[index - 1]
+            else:
+                return self
         return self
     
     def next_revision(self):
@@ -295,13 +310,26 @@ class DocumentWithRevisions:
             if current_index < len(self.parent.children) - 1:
                 return self.parent.children[current_index+1]
         return self
+    
+    def jump_revision(self):
+        if self.parent:
+            current_index = self.parent.children_ids.index(self.revision_id)
+            if current_index < len(self.parent.children) - 1:
+                return self.parent.children[current_index+1]
+        elif self.parent_ids:
+            non_parent_index = self.parent_ids.index(self.revision_id)
+            index = self.all_node_ids.index(self.revision_id)
+            if non_parent_index < len(self.parent_ids) - 1:
+                return self.root_revision_nodes[index+1]
+
+        return self
 
     def jump_to_revision(self, id):
         if id == self.revision_id:
             return self
 
-        if id in self.parent_ids:
-            return self.root_revision_nodes[self.parent_ids.index(id)]
+        if id in self.all_node_ids:
+            return self.root_revision_nodes[self.all_node_ids.index(id)]
 
         return "Not Found"
 
@@ -319,9 +347,9 @@ class DocumentWithRevisions:
                 _print_child_tree(self,root,seen_id)
             else:
                 if self.revision_id == root.revision_id:
-                    print('*|--', end = '')
+                    print('└──>', end = '')
                 else:
-                    print('|--', end = '')
+                    print('├──', end = '')
                 print(root.revision_id)
 
             seen_id.append(root.revision_id)
