@@ -16,6 +16,7 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
+import html
 from typing import List
 
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
@@ -205,15 +206,15 @@ def _table_wrapper_from_documentai_table(
 
 def _get_hocr_bounding_box(
     element_with_layout: ElementWithLayout,
-    dimensions: documentai.Document.Page.Dimension,
+    dimension: documentai.Document.Page.Dimension,
 ) -> str:
     r"""Returns a hOCR bounding box string.
 
     Args:
         element_with_layout (ElementWithLayout):
             Required. an element with layout fields.
-        dimensions (documentai.Document.Page.Dimension):
-            Required. Page dimensions.
+        dimension (documentai.Document.Page.Dimension):
+            Required. Page dimension.
 
     Returns:
         str:
@@ -237,7 +238,7 @@ def _get_hocr_bounding_box(
         element_with_layout.layout.bounding_poly.normalized_vertices[2].x,
         element_with_layout.layout.bounding_poly.normalized_vertices[2].y,
     )
-    return f"bbox {int(min_x * dimensions.width)} {int(min_y * dimensions.height)} {int(max_x * dimensions.width)} {int(max_y * dimensions.height)}"
+    return f"bbox {int(min_x * dimension.width)} {int(min_y * dimension.height)} {int(max_x * dimension.width)} {int(max_y * dimension.height)}"
 
 
 def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str:
@@ -630,44 +631,36 @@ class Page:
                 A string hOCR version of the documentai.Document.Page.
         """
         f = ""
-        dimensions = self.documentai_page.dimension
+        dimension = self.documentai_page.dimension
         pidx = self.documentai_page.page_number
         page_bounding_box = _get_hocr_bounding_box(
-            element_with_layout=(self.documentai_page), dimensions=(dimensions)
+            element_with_layout=(self.documentai_page), dimension=(dimension)
         )
         f += f"<div class='ocr_page' lang='unknown' title='image \"{filename}\";{page_bounding_box}'>\n"
         for bidx, block in enumerate(self.blocks):
             block_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=(block.documentai_block), dimensions=(dimensions)
+                element_with_layout=(block.documentai_block), dimension=(dimension)
             )
             f += f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block_bounding_box}'>\n"
             for paridx, paragraph in enumerate(block.paragraphs):
                 paragraph_bounding_box = _get_hocr_bounding_box(
                     element_with_layout=(paragraph.documentai_paragraph),
-                    dimensions=(dimensions),
+                    dimension=(dimension),
                 )
                 f += f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph_bounding_box}'>\n"
                 for lidx, line in enumerate(paragraph.lines):
                     line_bounding_box = _get_hocr_bounding_box(
                         element_with_layout=(line.documentai_line),
-                        dimensions=(dimensions),
+                        dimension=(dimension),
                     )
-                    line_text = (
-                        line.text.replace("&", "&amp;")
-                        .replace("<", "&lt;")
-                        .replace(">", "&gt;")
-                    )
+                    line_text = html.escape(line.text)
                     f += f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line_bounding_box}'>{line_text}</span>\n"
                     for tidx, token in enumerate(line.tokens):
                         token_bounding_box = _get_hocr_bounding_box(
                             element_with_layout=(token.documentai_token),
-                            dimensions=(dimensions),
+                            dimension=(dimension),
                         )
-                        word_text = (
-                            token.text.replace("&", "&amp;")
-                            .replace("<", "&lt;")
-                            .replace(">", "&gt;")
-                        )
+                        word_text = html.escape(token.text)
                         f += f"<span class='ocrx_word' id='word_{pidx}_{bidx}_{paridx}_{lidx}_{tidx}' title='{token_bounding_box}'>{word_text}</span>\n"
                 f += "</span>\n"
             f += "</span>\n"

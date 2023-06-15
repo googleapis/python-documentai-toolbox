@@ -311,7 +311,7 @@ def test_to_hocr(docproto):
 
 def test_get_hocr_bounding_box(docproto):
     hocr_bounding_box = page._get_hocr_bounding_box(
-        element_with_layout=docproto.pages[0], dimensions=docproto.pages[0].dimension
+        element_with_layout=docproto.pages[0], dimension=docproto.pages[0].dimension
     )
 
     assert hocr_bounding_box == "bbox 0 0 1758 2275"
