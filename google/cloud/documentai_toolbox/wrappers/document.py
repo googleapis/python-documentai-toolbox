@@ -729,16 +729,16 @@ class Document:
         return AnnotateFileResponse(responses=responses)
 
     def convert_document_to_annotate_file_json_response(self) -> str:
-        r"""Convert OCR data from Document.proto to JSON str of AnnotateFileResponse for Vision API.
+        r"""Convert OCR data from `Document.proto` to JSON str of `AnnotateFileResponse` for Vision API.
 
         Args:
             None.
         Returns:
             str:
-                JSON string of TextAnnotations.
+                JSON string of `TextAnnotations`.
         """
         return AnnotateFileResponse.to_json(
-            _convert_to_vision_annotate_file_response(self.text, self.pages)
+            self.convert_document_to_annotate_file_response()
         )
 
     def export_images(
