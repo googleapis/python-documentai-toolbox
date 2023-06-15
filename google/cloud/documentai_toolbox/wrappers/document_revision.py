@@ -30,7 +30,8 @@ from google.cloud.documentai_toolbox.wrappers.document import Document
 
 _OP_TYPE = documentai.Document.Provenance.OperationType
 
-DocumentWithRevisions=TypeVar("DocumentWithRevisions")
+DocumentWithRevisions = TypeVar("DocumentWithRevisions")
+
 
 def _get_base_and_revision_bytes(output_bucket: str, output_prefix: str) -> List[bytes]:
     r"""Returns a list of shards as bytes.
@@ -63,7 +64,7 @@ def _get_base_and_revision_bytes(output_bucket: str, output_prefix: str) -> List
 
         if re.search(r"^doc.dp.bp", name) != None:
             if blob.name.endswith(".dp.bp"):
-                blob_as_bytes = blob.download_as_bytes()          
+                blob_as_bytes = blob.download_as_bytes()
                 text = pb.FromString(blob_as_bytes).text
         if re.search(r"^pages_*.*", name) != None:
             if blob.name.endswith(".dp.bp"):
@@ -73,10 +74,8 @@ def _get_base_and_revision_bytes(output_bucket: str, output_prefix: str) -> List
             if blob.name.endswith(".dp.bp"):
                 blob_as_bytes = blob.download_as_bytes()
                 revisions_doc.append(blob_as_bytes)
-            
 
     return text, base_doc, revisions_doc
-
 
 
 def _get_base_docproto(gcs_prefix) -> List[documentai.Document]:
@@ -114,6 +113,7 @@ def _get_base_docproto(gcs_prefix) -> List[documentai.Document]:
         revision_shards.append(pb.FromString(byte))
 
     return base_shards, revision_shards
+
 
 def _modify_docproto(entities):
     entities_array = []
@@ -180,9 +180,9 @@ def _get_revised_documents(revision: documentai.Document):
                         Document2 = {pages:List[Page],entities:List[Entity],revision_nodes:List[RevisionNodes]...}
     """
 
-    revised_entities, history = _modify_docproto(revision.entities
-    )
+    revised_entities, history = _modify_docproto(revision.entities)
     return revised_entities, history
+
 
 def get_level(doc: DocumentWithRevisions):
         try:
@@ -234,9 +234,7 @@ class DocumentWithRevisions:
     """
 
     document: Document = dataclasses.field(init=True, repr=False)
-    revision_nodes: List[documentai.Document] = dataclasses.field(
-        init=True, repr=False
-    )
+    revision_nodes: List[documentai.Document] = dataclasses.field(init=True, repr=False)
     gcs_prefix: str = dataclasses.field(init=True, repr=False, default=None)
     parent_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
     all_node_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
@@ -246,11 +244,19 @@ class DocumentWithRevisions:
     history: List[str] = dataclasses.field(init=False, repr=False, default_factory=list)
     root_revision: Document = dataclasses.field(init=False, repr=False, default=None)
 
-    parent: DocumentWithRevisions = dataclasses.field(init=False, repr=False, default=None)
+    parent: DocumentWithRevisions = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
-    children: List[DocumentWithRevisions] = dataclasses.field(init=False, repr=False, default_factory=list)
-    children_ids: List[str] = dataclasses.field(init=False, repr=False, default_factory=list)
-    root_revision_nodes: List[DocumentWithRevisions] = dataclasses.field(init=False, repr=False, default_factory=list)
+    children: List[DocumentWithRevisions] = dataclasses.field(
+        init=False, repr=False, default_factory=list
+    )
+    children_ids: List[str] = dataclasses.field(
+        init=False, repr=False, default_factory=list
+    )
+    root_revision_nodes: List[DocumentWithRevisions] = dataclasses.field(
+        init=False, repr=False, default_factory=list
+    )
 
     @classmethod
     def from_gcs_prefix_with_revisions(self, gcs_prefix: str):
@@ -272,25 +278,29 @@ class DocumentWithRevisions:
             revision_doc.history += history
 
             revision_doc.revision_id = rev.revisions[0].id
-            if (rev.revisions[0].parent):
-                root_revision_nodes[rev.revisions[0].parent[0]].children.append(revision_doc)
-                root_revision_nodes[rev.revisions[0].parent[0]].children_ids.append(revision_doc.revision_id)
+            if rev.revisions[0].parent:
+                root_revision_nodes[rev.revisions[0].parent[0]].children.append(
+                    revision_doc
+                )
+                root_revision_nodes[rev.revisions[0].parent[0]].children_ids.append(
+                    revision_doc.revision_id
+                )
                 revision_doc.parent = root_revision_nodes[rev.revisions[0].parent[0]]
             else:
                 revision_doc.parent = None
-            
+
             root_revision_nodes.append(revision_doc)
-        
+
         for r in root_revision_nodes:
             r.root_revision_nodes = root_revision_nodes
-        
+
         return root_revision_nodes[-1]
-    
+
     def last_revision(self):
         if self.parent:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index != 0:
-                return self.parent.children[current_index-1]
+                return self.parent.children[current_index - 1]
             elif current_index != None:
                 return self.parent
         elif self.revision_id in self.parent_ids:
@@ -301,14 +311,14 @@ class DocumentWithRevisions:
             else:
                 return self
         return self
-    
+
     def next_revision(self):
         if self.children:
             return self.children[0]
         elif self.parent:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index < len(self.parent.children) - 1:
-                return self.parent.children[current_index+1]
+                return self.parent.children[current_index + 1]
         return self
     
     def jump_revision(self):
@@ -335,16 +345,16 @@ class DocumentWithRevisions:
 
     def get_revisions(cls):
         return cls.revision_nodes
-    
+
     def print_tree(self):
         seen_id = []
 
         for root in self.root_revision_nodes:
-            if (root == None or root.revision_id == None or root.revision_id in seen_id):
+            if root == None or root.revision_id == None or root.revision_id in seen_id:
                 continue
 
             if root.children:
-                _print_child_tree(self,root,seen_id)
+                _print_child_tree(self, root, seen_id)
             else:
                 if self.revision_id == root.revision_id:
                     print('└──>', end = '')
@@ -353,5 +363,3 @@ class DocumentWithRevisions:
                 print(root.revision_id)
 
             seen_id.append(root.revision_id)
-
-    
