@@ -37,8 +37,6 @@ from google.cloud.documentai_toolbox.wrappers.page import Page
 
 from google.cloud.vision import (
     AnnotateFileResponse,
-    AnnotateImageResponse,
-    ImageAnnotationContext,
 )
 
 from google.longrunning.operations_pb2 import GetOperationRequest, Operation
@@ -709,24 +707,15 @@ class Document:
             AnnotateFileResponse:
                 Proto with `TextAnnotations`.
         """
-        responses: List[AnnotateImageResponse] = []
-
-        for shard in self.shards:
-            for docai_page in shard.pages:
-                page_vision_annotation = vision_helpers._convert_document_page(
+        return AnnotateFileResponse(
+            responses=[
+                vision_helpers.convert_page_to_annotate_image_response(
                     docai_page, self.text
                 )
-
-                responses.append(
-                    AnnotateImageResponse(
-                        full_text_annotation=page_vision_annotation,
-                        context=ImageAnnotationContext(
-                            page_number=docai_page.page_number
-                        ),
-                    )
-                )
-
-        return AnnotateFileResponse(responses=responses)
+                for shard in self.shards
+                for docai_page in shard.pages
+            ]
+        )
 
     def convert_document_to_annotate_file_json_response(self) -> str:
         r"""Convert OCR data from `Document.proto` to JSON str of `AnnotateFileResponse` for Vision API.

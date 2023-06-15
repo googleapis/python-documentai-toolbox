@@ -329,7 +329,10 @@ def test_convert_document_page():
         language_code="en-us", confidence=1.0
     )
     page = documentai.Document.Page(detected_languages=[detected_language])
-    actual = vision_helpers._convert_document_page(docai_page=page, document_text="")
+
+    page_info = vision_helpers.PageInfo(page=page)
+
+    actual = vision_helpers._convert_document_page(page_info=page_info)
 
     assert actual.pages[0].property.detected_languages[0].language_code == "en-us"
     assert actual.pages[0].property.detected_languages[0].confidence == 1
