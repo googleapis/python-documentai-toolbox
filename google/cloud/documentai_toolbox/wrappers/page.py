@@ -294,7 +294,7 @@ def _get_tokens_in_line(
 
 def _get_lines_in_paragraph(
     paragraph: documentai.Document.Page.Paragraph, lines: List[Line]
-) -> List[Paragraph]:
+) -> List[Line]:
     r"""Returns a list of wrapped lines inside paragraph.
 
     Args:
@@ -619,12 +619,12 @@ class Page:
         )
         self.tables = tables
 
-    def to_hocr(self, filename):
+    def to_hocr(self, title):
         r"""Exports a string hOCR version of the documentai.Document.Page.
 
         Args:
-            filename (str):
-                Required. The filename of the original file.
+            title (str):
+                Required. The title for ocr_page.
 
         Returns:
             str:
@@ -636,7 +636,7 @@ class Page:
         page_bounding_box = _get_hocr_bounding_box(
             element_with_layout=(self.documentai_page), dimension=(dimension)
         )
-        f += f"<div class='ocr_page' lang='unknown' title='image \"{filename}\";{page_bounding_box}'>\n"
+        f += f"<div class='ocr_page' lang='unknown' title='image \"{title}\";{page_bounding_box}'>\n"
         for bidx, block in enumerate(self.blocks):
             block_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=(block.documentai_block), dimension=(dimension)

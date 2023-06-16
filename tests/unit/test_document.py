@@ -564,7 +564,7 @@ def test_export_hocr_str():
         document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
     )
 
-    actual_hocr = wrapped_document.export_hocr_str(filename="toolbox_invoice_test-0")
+    actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
 
     with open("tests/unit/resources/expected_export_hocr_str.txt", "r") as f:
         expected = f.read()

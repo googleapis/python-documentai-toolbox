@@ -766,12 +766,12 @@ class Document:
 
         return output_filenames
 
-    def export_hocr_str(self, filename: str) -> str:
+    def export_hocr_str(self, title: str) -> str:
         r"""Exports a string hOCR version of the Document.
 
         Args:
-            filename (str):
-                Required. The filename of the original file.
+            title (str):
+                Required. The title for hocr_page and head.
 
         Returns:
             str:
@@ -782,7 +782,7 @@ class Document:
         f += '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
         f += '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="unknown" lang="unknown">'
         f += "<head>"
-        f += f"<title>{filename}</title>"
+        f += f"<title>{title}</title>"
         f += '<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />'
         f += '<meta name="ocr-system" content="Document AI OCR" />'
         f += '<meta name="ocr-langs" content="unknown" />'
@@ -791,7 +791,7 @@ class Document:
         f += "</head>"
         f += "<body>"
         for page_to_export in self.pages:
-            f += page_to_export.to_hocr(filename)
+            f += page_to_export.to_hocr(title=title)
         f += "</body>"
         f += "</html>"
         return f
