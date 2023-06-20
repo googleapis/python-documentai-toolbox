@@ -93,3 +93,14 @@ def test_crop_image(docproto):
     actual = doc.entities[0].crop_image(documentai_page=docproto.pages[0])
 
     assert actual
+
+
+def test_crop_image_without_page_image(docproto):
+    doc = document.Document.from_documentai_document(docproto)
+    del docproto.pages[0].image
+
+    with pytest.raises(
+        ValueError,
+        match="Document does not contain images.",
+    ):
+        doc.entities[0].crop_image(documentai_page=docproto.pages[0])

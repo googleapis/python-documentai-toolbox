@@ -205,6 +205,44 @@ def test_get_batch_process_metadata_with_valid_operation(
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
+def test_get_batch_process_metadata_with_running_operation(
+    mock_docai,
+):
+    mock_client = mock_docai.DocumentProcessorServiceClient.return_value
+
+    metadata = documentai.BatchProcessMetadata(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            documentai.BatchProcessMetadata.IndividualProcessStatus(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+            )
+        ],
+    )
+
+    mock_operation_running = mock.Mock(done=False)
+    mock_operation_finished = mock.Mock(
+        done=True,
+        metadata=mock.Mock(
+            type_url="type.googleapis.com/google.cloud.documentai.v1.BatchProcessMetadata",
+            value=documentai.BatchProcessMetadata.serialize(metadata),
+        ),
+    )
+
+    mock_client.get_operation.side_effect = [
+        mock_operation_running,
+        mock_operation_finished,
+    ]
+
+    location = "us"
+    operation_name = "projects/123456/locations/us/operations/7890123"
+    document._get_batch_process_metadata(location, operation_name)
+
+    mock_client.get_operation.assert_called()
+    mock_docai.BatchProcessMetadata.deserialize.assert_called()
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
 def test_get_batch_process_metadata_with_no_metadata(mock_docai):
     with pytest.raises(
         ValueError,
