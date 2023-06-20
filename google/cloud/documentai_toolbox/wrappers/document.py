@@ -18,7 +18,7 @@
 import dataclasses
 import os
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from google.api_core.client_options import ClientOptions
 
@@ -209,11 +209,13 @@ def _get_batch_process_metadata(
     return metadata
 
 
-def _insert_into_dictionary_with_list(dic: Dict, key: str, value: str) -> Dict:
+def _insert_into_dictionary_with_list(
+    dic: Dict[str, Union[str, List[str]]], key: str, value: str
+) -> Dict[str, Union[str, List[str]]]:
     r"""Inserts value into a dictionary that can contain lists.
 
     Args:
-        dic (Dict):
+        dic (Dict[str, Union[str, List[str]]]):
             Required. The dictionary to insert into.
         key (str):
             Required. The key to be created or inserted into.
@@ -221,14 +223,14 @@ def _insert_into_dictionary_with_list(dic: Dict, key: str, value: str) -> Dict:
             Required. The value to be inserted.
 
     Returns:
-        Dict:
-            The dictionary after adding the key value pair.
+        Dict[str, Union[str, List[str]]]:
+            The dictionary after adding the key-value pair.
     """
     existing_value = dic.get(key)
 
     if existing_value:
-        # For duplicate keys,
-        # Change Type to a List if not already
+        # For duplicate keys.
+        # Change type to a List if not already.
         if not isinstance(existing_value, list):
             existing_value = [existing_value]
 
@@ -266,7 +268,7 @@ def _bigquery_column_name(input_string: str) -> str:
 
 
 def _dict_to_bigquery(
-    dic: Dict,
+    dic: Dict[str, Union[str, List[str]]],
     dataset_name: str,
     table_name: str,
     project_id: Optional[str],
@@ -274,7 +276,7 @@ def _dict_to_bigquery(
     r"""Loads dictionary to a BigQuery table.
 
     Args:
-        dic (Dict):
+        dic (Dict[str, Union[str, List[str]]]):
             Required: The dictionary to insert.
         dataset_name (str):
             Required. Name of the BigQuery dataset.
@@ -558,15 +560,15 @@ class Document:
 
         return found_fields
 
-    def form_fields_to_dict(self) -> Dict:
+    def form_fields_to_dict(self) -> Dict[str, Union[str, List[str]]]:
         r"""Returns dictionary of form fields in document.
 
         Returns:
-            Dict:
+            Dict[str, Union[str, List[str]]]:
                 The Dict of the form fields indexed by type.
 
         """
-        form_fields_dict: Dict = {}
+        form_fields_dict: Dict[str, Union[str, List[str]]] = {}
         for p in self.pages:
             for form_field in p.form_fields:
                 field_name = _bigquery_column_name(form_field.field_name)
@@ -615,7 +617,7 @@ class Document:
         """
         return [entity for entity in self.entities if entity.type_ == target_type]
 
-    def entities_to_dict(self) -> Dict:
+    def entities_to_dict(self) -> Dict[str, Union[str, List[str]]]:
         r"""Returns Dictionary of entities in document.
 
         Returns:
@@ -623,7 +625,7 @@ class Document:
                 The Dict of the entities indexed by type.
 
         """
-        entities_dict: Dict = {}
+        entities_dict: Dict[str, Union[str, List[str]]] = {}
         for entity in self.entities:
             entity_type = _bigquery_column_name(entity.type_)
             entities_dict = _insert_into_dictionary_with_list(
@@ -733,7 +735,7 @@ class Document:
     def export_images(
         self, output_path: str, output_file_prefix: str, output_file_extension: str
     ) -> List[str]:
-        r"""Exports images from `Document` to files.
+        r"""Exports images from `Document.entities` to files. Only exports `Portrait` entities.
 
         Args:
             output_path (str):

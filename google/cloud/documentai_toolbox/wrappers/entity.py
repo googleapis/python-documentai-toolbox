@@ -32,9 +32,10 @@ class Entity:
     Attributes:
         documentai_entity (google.cloud.documentai.Document.Entity):
             Required. The original `google.cloud.documentai.Document.Entity` object.
-        page_offset (int):
-            Optional. The page offset (for sharded Documents) of the `google.cloud.documentai.Document` containing
-            the `google.cloud.documentai.Document.Entity`. `page_refs.page` is relative to the shard, not the entire Document.
+        page_offset (InitVar[int]):
+            Optional. The start page of the shard containing the `documentai.Document.Entity`
+            in the context of the full `documentai.Document`.
+            `page_refs.page` is relative to the shard, not the full `documentai.Document`.
         type_ (str):
             Required. Entity type from a schema e.g. "Address".
         mention_text (str):
