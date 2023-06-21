@@ -237,51 +237,6 @@ def test_FormField():
     assert form_field.field_value == "Sally Walker"
 
 
-def test_Block():
-    docai_block = documentai.Document.Page.Block()
-    paragraphs = [
-        page.Paragraph(
-            documentai_paragraph=documentai.Document.Page.Paragraph(),
-            text="test paragraph",
-            lines=[],
-        )
-    ]
-    block = page.Block(
-        documentai_block=docai_block, text="test block", paragraphs=paragraphs
-    )
-
-    assert block.text == "test block"
-    assert block.paragraphs[0].text == "test paragraph"
-
-
-def test_Paragraph():
-    docai_paragraph = documentai.Document.Page.Paragraph()
-    lines = [
-        page.Line(
-            documentai_line=documentai.Document.Page.Line(), text="test line", tokens=[]
-        )
-    ]
-    paragraph = page.Paragraph(
-        documentai_paragraph=docai_paragraph, text="test paragraph", lines=lines
-    )
-
-    assert paragraph.text == "test paragraph"
-    assert paragraph.lines[0].text == "test line"
-
-
-def test_Line():
-    docai_line = documentai.Document.Page.Line()
-    tokens = [
-        page.Token(documentai_token=documentai.Document.Page.Token(), text="test"),
-        page.Token(documentai_token=documentai.Document.Page.Token(), text="line"),
-    ]
-    line = page.Line(documentai_line=docai_line, text="test line", tokens=tokens)
-
-    assert line.text == "test line"
-    assert line.tokens[0].text == "test"
-    assert line.tokens[1].text == "line"
-
-
 def test_Table():
     header_rows = [
         ["This", "Is", "A", "Header", "Test"],
@@ -321,6 +276,8 @@ def test_Page(docproto):
     assert len(wrapped_page.lines) == 37
     assert len(wrapped_page.paragraphs) == 31
     assert len(wrapped_page.blocks) == 31
+    assert len(wrapped_page.tokens) == 86
     assert wrapped_page.lines[0].text == "Invoice\n"
     assert wrapped_page.paragraphs[30].text == "Supplies used for Project Q.\n"
     assert wrapped_page.blocks[30].text == "Supplies used for Project Q.\n"
+    assert wrapped_page.tokens[85].text == "Q.\n"

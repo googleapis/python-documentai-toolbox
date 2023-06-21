@@ -17,7 +17,7 @@
 
 import dataclasses
 import html
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
 
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
 
@@ -25,6 +25,17 @@ from google.cloud import documentai
 import pandas as pd
 
 Page = TypeVar("Page")
+Paragraph = TypeVar("Paragraph")
+Block = TypeVar("Block")
+Token = TypeVar("Token")
+Line = TypeVar("Line")
+
+ChildrenElements = Union[
+    List[Paragraph],
+    List[Block],
+    List[Token],
+    List[Line],
+]
 
 
 @dataclasses.dataclass
@@ -100,13 +111,13 @@ class Token:
     """Represents a wrapped documentai.Document.Page.Token.
 
     Attributes:
-        documentai_token (google.cloud.documentai.Document.Page.Token):
+        documentai_object (google.cloud.documentai.Document.Page.Token):
             Required. The original google.cloud.documentai.Document.Page.Token object.
         text (str):
             Required. UTF-8 encoded text.
     """
 
-    documentai_token: documentai.Document.Page.Token
+    documentai_object: documentai.Document.Page.Token
     text: str
 
 
@@ -115,15 +126,26 @@ class Line:
     """Represents a wrapped documentai.Document.Page.Line.
 
     Attributes:
-        documentai_line (google.cloud.documentai.Document.Page.Line):
+        documentai_object (google.cloud.documentai.Document.Page.Line):
             Required. The original google.cloud.documentai.Document.Page.Line object.
         text (str):
             Required. UTF-8 encoded text.
     """
 
-    documentai_line: documentai.Document.Page.Line
-    text: str
-    tokens: List[Token]
+    documentai_object: documentai.Document.Page.Line = dataclasses.field(
+        init=True, repr=False
+    )
+    text: str = dataclasses.field(init=True, repr=False)
+    _page: Page = dataclasses.field(init=True, repr=False)
+
+    tokens: List[Token] = dataclasses.field(
+        init=False, repr=False, default_factory=list
+    )
+
+    def __post_init__(self):
+        self.tokens = _get_children_of_element(
+            self.documentai_object, self._page.tokens
+        )
 
 
 @dataclasses.dataclass
@@ -149,15 +171,22 @@ class Paragraph:
     """Represents a wrapped documentai.Document.Page.Paragraph.
 
     Attributes:
-        documentai_paragraph (google.cloud.documentai.Document.Page.Paragraph):
+        documentai_object (google.cloud.documentai.Document.Page.Paragraph):
             Required. The original google.cloud.documentai.Document.Page.Paragraph object.
         text (str):
             Required. UTF-8 encoded text.
     """
 
-    documentai_paragraph: documentai.Document.Page.Paragraph
-    text: str
-    lines: List[Line]
+    documentai_object: documentai.Document.Page.Paragraph = dataclasses.field(
+        init=True, repr=False
+    )
+    text: str = dataclasses.field(init=True, repr=False)
+    _page: Page = dataclasses.field(init=True, repr=False)
+
+    lines: List[Line] = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self):
+        self.lines = _get_children_of_element(self.documentai_object, self._page.lines)
 
 
 @dataclasses.dataclass
@@ -165,15 +194,24 @@ class Block:
     """Represents a wrapped documentai.Document.Page.Block.
 
     Attributes:
-        documentai_block (google.cloud.documentai.Document.Page.Block):
+        documentai_object (google.cloud.documentai.Document.Page.Block):
             Required. The original google.cloud.documentai.Document.Page.Block object.
         text (str):
             Required. UTF-8 encoded text.
     """
 
-    documentai_block: documentai.Document.Page.Block
-    text: str
-    paragraphs: List[Paragraph]
+    documentai_object: documentai.Document.Page.Block = dataclasses.field(
+        init=True, repr=False
+    )
+    text: str = dataclasses.field(init=True, repr=False)
+    _page: Page = dataclasses.field(init=True, repr=False)
+
+    paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self):
+        self.paragraphs = _get_children_of_element(
+            self.documentai_object, self._page.paragraphs
+        )
 
 
 def _table_wrapper_from_documentai_table(
@@ -271,65 +309,7 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
     return result_text
 
 
-def _get_tokens_in_line(
-    line: documentai.Document.Page.Line, tokens: List[Token]
-) -> List[Token]:
-    r"""Returns a list of wrapped tokens inside line.
-
-    Args:
-        line (documentai.Document.Page.Line):
-            Required. A line in a page.
-        tokens (List[Token]):
-            Required. List of wrapped tokens.
-
-    Returns:
-        List[Token]:
-            A list of wrapped tokens that are inside a line.
-    """
-    start_index = line.layout.text_anchor.text_segments[0].start_index
-    end_index = line.layout.text_anchor.text_segments[0].end_index
-
-    return [
-        token
-        for token in tokens
-        if token.documentai_token.layout.text_anchor.text_segments[0].start_index
-        >= start_index
-        if token.documentai_token.layout.text_anchor.text_segments[0].end_index
-        <= end_index
-    ]
-
-
-def _get_lines_in_paragraph(
-    paragraph: documentai.Document.Page.Paragraph, lines: List[Line]
-) -> List[Line]:
-    r"""Returns a list of wrapped lines inside paragraph.
-
-    Args:
-        paragraph (documentai.Document.Page.Paragraph):
-            Required. A paragraph in a page.
-        lines (List[Line]):
-            Required. List of wrapped lines.
-
-    Returns:
-        List[Paragraph]:
-            A list of wrapped lines that are inside a paragraph.
-    """
-    start_index = paragraph.layout.text_anchor.text_segments[0].start_index
-    end_index = paragraph.layout.text_anchor.text_segments[0].end_index
-
-    return [
-        line
-        for line in lines
-        if line.documentai_line.layout.text_anchor.text_segments[0].start_index
-        >= start_index
-        if line.documentai_line.layout.text_anchor.text_segments[0].end_index
-        <= end_index
-    ]
-
-
-def _get_paragraphs_in_blocks(
-    block: documentai.Document.Page.Block, paragraphs: List[Paragraph]
-) -> List[Paragraph]:
+def _get_children_of_element(element: ElementWithLayout, children: ChildrenElements):
     r"""Returns a list of paragraph inside block.
 
     Args:
@@ -342,17 +322,15 @@ def _get_paragraphs_in_blocks(
         List[Paragraph]:
             A list of wrapped paragraphs that are inside a block.
     """
-    start_index = block.layout.text_anchor.text_segments[0].start_index
-    end_index = block.layout.text_anchor.text_segments[0].end_index
+    start_index = element.layout.text_anchor.text_segments[0].start_index
+    end_index = element.layout.text_anchor.text_segments[0].end_index
 
     return [
-        paragraph
-        for paragraph in paragraphs
-        if paragraph.documentai_paragraph.layout.text_anchor.text_segments[
-            0
-        ].start_index
+        child
+        for child in children
+        if child.documentai_object.layout.text_anchor.text_segments[0].start_index
         >= start_index
-        if paragraph.documentai_paragraph.layout.text_anchor.text_segments[0].end_index
+        if child.documentai_object.layout.text_anchor.text_segments[0].end_index
         <= end_index
     ]
 
@@ -375,12 +353,11 @@ def _get_blocks(
     result = []
 
     for block in blocks:
-        block_paragraph = _get_paragraphs_in_blocks(block, _page.paragraphs)
         result.append(
             Block(
-                documentai_block=block,
+                documentai_object=block,
                 text=_text_from_layout(layout=block.layout, text=text),
-                paragraphs=block_paragraph,
+                _page=_page,
             )
         )
 
@@ -407,14 +384,11 @@ def _get_paragraphs(
     result = []
 
     for paragraph in paragraphs:
-
-        paragraph_lines = _get_lines_in_paragraph(paragraph, _page.lines)
-
         result.append(
             Paragraph(
-                documentai_paragraph=paragraph,
+                documentai_object=paragraph,
                 text=_text_from_layout(layout=paragraph.layout, text=text),
-                lines=paragraph_lines,
+                _page=_page,
             )
         )
 
@@ -440,7 +414,7 @@ def _get_tokens(tokens: List[documentai.Document.Page.Token], text: str) -> List
     for token in tokens:
         result.append(
             Token(
-                documentai_token=token,
+                documentai_object=token,
                 text=_text_from_layout(layout=token.layout, text=text),
             )
         )
@@ -467,14 +441,11 @@ def _get_lines(
     result = []
 
     for line in lines:
-
-        line_tokens = _get_tokens_in_line(line, _page.tokens)
-
         result.append(
             Line(
-                documentai_line=line,
+                documentai_object=line,
                 text=_text_from_layout(layout=line.layout, text=text),
-                tokens=line_tokens,
+                _page=_page,
             )
         )
 
@@ -647,25 +618,27 @@ class Page:
         f += f"<div class='ocr_page' lang='unknown' title='image \"{title}\";{page_bounding_box}'>\n"
         for bidx, block in enumerate(self.blocks):
             block_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=(block.documentai_block), dimension=(dimension)
+                element_with_layout=(block.documentai_object), dimension=(dimension)
             )
             f += f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block_bounding_box}'>\n"
             for paridx, paragraph in enumerate(block.paragraphs):
                 paragraph_bounding_box = _get_hocr_bounding_box(
-                    element_with_layout=(paragraph.documentai_paragraph),
+                    element_with_layout=(paragraph.documentai_object),
                     dimension=(dimension),
                 )
                 f += f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph_bounding_box}'>\n"
+                print(type(paragraph))
                 for lidx, line in enumerate(paragraph.lines):
                     line_bounding_box = _get_hocr_bounding_box(
-                        element_with_layout=(line.documentai_line),
+                        element_with_layout=(line.documentai_object),
                         dimension=(dimension),
                     )
                     line_text = html.escape(line.text)
                     f += f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line_bounding_box}'>{line_text}</span>\n"
+                    print(type(line))
                     for tidx, token in enumerate(line.tokens):
                         token_bounding_box = _get_hocr_bounding_box(
-                            element_with_layout=(token.documentai_token),
+                            element_with_layout=(token.documentai_object),
                             dimension=(dimension),
                         )
                         word_text = html.escape(token.text)

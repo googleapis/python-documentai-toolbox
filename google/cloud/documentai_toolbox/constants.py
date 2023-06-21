@@ -17,7 +17,6 @@
 from typing import Union
 from google.cloud.documentai import Document
 
-
 USER_AGENT_PRODUCT = "documentai-toolbox"
 
 JSON_EXTENSION = ".json"
