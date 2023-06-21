@@ -173,13 +173,13 @@ def test_text_from_element_with_layout(docproto):
 
 
 def test_get_blocks(docproto):
+
+    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+
     docproto_blocks = docproto.pages[0].blocks
-    document_paragraphs = page._get_paragraphs(
-        paragraphs=docproto.pages[0].paragraphs, text=docproto.text, lines=[]
-    )
 
     blocks = page._get_blocks(
-        blocks=docproto_blocks, text=docproto.text, paragraphs=document_paragraphs
+        blocks=docproto_blocks, text=docproto.text, _page=wrapped_page
     )
 
     assert len(blocks) == 31
@@ -187,13 +187,12 @@ def test_get_blocks(docproto):
 
 
 def test_get_paragraphs(docproto):
+    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+
     docproto_paragraphs = docproto.pages[0].paragraphs
-    document_lines = page._get_lines(
-        lines=docproto.pages[0].lines, text=docproto.text, tokens=[]
-    )
 
     paragraphs = page._get_paragraphs(
-        paragraphs=docproto_paragraphs, text=docproto.text, lines=document_lines
+        paragraphs=docproto_paragraphs, text=docproto.text, _page=wrapped_page
     )
 
     assert len(paragraphs) == 31
@@ -201,13 +200,11 @@ def test_get_paragraphs(docproto):
 
 
 def test_get_lines(docproto):
+    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
     docproto_lines = docproto.pages[0].lines
-    document_tokens = page._get_tokens(
-        tokens=docproto.pages[0].tokens, text=docproto.text
-    )
 
     lines = page._get_lines(
-        lines=docproto_lines, text=docproto.text, tokens=document_tokens
+        lines=docproto_lines, text=docproto.text, _page=wrapped_page
     )
 
     assert len(lines) == 37

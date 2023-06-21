@@ -17,12 +17,14 @@
 
 import dataclasses
 import html
-from typing import List
+from typing import List, TypeVar
 
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
 
 from google.cloud import documentai
 import pandas as pd
+
+Page = TypeVar("Page")
 
 
 @dataclasses.dataclass
@@ -220,6 +222,7 @@ def _get_hocr_bounding_box(
         str:
             hOCR bounding box sring.
     """
+
     if element_with_layout.layout.bounding_poly.vertices:
         min_x, min_y = (
             element_with_layout.layout.bounding_poly.vertices[0].x,
@@ -229,16 +232,20 @@ def _get_hocr_bounding_box(
             element_with_layout.layout.bounding_poly.vertices[2].x,
             element_with_layout.layout.bounding_poly.vertices[2].y,
         )
-        return f"bbox {int(min_x)} {int(min_y)} {int(max_x)} {int(max_y)}"
-    min_x, min_y = (
-        element_with_layout.layout.bounding_poly.normalized_vertices[0].x,
-        element_with_layout.layout.bounding_poly.normalized_vertices[0].y,
-    )
-    max_x, max_y = (
-        element_with_layout.layout.bounding_poly.normalized_vertices[2].x,
-        element_with_layout.layout.bounding_poly.normalized_vertices[2].y,
-    )
-    return f"bbox {int(min_x * dimension.width)} {int(min_y * dimension.height)} {int(max_x * dimension.width)} {int(max_y * dimension.height)}"
+    else:
+        min_x, min_y = (
+            element_with_layout.layout.bounding_poly.normalized_vertices[0].x
+            * dimension.width,
+            element_with_layout.layout.bounding_poly.normalized_vertices[0].y
+            * dimension.height,
+        )
+        max_x, max_y = (
+            element_with_layout.layout.bounding_poly.normalized_vertices[2].x
+            * dimension.width,
+            element_with_layout.layout.bounding_poly.normalized_vertices[2].y
+            * dimension.height,
+        )
+    return f"bbox {int(min_x)} {int(min_y)} {int(max_x)} {int(max_y)}"
 
 
 def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str:
@@ -351,7 +358,7 @@ def _get_paragraphs_in_blocks(
 
 
 def _get_blocks(
-    blocks: List[documentai.Document.Page.Block], text: str, paragraphs: List[Paragraph]
+    blocks: List[documentai.Document.Page.Block], text: str, _page: Page
 ) -> List[Block]:
     r"""Returns a list of wrapped Blocks.
 
@@ -368,7 +375,7 @@ def _get_blocks(
     result = []
 
     for block in blocks:
-        block_paragraph = _get_paragraphs_in_blocks(block, paragraphs)
+        block_paragraph = _get_paragraphs_in_blocks(block, _page.paragraphs)
         result.append(
             Block(
                 documentai_block=block,
@@ -383,7 +390,7 @@ def _get_blocks(
 def _get_paragraphs(
     paragraphs: List[documentai.Document.Page.Paragraph],
     text: str,
-    lines: List[Paragraph],
+    _page: Page,
 ) -> List[Paragraph]:
     r"""Returns a list of wrapped Paragraphs.
 
@@ -401,7 +408,7 @@ def _get_paragraphs(
 
     for paragraph in paragraphs:
 
-        paragraph_lines = _get_lines_in_paragraph(paragraph, lines)
+        paragraph_lines = _get_lines_in_paragraph(paragraph, _page.lines)
 
         result.append(
             Paragraph(
@@ -442,7 +449,7 @@ def _get_tokens(tokens: List[documentai.Document.Page.Token], text: str) -> List
 
 
 def _get_lines(
-    lines: List[documentai.Document.Page.Line], text: str, tokens: List[Token]
+    lines: List[documentai.Document.Page.Line], text: str, _page: Page
 ) -> List[Line]:
     r"""Returns a list of wrapped lines.
 
@@ -456,11 +463,12 @@ def _get_lines(
         List[Line]:
             A list of wrapped Lines.
     """
+
     result = []
 
     for line in lines:
 
-        line_tokens = _get_tokens_in_line(line, tokens)
+        line_tokens = _get_tokens_in_line(line, _page.tokens)
 
         result.append(
             Line(
@@ -607,15 +615,15 @@ class Page:
 
         self.tokens = _get_tokens(tokens=self.documentai_page.tokens, text=self.text)
         self.lines = _get_lines(
-            lines=self.documentai_page.lines, text=self.text, tokens=self.tokens
+            lines=self.documentai_page.lines, text=self.text, _page=self
         )
         self.paragraphs = _get_paragraphs(
-            paragraphs=self.documentai_page.paragraphs, text=self.text, lines=self.lines
+            paragraphs=self.documentai_page.paragraphs, text=self.text, _page=self
         )
         self.blocks = _get_blocks(
             blocks=self.documentai_page.blocks,
             text=self.text,
-            paragraphs=self.paragraphs,
+            _page=self,
         )
         self.tables = tables
 
