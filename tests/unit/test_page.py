@@ -277,7 +277,18 @@ def test_Page(docproto):
     assert len(wrapped_page.paragraphs) == 31
     assert len(wrapped_page.blocks) == 31
     assert len(wrapped_page.tokens) == 86
+
     assert wrapped_page.lines[0].text == "Invoice\n"
+    assert wrapped_page.lines[0].tokens[0].text == "Invoice\n"
+    assert len(wrapped_page.lines[0].tokens) == 1
+
     assert wrapped_page.paragraphs[30].text == "Supplies used for Project Q.\n"
+    assert len(wrapped_page.paragraphs[30].lines) == 1
+    assert wrapped_page.paragraphs[30].lines[0].text == "Supplies used for Project Q.\n"
+    assert wrapped_page.paragraphs[30].lines[0].tokens[0].text == "Supplies "
+
     assert wrapped_page.blocks[30].text == "Supplies used for Project Q.\n"
+    assert wrapped_page.blocks[30].paragraphs[0].text == "Supplies used for Project Q.\n"
+    assert wrapped_page.blocks[30].paragraphs[0].lines[0].text == "Supplies used for Project Q.\n"
+    assert wrapped_page.blocks[30].paragraphs[0].lines[0].tokens[0].text == "Supplies "
     assert wrapped_page.tokens[85].text == "Q.\n"
