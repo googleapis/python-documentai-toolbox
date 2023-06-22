@@ -46,7 +46,7 @@ def test_table_to_csv():
     ]
     body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
     table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
+        documentai_object=None, header_rows=header_rows, body_rows=body_rows
     )
     contents = table.to_csv()
 
@@ -62,7 +62,7 @@ This,Is,A,Body,Test
 
 def test_table_to_csv_with_empty_body_rows():
     header_rows = [["This", "Is", "A", "Header", "Test"]]
-    table = page.Table(documentai_table=None, header_rows=header_rows, body_rows=[])
+    table = page.Table(documentai_object=None, header_rows=header_rows, body_rows=[])
 
     contents = table.to_csv()
 
@@ -75,7 +75,7 @@ def test_table_to_csv_with_empty_body_rows():
 
 def test_table_to_csv_with_empty_header_rows():
     body_rows = [["This"], ["Is"], ["A"], ["Body"], ["Test"]]
-    table = page.Table(documentai_table=None, header_rows=[], body_rows=body_rows)
+    table = page.Table(documentai_object=None, header_rows=[], body_rows=body_rows)
 
     contents = table.to_csv()
 
@@ -93,7 +93,7 @@ Test
 
 def test_table_to_csv_with_empty_header_rows_and_single_body():
     body_rows = [["Body"]]
-    table = page.Table(documentai_table=None, header_rows=[], body_rows=body_rows)
+    table = page.Table(documentai_object=None, header_rows=[], body_rows=body_rows)
 
     contents = table.to_csv()
 
@@ -112,7 +112,7 @@ def test_table_to_dataframe():
     ]
     body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
     table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
+        documentai_object=None, header_rows=header_rows, body_rows=body_rows
     )
     contents = table.to_dataframe()
 
@@ -127,29 +127,29 @@ def test_trim_text():
     assert output_text == "Sally Walker"
 
 
-def test_table_wrapper_from_documentai_table(docproto):
+def test_table_wrapper_from_documentai_object(docproto):
     docproto_page = docproto.pages[0]
 
-    table = page._table_wrapper_from_documentai_table(
-        documentai_table=docproto_page.tables[0], text=docproto.text
+    table = page._table_wrapper_from_documentai_object(
+        documentai_object=docproto_page.tables[0], text=docproto.text
     )
     assert len(table.body_rows) == 6
     assert len(table.header_rows[0]) == 4
 
 
-def test_header_for_table_rows_from_documentai_table_rows(docproto):
+def test_header_for_table_rows_from_documentai_object_rows(docproto):
     docproto_page = docproto.pages[0]
 
-    header_rows = page._table_rows_from_documentai_table_rows(
+    header_rows = page._table_rows_from_documentai_object_rows(
         table_rows=docproto_page.tables[0].header_rows, text=docproto.text
     )
     assert header_rows == [["Item Description", "Quantity", "Price", "Amount"]]
 
 
-def test_body_for_table_rows_from_documentai_table_rows(docproto):
+def test_body_for_table_rows_from_documentai_object_rows(docproto):
     docproto_page = docproto.pages[0]
 
-    body_rows = page._table_rows_from_documentai_table_rows(
+    body_rows = page._table_rows_from_documentai_object_rows(
         table_rows=docproto_page.tables[0].body_rows, text=docproto.text
     )
     assert body_rows == [
@@ -174,38 +174,32 @@ def test_text_from_element_with_layout(docproto):
 
 def test_get_blocks(docproto):
 
-    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
 
     docproto_blocks = docproto.pages[0].blocks
 
-    blocks = page._get_blocks(
-        blocks=docproto_blocks, text=docproto.text, _page=wrapped_page
-    )
+    blocks = page._get_blocks(blocks=docproto_blocks, page=wrapped_page)
 
     assert len(blocks) == 31
     assert blocks[0].text == "Invoice\n"
 
 
 def test_get_paragraphs(docproto):
-    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
 
     docproto_paragraphs = docproto.pages[0].paragraphs
 
-    paragraphs = page._get_paragraphs(
-        paragraphs=docproto_paragraphs, text=docproto.text, _page=wrapped_page
-    )
+    paragraphs = page._get_paragraphs(paragraphs=docproto_paragraphs, page=wrapped_page)
 
     assert len(paragraphs) == 31
     assert paragraphs[0].text == "Invoice\n"
 
 
 def test_get_lines(docproto):
-    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
     docproto_lines = docproto.pages[0].lines
 
-    lines = page._get_lines(
-        lines=docproto_lines, text=docproto.text, _page=wrapped_page
-    )
+    lines = page._get_lines(lines=docproto_lines, page=wrapped_page)
 
     assert len(lines) == 37
     assert lines[36].text == "Supplies used for Project Q.\n"
@@ -229,7 +223,7 @@ def test_get_form_fields(docproto_form_parser):
 def test_FormField():
     docai_form_field = documentai.Document.Page.FormField()
     form_field = page.FormField(
-        documentai_formfield=docai_form_field,
+        documentai_object=docai_form_field,
         field_name="Name:",
         field_value="Sally Walker",
     )
@@ -244,7 +238,7 @@ def test_Table():
     ]
     body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
     table = page.Table(
-        documentai_table=None, header_rows=header_rows, body_rows=body_rows
+        documentai_object=None, header_rows=header_rows, body_rows=body_rows
     )
 
     assert len(table.body_rows) == 2
@@ -252,7 +246,7 @@ def test_Table():
 
 
 def test_to_hocr(docproto):
-    wrapped_page = page.Page(documentai_page=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
     hocr_str = wrapped_page.to_hocr("docproto-test")
 
     with open("tests/unit/resources/expected_hocr_page_0.txt", "r") as f:
@@ -271,7 +265,7 @@ def test_get_hocr_bounding_box(docproto):
 
 def test_Page(docproto):
     docproto_page = docproto.pages[0]
-    wrapped_page = page.Page(documentai_page=docproto_page, text=docproto.text)
+    wrapped_page = page.Page(documentai_object=docproto_page, text=docproto.text)
 
     assert len(wrapped_page.lines) == 37
     assert len(wrapped_page.paragraphs) == 31
@@ -288,7 +282,12 @@ def test_Page(docproto):
     assert wrapped_page.paragraphs[30].lines[0].tokens[0].text == "Supplies "
 
     assert wrapped_page.blocks[30].text == "Supplies used for Project Q.\n"
-    assert wrapped_page.blocks[30].paragraphs[0].text == "Supplies used for Project Q.\n"
-    assert wrapped_page.blocks[30].paragraphs[0].lines[0].text == "Supplies used for Project Q.\n"
+    assert (
+        wrapped_page.blocks[30].paragraphs[0].text == "Supplies used for Project Q.\n"
+    )
+    assert (
+        wrapped_page.blocks[30].paragraphs[0].lines[0].text
+        == "Supplies used for Project Q.\n"
+    )
     assert wrapped_page.blocks[30].paragraphs[0].lines[0].tokens[0].text == "Supplies "
     assert wrapped_page.tokens[85].text == "Q.\n"

@@ -24,17 +24,11 @@ from google.cloud.documentai_toolbox.constants import ElementWithLayout
 from google.cloud import documentai
 import pandas as pd
 
-Page = TypeVar("Page")
-Paragraph = TypeVar("Paragraph")
-Block = TypeVar("Block")
-Token = TypeVar("Token")
-Line = TypeVar("Line")
-
 ChildrenElements = Union[
-    List[Paragraph],
-    List[Block],
-    List[Token],
-    List[Line],
+    List["Paragraph"],
+    List["Block"],
+    List["Token"],
+    List["Line"],
 ]
 
 
@@ -43,7 +37,7 @@ class Table:
     """Represents a wrapped documentai.Document.Page.Table.
 
     Attributes:
-        documentai_table (google.cloud.documentai.Document.Page.Table):
+        documentai_object (google.cloud.documentai.Document.Page.Table):
             Required. The original google.cloud.documentai.Document.Page.Table object.
         body_rows (List[List[str]]):
             Required. A list of body rows.
@@ -51,7 +45,7 @@ class Table:
             Required. A list of header rows.
     """
 
-    documentai_table: documentai.Document.Page.Table = dataclasses.field(repr=False)
+    documentai_object: documentai.Document.Page.Table = dataclasses.field(repr=False)
     body_rows: List[List[str]] = dataclasses.field(repr=False)
     header_rows: List[List[str]] = dataclasses.field(repr=False)
 
@@ -130,13 +124,13 @@ class Line:
             Required. The original google.cloud.documentai.Document.Page.Line object.
         text (str):
             Required. UTF-8 encoded text.
+        _page (Page):
+            Required. The Page object.
     """
 
-    documentai_object: documentai.Document.Page.Line = dataclasses.field(
-        init=True, repr=False
-    )
-    text: str = dataclasses.field(init=True, repr=False)
-    _page: Page = dataclasses.field(init=True, repr=False)
+    documentai_object: documentai.Document.Page.Line = dataclasses.field(repr=False)
+    text: str = dataclasses.field(repr=False)
+    _page: "Page" = dataclasses.field(repr=False)
 
     tokens: List[Token] = dataclasses.field(
         init=False, repr=False, default_factory=list
@@ -153,7 +147,7 @@ class FormField:
     """Represents a wrapped documentai.Document.Page.FormField.
 
     Attributes:
-        documentai_formfield (google.cloud.documentai.Document.Page.FormField):
+        documentai_object (google.cloud.documentai.Document.Page.FormField):
             Required. The original google.cloud.documentai.Document.Page.FormField object.
         field_name (str):
             Required. The form field name
@@ -161,7 +155,7 @@ class FormField:
             Required. The form field value
     """
 
-    documentai_formfield: documentai.Document.Page.FormField
+    documentai_object: documentai.Document.Page.FormField
     field_name: str
     field_value: str
 
@@ -175,13 +169,15 @@ class Paragraph:
             Required. The original google.cloud.documentai.Document.Page.Paragraph object.
         text (str):
             Required. UTF-8 encoded text.
+        _page (Page):
+            Required. The Page object.
     """
 
     documentai_object: documentai.Document.Page.Paragraph = dataclasses.field(
-        init=True, repr=False
+        repr=False
     )
-    text: str = dataclasses.field(init=True, repr=False)
-    _page: Page = dataclasses.field(init=True, repr=False)
+    text: str = dataclasses.field(repr=False)
+    _page: "Page" = dataclasses.field(repr=False)
 
     lines: List[Line] = dataclasses.field(init=False, repr=False)
 
@@ -198,13 +194,13 @@ class Block:
             Required. The original google.cloud.documentai.Document.Page.Block object.
         text (str):
             Required. UTF-8 encoded text.
+        _page (Page):
+            Required. The Page object.
     """
 
-    documentai_object: documentai.Document.Page.Block = dataclasses.field(
-        init=True, repr=False
-    )
-    text: str = dataclasses.field(init=True, repr=False)
-    _page: Page = dataclasses.field(init=True, repr=False)
+    documentai_object: documentai.Document.Page.Block = dataclasses.field(repr=False)
+    text: str = dataclasses.field(repr=False)
+    _page: "Page" = dataclasses.field(repr=False)
 
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
 
@@ -214,13 +210,13 @@ class Block:
         )
 
 
-def _table_wrapper_from_documentai_table(
-    documentai_table: documentai.Document.Page.Table, text: str
+def _table_wrapper_from_documentai_object(
+    documentai_object: documentai.Document.Page.Table, text: str
 ) -> Table:
     r"""Returns a Table.
 
     Args:
-        documentai_table (documentai.Document.Page.Table):
+        documentai_object (documentai.Document.Page.Table):
             Required. A documentai.Document.Page.Table.
         text (str):
             Required. UTF-8 encoded text in reading order
@@ -232,15 +228,17 @@ def _table_wrapper_from_documentai_table(
 
     """
 
-    header_rows = _table_rows_from_documentai_table_rows(
-        table_rows=list(documentai_table.header_rows), text=text
+    header_rows = _table_rows_from_documentai_object_rows(
+        table_rows=list(documentai_object.header_rows), text=text
     )
-    body_rows = _table_rows_from_documentai_table_rows(
-        table_rows=list(documentai_table.body_rows), text=text
+    body_rows = _table_rows_from_documentai_object_rows(
+        table_rows=list(documentai_object.body_rows), text=text
     )
 
     return Table(
-        documentai_table=documentai_table, body_rows=body_rows, header_rows=header_rows
+        documentai_object=documentai_object,
+        body_rows=body_rows,
+        header_rows=header_rows,
     )
 
 
@@ -336,7 +334,7 @@ def _get_children_of_element(element: ElementWithLayout, children: ChildrenEleme
 
 
 def _get_blocks(
-    blocks: List[documentai.Document.Page.Block], text: str, _page: Page
+    blocks: List[documentai.Document.Page.Block], page: "Page"
 ) -> List[Block]:
     r"""Returns a list of wrapped Blocks.
 
@@ -356,8 +354,8 @@ def _get_blocks(
         result.append(
             Block(
                 documentai_object=block,
-                text=_text_from_layout(layout=block.layout, text=text),
-                _page=_page,
+                text=_text_from_layout(layout=block.layout, text=page.text),
+                _page=page,
             )
         )
 
@@ -366,8 +364,7 @@ def _get_blocks(
 
 def _get_paragraphs(
     paragraphs: List[documentai.Document.Page.Paragraph],
-    text: str,
-    _page: Page,
+    page: "Page",
 ) -> List[Paragraph]:
     r"""Returns a list of wrapped Paragraphs.
 
@@ -387,8 +384,8 @@ def _get_paragraphs(
         result.append(
             Paragraph(
                 documentai_object=paragraph,
-                text=_text_from_layout(layout=paragraph.layout, text=text),
-                _page=_page,
+                text=_text_from_layout(layout=paragraph.layout, text=page.text),
+                _page=page,
             )
         )
 
@@ -422,9 +419,7 @@ def _get_tokens(tokens: List[documentai.Document.Page.Token], text: str) -> List
     return result
 
 
-def _get_lines(
-    lines: List[documentai.Document.Page.Line], text: str, _page: Page
-) -> List[Line]:
+def _get_lines(lines: List[documentai.Document.Page.Line], page: "Page") -> List[Line]:
     r"""Returns a list of wrapped lines.
 
     Args:
@@ -444,8 +439,8 @@ def _get_lines(
         result.append(
             Line(
                 documentai_object=line,
-                text=_text_from_layout(layout=line.layout, text=text),
-                _page=_page,
+                text=_text_from_layout(layout=line.layout, text=page.text),
+                _page=page,
             )
         )
 
@@ -486,7 +481,7 @@ def _get_form_fields(
     for form_field in form_fields:
         result.append(
             FormField(
-                documentai_formfield=form_field,
+                documentai_object=form_field,
                 field_name=_trim_text(_text_from_layout(form_field.field_name, text)),
                 field_value=_trim_text(
                     _text_from_layout(form_field.field_value, text),
@@ -497,7 +492,7 @@ def _get_form_fields(
     return result
 
 
-def _table_rows_from_documentai_table_rows(
+def _table_rows_from_documentai_object_rows(
     table_rows: List[documentai.Document.Page.Table.TableRow], text: str
 ) -> List[List[str]]:
     r"""Returns a list of rows from table_rows.
@@ -531,7 +526,7 @@ class Page:
     """Represents a wrapped documentai.Document.Page .
 
     Attributes:
-        documentai_page (google.cloud.documentai.Document.Page):
+        documentai_object (google.cloud.documentai.Document.Page):
             Required. The original google.cloud.documentai.Document.Page object.
         text: (str):
             Required. The full text of the Document containing the Page.
@@ -555,7 +550,7 @@ class Page:
             page.
     """
 
-    documentai_page: documentai.Document.Page = dataclasses.field(repr=False)
+    documentai_object: documentai.Document.Page = dataclasses.field(repr=False)
     text: str = dataclasses.field(repr=False)
 
     form_fields: List[FormField] = dataclasses.field(init=False, repr=False)
@@ -573,28 +568,25 @@ class Page:
         Paragraph,
         Block
         """
-        for table in self.documentai_page.tables:
+        for table in self.documentai_object.tables:
             tables.append(
-                _table_wrapper_from_documentai_table(
-                    documentai_table=table, text=self.text
+                _table_wrapper_from_documentai_object(
+                    documentai_object=table, text=self.text
                 )
             )
 
         self.form_fields = _get_form_fields(
-            form_fields=self.documentai_page.form_fields, text=self.text
+            form_fields=self.documentai_object.form_fields, text=self.text
         )
 
-        self.tokens = _get_tokens(tokens=self.documentai_page.tokens, text=self.text)
-        self.lines = _get_lines(
-            lines=self.documentai_page.lines, text=self.text, _page=self
-        )
+        self.tokens = _get_tokens(tokens=self.documentai_object.tokens, text=self.text)
+        self.lines = _get_lines(lines=self.documentai_object.lines, page=self)
         self.paragraphs = _get_paragraphs(
-            paragraphs=self.documentai_page.paragraphs, text=self.text, _page=self
+            paragraphs=self.documentai_object.paragraphs, page=self
         )
         self.blocks = _get_blocks(
-            blocks=self.documentai_page.blocks,
-            text=self.text,
-            _page=self,
+            blocks=self.documentai_object.blocks,
+            page=self,
         )
         self.tables = tables
 
@@ -610,10 +602,10 @@ class Page:
                 A string hOCR version of the documentai.Document.Page.
         """
         f = ""
-        dimension = self.documentai_page.dimension
-        pidx = self.documentai_page.page_number
+        dimension = self.documentai_object.dimension
+        pidx = self.documentai_object.page_number
         page_bounding_box = _get_hocr_bounding_box(
-            element_with_layout=(self.documentai_page), dimension=(dimension)
+            element_with_layout=(self.documentai_object), dimension=(dimension)
         )
         f += f"<div class='ocr_page' lang='unknown' title='image \"{title}\";{page_bounding_box}'>\n"
         for bidx, block in enumerate(self.blocks):
