@@ -127,6 +127,7 @@ class Token:
 
     @property
     def hocr_bounding_box(self):
+        print(self._hocr_bounding_box)
         if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,

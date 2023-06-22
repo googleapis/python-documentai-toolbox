@@ -183,6 +183,9 @@ def test_get_blocks(docproto):
     assert len(blocks) == 31
     assert blocks[0].text == "Invoice\n"
     assert blocks[0].hocr_bounding_box == "bbox 1310 220 1534 282"
+    # checking cached value
+    assert blocks[0].text == "Invoice\n"
+    assert blocks[0].hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
 def test_get_paragraphs(docproto):
@@ -194,15 +197,9 @@ def test_get_paragraphs(docproto):
     assert len(paragraphs) == 31
     assert paragraphs[0].text == "Invoice\n"
     assert paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
-
-    wrapped_page.paragraphs = []
-    double_check_paragraphs = page._get_paragraphs(
-        paragraphs=docproto_paragraphs, page=wrapped_page
-    )
-
-    assert len(double_check_paragraphs) == 31
-    assert double_check_paragraphs[0].text == "Invoice\n"
-    assert double_check_paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
+    # checking cached value
+    assert paragraphs[0].text == "Invoice\n"
+    assert paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
 def test_get_lines(docproto):
@@ -214,13 +211,9 @@ def test_get_lines(docproto):
     assert len(lines) == 37
     assert lines[36].text == "Supplies used for Project Q.\n"
     assert lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
-
-    wrapped_page.lines = []
-    double_check_lines = page._get_lines(lines=docproto_lines, page=wrapped_page)
-
-    assert len(double_check_lines) == 37
-    assert double_check_lines[36].text == "Supplies used for Project Q.\n"
-    assert double_check_lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
+    # checking cached value
+    assert lines[36].text == "Supplies used for Project Q.\n"
+    assert lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
 
 
 def test_get_tokens(docproto):
@@ -233,12 +226,9 @@ def test_get_tokens(docproto):
     assert len(tokens) == 86
     assert tokens[85].text == "Q.\n"
     assert tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
-
-    double_check_tokens = page._get_tokens(tokens=docproto_tokens, page=wrapped_page)
-
-    assert len(double_check_tokens) == 86
-    assert double_check_tokens[85].text == "Q.\n"
-    assert double_check_tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
+    # checking cached value
+    assert tokens[85].text == "Q.\n"
+    assert tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
 
 
 def test_get_form_fields(docproto_form_parser):
@@ -292,11 +282,41 @@ def test_to_hocr(docproto):
 
 
 def test_get_hocr_bounding_box(docproto):
-    hocr_bounding_box = page._get_hocr_bounding_box(
+    hocr_bounding_box_normalized = page._get_hocr_bounding_box(
         element_with_layout=docproto.pages[0], dimension=docproto.pages[0].dimension
     )
 
-    assert hocr_bounding_box == "bbox 0 0 1758 2275"
+    assert hocr_bounding_box_normalized == "bbox 0 0 1758 2275"
+
+    hocr_bounding_box_with_vertices = page._get_hocr_bounding_box(
+        element_with_layout=docproto.pages[0].blocks[0],
+        dimension=docproto.pages[0].dimension,
+    )
+
+    assert hocr_bounding_box_with_vertices == "bbox 1310 220 1534 282"
+
+
+def test_get_xy(docproto):
+    max_x, max_y = page._get_xy(
+        docproto.pages[0], docproto.pages[0].dimension, False, False
+    )
+    min_x, min_y = page._get_xy(
+        docproto.pages[0], docproto.pages[0].dimension, False, True
+    )
+    normalized_max_x, normalized_max_y = page._get_xy(
+        docproto.pages[0], docproto.pages[0].dimension, True, False
+    )
+    normalized_min_x, normalized_min_y = page._get_xy(
+        docproto.pages[0], docproto.pages[0].dimension, True, True
+    )
+
+    assert max_x == 1758 and max_y == 2275
+
+    assert min_x == 0 and min_y == 0
+
+    assert normalized_min_x == 0.0 and normalized_min_y == 0.0
+
+    assert normalized_max_x == 3090564.0 and normalized_max_y == 5175625.0
 
 
 def test_Page(docproto):
@@ -327,3 +347,7 @@ def test_Page(docproto):
     )
     assert wrapped_page.blocks[30].paragraphs[0].lines[0].tokens[0].text == "Supplies "
     assert wrapped_page.tokens[85].text == "Q.\n"
+
+    assert wrapped_page.hocr_bounding_box == "bbox 0 0 1758 2275"
+    # checking cached value
+    assert wrapped_page.hocr_bounding_box == "bbox 0 0 1758 2275"
