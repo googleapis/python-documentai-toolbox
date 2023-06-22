@@ -182,17 +182,27 @@ def test_get_blocks(docproto):
 
     assert len(blocks) == 31
     assert blocks[0].text == "Invoice\n"
+    assert blocks[0].hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
 def test_get_paragraphs(docproto):
     wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
-
     docproto_paragraphs = docproto.pages[0].paragraphs
 
     paragraphs = page._get_paragraphs(paragraphs=docproto_paragraphs, page=wrapped_page)
 
     assert len(paragraphs) == 31
     assert paragraphs[0].text == "Invoice\n"
+    assert paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
+
+    wrapped_page.paragraphs = []
+    double_check_paragraphs = page._get_paragraphs(
+        paragraphs=docproto_paragraphs, page=wrapped_page
+    )
+
+    assert len(double_check_paragraphs) == 31
+    assert double_check_paragraphs[0].text == "Invoice\n"
+    assert double_check_paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
 def test_get_lines(docproto):
@@ -203,6 +213,32 @@ def test_get_lines(docproto):
 
     assert len(lines) == 37
     assert lines[36].text == "Supplies used for Project Q.\n"
+    assert lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
+
+    wrapped_page.lines = []
+    double_check_lines = page._get_lines(lines=docproto_lines, page=wrapped_page)
+
+    assert len(double_check_lines) == 37
+    assert double_check_lines[36].text == "Supplies used for Project Q.\n"
+    assert double_check_lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
+
+
+def test_get_tokens(docproto):
+    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
+    wrapped_page.tokens = []
+    docproto_tokens = docproto.pages[0].tokens
+
+    tokens = page._get_tokens(tokens=docproto_tokens, page=wrapped_page)
+
+    assert len(tokens) == 86
+    assert tokens[85].text == "Q.\n"
+    assert tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
+
+    double_check_tokens = page._get_tokens(tokens=docproto_tokens, page=wrapped_page)
+
+    assert len(double_check_tokens) == 86
+    assert double_check_tokens[85].text == "Q.\n"
+    assert double_check_tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
 
 
 def test_get_form_fields(docproto_form_parser):

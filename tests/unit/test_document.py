@@ -118,7 +118,7 @@ def test_pages_from_shards():
     assert len(actual[0].paragraphs) == 31
 
     for page_index, page in enumerate(actual):
-        assert page.documentai_page.page_number == page_index + 1
+        assert page.documentai_object.page_number == page_index + 1
 
 
 def test_entities_from_shard():
@@ -269,7 +269,7 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
         current_text_offset += len(shard.text)
 
     for page_index, page in enumerate(actual.pages):
-        assert page.documentai_page.page_number == page_index + 1
+        assert page.documentai_object.page_number == page_index + 1
 
 
 def test_document_from_batch_process_metadata_with_multiple_input_files(

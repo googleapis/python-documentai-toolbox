@@ -94,7 +94,7 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     for shard in shards:
         text = shard.text
         for shard_page in shard.pages:
-            result.append(Page(documentai_page=shard_page, text=text))
+            result.append(Page(documentai_object=shard_page, text=text))
 
     return result
 
@@ -169,11 +169,11 @@ def _convert_to_vision_annotate_file_response(text: str, pages: List[page.Page])
     vision_file_response = AnnotateFileResponse()
     page_idx = 0
     while page_idx < len(pages):
-        page_info = PageInfo(pages[page_idx].documentai_page, text)
+        page_info = PageInfo(pages[page_idx].documentai_object, text)
 
         full_text_annotation = _convert_document_page(page_info)
         full_text_annotation.text = _get_text_anchor_substring(
-            text, pages[page_idx].documentai_page.layout.text_anchor
+            text, pages[page_idx].documentai_object.layout.text_anchor
         )
         text_annotations = _generate_entity_annotations(page_info)
 

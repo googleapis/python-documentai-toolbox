@@ -17,7 +17,7 @@
 
 import dataclasses
 import html
-from typing import List, TypeVar, Union
+from typing import List, Optional, Union
 
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
 
@@ -107,12 +107,32 @@ class Token:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.Token):
             Required. The original google.cloud.documentai.Document.Page.Token object.
-        text (str):
-            Required. UTF-8 encoded text.
+        _page (Page):
+                    Required. The Page object.
     """
 
-    documentai_object: documentai.Document.Page.Token
-    text: str
+    documentai_object: documentai.Document.Page.Token = dataclasses.field(default=None)
+    _page: "Page" = dataclasses.field(default=None)
+
+    _text: Optional[str] = dataclasses.field(init=False, default=None)
+    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
+
+    @property
+    def text(self):
+        if self._text is None:
+            self._text = _text_from_layout(
+                layout=self.documentai_object.layout, text=self._page.text
+            )
+        return self._text
+
+    @property
+    def hocr_bounding_box(self):
+        if self._hocr_bounding_box is None:
+            self._hocr_bounding_box = _get_hocr_bounding_box(
+                element_with_layout=self.documentai_object,
+                dimension=self._page.documentai_object.dimension,
+            )
+        return self._hocr_bounding_box
 
 
 @dataclasses.dataclass
@@ -122,24 +142,40 @@ class Line:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.Line):
             Required. The original google.cloud.documentai.Document.Page.Line object.
-        text (str):
-            Required. UTF-8 encoded text.
         _page (Page):
             Required. The Page object.
     """
 
     documentai_object: documentai.Document.Page.Line = dataclasses.field(repr=False)
-    text: str = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
     tokens: List[Token] = dataclasses.field(
         init=False, repr=False, default_factory=list
     )
+    _text: Optional[str] = dataclasses.field(init=False, default=None)
+    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self):
         self.tokens = _get_children_of_element(
             self.documentai_object, self._page.tokens
         )
+
+    @property
+    def text(self):
+        if self._text is None:
+            self._text = _text_from_layout(
+                layout=self.documentai_object.layout, text=self._page.text
+            )
+        return self._text
+
+    @property
+    def hocr_bounding_box(self):
+        if self._hocr_bounding_box is None:
+            self._hocr_bounding_box = _get_hocr_bounding_box(
+                element_with_layout=self.documentai_object,
+                dimension=self._page.documentai_object.dimension,
+            )
+        return self._hocr_bounding_box
 
 
 @dataclasses.dataclass
@@ -167,8 +203,6 @@ class Paragraph:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.Paragraph):
             Required. The original google.cloud.documentai.Document.Page.Paragraph object.
-        text (str):
-            Required. UTF-8 encoded text.
         _page (Page):
             Required. The Page object.
     """
@@ -176,13 +210,31 @@ class Paragraph:
     documentai_object: documentai.Document.Page.Paragraph = dataclasses.field(
         repr=False
     )
-    text: str = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
     lines: List[Line] = dataclasses.field(init=False, repr=False)
+    _text: Optional[str] = dataclasses.field(init=False, default=None)
+    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self):
         self.lines = _get_children_of_element(self.documentai_object, self._page.lines)
+
+    @property
+    def text(self):
+        if self._text is None:
+            self._text = _text_from_layout(
+                layout=self.documentai_object.layout, text=self._page.text
+            )
+        return self._text
+
+    @property
+    def hocr_bounding_box(self):
+        if self._hocr_bounding_box is None:
+            self._hocr_bounding_box = _get_hocr_bounding_box(
+                element_with_layout=self.documentai_object,
+                dimension=self._page.documentai_object.dimension,
+            )
+        return self._hocr_bounding_box
 
 
 @dataclasses.dataclass
@@ -192,22 +244,38 @@ class Block:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.Block):
             Required. The original google.cloud.documentai.Document.Page.Block object.
-        text (str):
-            Required. UTF-8 encoded text.
         _page (Page):
             Required. The Page object.
     """
 
     documentai_object: documentai.Document.Page.Block = dataclasses.field(repr=False)
-    text: str = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
+    _text: Optional[str] = dataclasses.field(init=False, default=None)
+    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self):
         self.paragraphs = _get_children_of_element(
             self.documentai_object, self._page.paragraphs
         )
+
+    @property
+    def text(self):
+        if self._text is None:
+            self._text = _text_from_layout(
+                layout=self.documentai_object.layout, text=self._page.text
+            )
+        return self._text
+
+    @property
+    def hocr_bounding_box(self):
+        if self._hocr_bounding_box is None:
+            self._hocr_bounding_box = _get_hocr_bounding_box(
+                element_with_layout=self.documentai_object,
+                dimension=self._page.documentai_object.dimension,
+            )
+        return self._hocr_bounding_box
 
 
 def _table_wrapper_from_documentai_object(
@@ -242,6 +310,40 @@ def _table_wrapper_from_documentai_object(
     )
 
 
+def _get_xy(
+    element: ElementWithLayout,
+    dimension: documentai.Document.Page.Dimension,
+    normalized: bool = False,
+    min: bool = False,
+):
+    r"""Returns xy coordinates corresponding to element.
+
+    Args:
+        element (ElementWithLayout):
+            Required. an element with layout fields.
+        dimension (documentai.Document.Page.Dimension):
+            Required. Page dimension.
+        normalized (Boolean):
+            Required. Wether element.layout.bounding_poly is normalized
+        min (Boolean):
+            Required. Wether xy should be min
+
+    Returns:
+        tuplil(int,int):
+            xy coordinates corresponding to element.
+    """
+    index = 0 if min else 2
+    if not normalized:
+        return (
+            element.layout.bounding_poly.vertices[index].x,
+            element.layout.bounding_poly.vertices[index].y,
+        )
+    return (
+        element.layout.bounding_poly.vertices[index].x * dimension.width,
+        element.layout.bounding_poly.vertices[index].y * dimension.height,
+    )
+
+
 def _get_hocr_bounding_box(
     element_with_layout: ElementWithLayout,
     dimension: documentai.Document.Page.Dimension,
@@ -260,27 +362,12 @@ def _get_hocr_bounding_box(
     """
 
     if element_with_layout.layout.bounding_poly.vertices:
-        min_x, min_y = (
-            element_with_layout.layout.bounding_poly.vertices[0].x,
-            element_with_layout.layout.bounding_poly.vertices[0].y,
-        )
-        max_x, max_y = (
-            element_with_layout.layout.bounding_poly.vertices[2].x,
-            element_with_layout.layout.bounding_poly.vertices[2].y,
-        )
+        min_x, min_y = _get_xy(element_with_layout, dimension, False, True)
+        max_x, max_y = _get_xy(element_with_layout, dimension, False, False)
     else:
-        min_x, min_y = (
-            element_with_layout.layout.bounding_poly.normalized_vertices[0].x
-            * dimension.width,
-            element_with_layout.layout.bounding_poly.normalized_vertices[0].y
-            * dimension.height,
-        )
-        max_x, max_y = (
-            element_with_layout.layout.bounding_poly.normalized_vertices[2].x
-            * dimension.width,
-            element_with_layout.layout.bounding_poly.normalized_vertices[2].y
-            * dimension.height,
-        )
+        min_x, min_y = _get_xy(element_with_layout, dimension, True, True)
+        max_x, max_y = _get_xy(element_with_layout, dimension, True, False)
+
     return f"bbox {int(min_x)} {int(min_y)} {int(max_x)} {int(max_y)}"
 
 
@@ -308,17 +395,17 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
 
 
 def _get_children_of_element(element: ElementWithLayout, children: ChildrenElements):
-    r"""Returns a list of paragraph inside block.
+    r"""Returns a list of children inside element.
 
     Args:
-        block (documentai.Document.Page.Block):
-            Required. A block in a page.
-        paragraphs (List[Paragraph]):
-            Required. List of wrapped paragraphs.
+        element (ElementWithLayout):
+            Required. A element in a page.
+        children (ChildrenElements):
+            Required. List of wrapped children.
 
     Returns:
-        List[Paragraph]:
-            A list of wrapped paragraphs that are inside a block.
+        List[ChildrenElements]:
+            A list of wrapped children that are inside a element.
     """
     start_index = element.layout.text_anchor.text_segments[0].start_index
     end_index = element.layout.text_anchor.text_segments[0].end_index
@@ -341,9 +428,9 @@ def _get_blocks(
     Args:
         blocks (List[documentai.Document.Page.Block]):
             Required. A list of documentai.Document.Page.Block objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
+        page (Page):
+            Required. The Page object.
+
     Returns:
         List[Block]:
              A list of wrapped Blocks.
@@ -354,7 +441,6 @@ def _get_blocks(
         result.append(
             Block(
                 documentai_object=block,
-                text=_text_from_layout(layout=block.layout, text=page.text),
                 _page=page,
             )
         )
@@ -371,9 +457,9 @@ def _get_paragraphs(
     Args:
         paragraphs (List[documentai.Document.Page.Paragraph]):
             Required. A list of documentai.Document.Page.Paragraph objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
+        page (Page):
+            Required. The Page object.
+
     Returns:
         List[Paragraph]:
              A list of wrapped Paragraphs.
@@ -384,7 +470,6 @@ def _get_paragraphs(
         result.append(
             Paragraph(
                 documentai_object=paragraph,
-                text=_text_from_layout(layout=paragraph.layout, text=page.text),
                 _page=page,
             )
         )
@@ -392,15 +477,16 @@ def _get_paragraphs(
     return result
 
 
-def _get_tokens(tokens: List[documentai.Document.Page.Token], text: str) -> List[Token]:
+def _get_tokens(
+    tokens: List[documentai.Document.Page.Token], page: "Page"
+) -> List[Token]:
     r"""Returns a list of wrapped tokens.
 
     Args:
         tokens (List[documentai.Document.Page.Token]):
             Required. A list of documentai.Document.Page.Token.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
+        page (Page):
+            Required. The Page object.
 
     Returns:
         List[Token]:
@@ -412,7 +498,7 @@ def _get_tokens(tokens: List[documentai.Document.Page.Token], text: str) -> List
         result.append(
             Token(
                 documentai_object=token,
-                text=_text_from_layout(layout=token.layout, text=text),
+                _page=page,
             )
         )
 
@@ -425,9 +511,9 @@ def _get_lines(lines: List[documentai.Document.Page.Line], page: "Page") -> List
     Args:
         lines (List[documentai.Document.Page.Line]):
             Required. A list of documentai.Document.Page.Line objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
+        page (Page):
+            Required. The Page object.
+
     Returns:
         List[Line]:
             A list of wrapped Lines.
@@ -439,7 +525,6 @@ def _get_lines(lines: List[documentai.Document.Page.Line], page: "Page") -> List
         result.append(
             Line(
                 documentai_object=line,
-                text=_text_from_layout(layout=line.layout, text=page.text),
                 _page=page,
             )
         )
@@ -558,6 +643,7 @@ class Page:
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
     tables: List[Table] = dataclasses.field(init=False, repr=False)
+    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self):
         tables = []
@@ -579,7 +665,7 @@ class Page:
             form_fields=self.documentai_object.form_fields, text=self.text
         )
 
-        self.tokens = _get_tokens(tokens=self.documentai_object.tokens, text=self.text)
+        self.tokens = _get_tokens(tokens=self.documentai_object.tokens, page=self)
         self.lines = _get_lines(lines=self.documentai_object.lines, page=self)
         self.paragraphs = _get_paragraphs(
             paragraphs=self.documentai_object.paragraphs, page=self
@@ -602,40 +688,28 @@ class Page:
                 A string hOCR version of the documentai.Document.Page.
         """
         f = ""
-        dimension = self.documentai_object.dimension
         pidx = self.documentai_object.page_number
-        page_bounding_box = _get_hocr_bounding_box(
-            element_with_layout=(self.documentai_object), dimension=(dimension)
-        )
-        f += f"<div class='ocr_page' lang='unknown' title='image \"{title}\";{page_bounding_box}'>\n"
+        f += f"<div class='ocr_page' lang='unknown' title='image \"{title}\";{self.hocr_bounding_box}'>"
         for bidx, block in enumerate(self.blocks):
-            block_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=(block.documentai_object), dimension=(dimension)
-            )
-            f += f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block_bounding_box}'>\n"
+            f += f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block.hocr_bounding_box}'>"
             for paridx, paragraph in enumerate(block.paragraphs):
-                paragraph_bounding_box = _get_hocr_bounding_box(
-                    element_with_layout=(paragraph.documentai_object),
-                    dimension=(dimension),
-                )
-                f += f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph_bounding_box}'>\n"
-                print(type(paragraph))
+                f += f"<span class='ocr_par' id='par_{pidx}_{bidx}_{paridx}' title='{paragraph.hocr_bounding_box}'>"
                 for lidx, line in enumerate(paragraph.lines):
-                    line_bounding_box = _get_hocr_bounding_box(
-                        element_with_layout=(line.documentai_object),
-                        dimension=(dimension),
-                    )
                     line_text = html.escape(line.text)
-                    f += f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line_bounding_box}'>{line_text}</span>\n"
-                    print(type(line))
+                    f += f"<span class='ocr_line' id='line_{pidx}_{bidx}_{paridx}_{lidx}' title='{line.hocr_bounding_box}'>{line_text}</span>"
                     for tidx, token in enumerate(line.tokens):
-                        token_bounding_box = _get_hocr_bounding_box(
-                            element_with_layout=(token.documentai_object),
-                            dimension=(dimension),
-                        )
                         word_text = html.escape(token.text)
-                        f += f"<span class='ocrx_word' id='word_{pidx}_{bidx}_{paridx}_{lidx}_{tidx}' title='{token_bounding_box}'>{word_text}</span>\n"
-                f += "</span>\n"
-            f += "</span>\n"
-        f += "</div>\n"
+                        f += f"<span class='ocrx_word' id='word_{pidx}_{bidx}_{paridx}_{lidx}_{tidx}' title='{token.hocr_bounding_box}'>{word_text}</span>"
+                f += "</span>"
+            f += "</span>"
+        f += "</div>"
         return f
+
+    @property
+    def hocr_bounding_box(self):
+        if self._hocr_bounding_box is None:
+            self._hocr_bounding_box = _get_hocr_bounding_box(
+                element_with_layout=self.documentai_object,
+                dimension=self.documentai_object.dimension,
+            )
+        return self._hocr_bounding_box
