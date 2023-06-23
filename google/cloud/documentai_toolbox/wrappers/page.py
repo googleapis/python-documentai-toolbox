@@ -39,6 +39,8 @@ class Table:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.Table):
             Required. The original google.cloud.documentai.Document.Page.Table object.
+        document_text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         body_rows (List[List[str]]):
             Required. A list of body rows.
         header_rows (List[List[str]]):
@@ -46,8 +48,18 @@ class Table:
     """
 
     documentai_object: documentai.Document.Page.Table = dataclasses.field(repr=False)
-    body_rows: List[List[str]] = dataclasses.field(repr=False)
-    header_rows: List[List[str]] = dataclasses.field(repr=False)
+    document_text: dataclasses.InitVar[str]
+
+    body_rows: List[List[str]] = dataclasses.field(init=False, repr=False)
+    header_rows: List[List[str]] = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self, document_text) -> None:
+        self.header_rows = _table_rows_from_documentai_table_rows(
+            table_rows=list(self.documentai_table.header_rows), text=document_text
+        )
+        self.body_rows = _table_rows_from_documentai_table_rows(
+            table_rows=list(self.documentai_table.body_rows), text=document_text
+        )
 
     def to_dataframe(self) -> pd.DataFrame:
         r"""Returns pd.DataFrame from documentai.table
@@ -102,7 +114,8 @@ class Table:
 
 @dataclasses.dataclass
 class Token:
-    """Represents a wrapped documentai.Document.Page.Token.
+    """Represents a wrapped documentai.Document.Page.
+    .
 
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.Token):
@@ -177,6 +190,7 @@ class Line:
                 dimension=self._page.documentai_object.dimension,
             )
         return self._hocr_bounding_box
+
 
 
 @dataclasses.dataclass
@@ -393,6 +407,7 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
         result_text += text[int(text_segment.start_index) : int(text_segment.end_index)]
 
     return result_text
+
 
 
 def _get_children_of_element(element: ElementWithLayout, children: ChildrenElements):
@@ -614,8 +629,12 @@ class Page:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page):
             Required. The original google.cloud.documentai.Document.Page object.
-        text: (str):
-            Required. The full text of the Document containing the Page.
+        document_text (str):
+            Required. The full text of the `Document` containing the `Page`.
+        text (str):
+            Required. UTF-8 encoded text of the page.
+        page_number (int):
+            Required. The page number of the `Page`.
         form_fields (List[FormField]):
             Required. A list of visually detected form fields on the
             page.
@@ -636,15 +655,19 @@ class Page:
             page.
     """
 
-    documentai_object: documentai.Document.Page = dataclasses.field(repr=False)
-    text: str = dataclasses.field(repr=False)
 
+    documentai_object: documentai.Document.Page = dataclasses.field(repr=False)
+    document_text: dataclasses.InitVar[str]
+
+    text: str = dataclasses.field(init=False, repr=False)
+    page_number: int = dataclasses.field(init=False, repr=False)
     form_fields: List[FormField] = dataclasses.field(init=False, repr=False)
     lines: List[Line] = dataclasses.field(init=False, repr=False)
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
     tables: List[Table] = dataclasses.field(init=False, repr=False)
     _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
+
 
     def __post_init__(self):
         tables = []
@@ -714,3 +737,4 @@ class Page:
                 dimension=self.documentai_object.dimension,
             )
         return self._hocr_bounding_box
+      

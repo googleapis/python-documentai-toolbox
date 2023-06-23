@@ -39,85 +39,91 @@ def docproto_form_parser():
         return documentai.Document.from_json(f.read())
 
 
-def test_table_to_csv():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
+def test_table_to_csv(docproto):
+    docproto_page = docproto.pages[0]
     table = page.Table(
-        documentai_object=None, header_rows=header_rows, body_rows=body_rows
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
     )
-    contents = table.to_csv()
-
-    assert (
-        contents
-        == """This,Is,A,Header,Test
-,,A,Sub,Header
-This,Is,A,Body,Test
-1,2,3,4,5
-"""
-    )
-
-
-def test_table_to_csv_with_empty_body_rows():
-    header_rows = [["This", "Is", "A", "Header", "Test"]]
-    table = page.Table(documentai_object=None, header_rows=header_rows, body_rows=[])
 
     contents = table.to_csv()
 
     assert (
         contents
-        == """This,Is,A,Header,Test
+        == """Item Description,Quantity,Price,Amount
+Tool A,500,$1.00,$500.00
+Service B,1,$900.00,$900.00
+Resource C,50,$12.00,$600.00
+,,Subtotal,$2000.00
+,,Tax,$140.00
+,,BALANCE DUE,$2140.00
 """
     )
 
 
-def test_table_to_csv_with_empty_header_rows():
-    body_rows = [["This"], ["Is"], ["A"], ["Body"], ["Test"]]
-    table = page.Table(documentai_object=None, header_rows=[], body_rows=body_rows)
+def test_table_to_csv_with_empty_body_rows(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
+    )
+    table.body_rows = None
 
     contents = table.to_csv()
 
+    assert (
+        contents
+        == """Item Description,Quantity,Price,Amount
+"""
+    )
+
+
+def test_table_to_csv_with_empty_header_rows(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
+    )
+    table.header_rows = None
+
+    contents = table.to_csv()
+
+    assert (
+        contents
+        == """,,,
+Tool A,500,$1.00,$500.00
+Service B,1,$900.00,$900.00
+Resource C,50,$12.00,$600.00
+,,Subtotal,$2000.00
+,,Tax,$140.00
+,,BALANCE DUE,$2140.00
+"""
+    )
+
+
+def test_table_to_csv_with_empty_header_rows_and_single_body(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
+    )
+    table.header_rows = []
+    table.body_rows = [[table.body_rows[0][0]]]
+
+    contents = table.to_csv()
     assert (
         contents
         == """""
-This
-Is
-A
-Body
-Test
+Tool A
 """
     )
 
 
-def test_table_to_csv_with_empty_header_rows_and_single_body():
-    body_rows = [["Body"]]
-    table = page.Table(documentai_object=None, header_rows=[], body_rows=body_rows)
-
-    contents = table.to_csv()
-
-    assert (
-        contents
-        == """""
-Body
-"""
-    )
-
-
-def test_table_to_dataframe():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
+def test_table_to_dataframe(docproto):
+    docproto_page = docproto.pages[0]
     table = page.Table(
-        documentai_object=None, header_rows=header_rows, body_rows=body_rows
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
     )
     contents = table.to_dataframe()
 
-    assert len(contents.columns) == 5
-    assert len(contents.values) == 2
+    assert len(contents.columns) == 4
+    assert len(contents.values) == 6
 
 
 def test_trim_text():
@@ -246,29 +252,48 @@ def test_get_form_fields(docproto_form_parser):
 # Class init Tests
 
 
-def test_FormField():
-    docai_form_field = documentai.Document.Page.FormField()
+def test_FormField(docproto_form_parser):
+    documentai_formfield = docproto_form_parser.pages[0].form_fields[4]
     form_field = page.FormField(
-        documentai_object=docai_form_field,
-        field_name="Name:",
-        field_value="Sally Walker",
+        documentai_object=documentai_formfield,
+        document_text=docproto_form_parser.text,
     )
-    assert form_field.field_name == "Name:"
-    assert form_field.field_value == "Sally Walker"
+
+    assert form_field.field_name == "Occupation:"
+    assert form_field.field_value == "Software Engineer"
 
 
-def test_Table():
-    header_rows = [
-        ["This", "Is", "A", "Header", "Test"],
-        ["", "", "A", "Sub", "Header"],
-    ]
-    body_rows = [["This", "Is", "A", "Body", "Test"], ["1", "2", "3", "4", "5"]]
+def test_Block(docproto):
+    docai_block = docproto.pages[0].blocks[0]
+    block = page.Block(documentai_block=docai_block, document_text=docproto.text)
+
+    assert block.text == "Invoice\n"
+
+
+def test_Paragraph(docproto):
+    docai_paragraph = docproto.pages[0].paragraphs[0]
+    paragraph = page.Paragraph(
+        documentai_paragraph=docai_paragraph, document_text=docproto.text
+    )
+
+    assert paragraph.text == "Invoice\n"
+
+
+def test_Line(docproto):
+    docai_line = docproto.pages[0].lines[36]
+    line = page.Paragraph(documentai_paragraph=docai_line, document_text=docproto.text)
+
+    assert line.text == "Supplies used for Project Q.\n"
+
+
+def test_Table(docproto):
+    docproto_page = docproto.pages[0]
     table = page.Table(
-        documentai_object=None, header_rows=header_rows, body_rows=body_rows
+        documentai_table=docproto_page.tables[0], document_text=docproto.text
     )
 
-    assert len(table.body_rows) == 2
-    assert len(table.header_rows[0]) == 5
+    assert len(table.body_rows) == 6
+    assert len(table.header_rows[0]) == 4
 
 
 def test_to_hocr(docproto):
@@ -321,12 +346,18 @@ def test_get_xy(docproto):
 
 def test_Page(docproto):
     docproto_page = docproto.pages[0]
-    wrapped_page = page.Page(documentai_object=docproto_page, text=docproto.text)
+
+    wrapped_page = page.Page(documentai_object=docproto_page, document_text=docproto.text)
+
+    assert "Invoice" in wrapped_page.text
+    assert wrapped_page.page_number == 1
 
     assert len(wrapped_page.lines) == 37
     assert len(wrapped_page.paragraphs) == 31
     assert len(wrapped_page.blocks) == 31
     assert len(wrapped_page.tokens) == 86
+    assert len(wrapped_page.form_fields) == 13
+
 
     assert wrapped_page.lines[0].text == "Invoice\n"
     assert wrapped_page.lines[0].tokens[0].text == "Invoice\n"
@@ -338,6 +369,7 @@ def test_Page(docproto):
     assert wrapped_page.paragraphs[30].lines[0].tokens[0].text == "Supplies "
 
     assert wrapped_page.blocks[30].text == "Supplies used for Project Q.\n"
+
     assert (
         wrapped_page.blocks[30].paragraphs[0].text == "Supplies used for Project Q.\n"
     )
@@ -351,3 +383,7 @@ def test_Page(docproto):
     assert wrapped_page.hocr_bounding_box == "bbox 0 0 1758 2275"
     # checking cached value
     assert wrapped_page.hocr_bounding_box == "bbox 0 0 1758 2275"
+
+    assert wrapped_page.form_fields[0].field_name == "BALANCE DUE"
+    assert wrapped_page.form_fields[0].field_value == "$2140.00"
+
