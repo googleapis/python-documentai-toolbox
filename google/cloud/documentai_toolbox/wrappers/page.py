@@ -55,10 +55,10 @@ class Table:
 
     def __post_init__(self, document_text) -> None:
         self.header_rows = _table_rows_from_documentai_table_rows(
-            table_rows=list(self.documentai_table.header_rows), text=document_text
+            table_rows=list(self.documentai_object.header_rows), text=document_text
         )
         self.body_rows = _table_rows_from_documentai_table_rows(
-            table_rows=list(self.documentai_table.body_rows), text=document_text
+            table_rows=list(self.documentai_object.body_rows), text=document_text
         )
 
     def to_dataframe(self) -> pd.DataFrame:
@@ -192,7 +192,6 @@ class Line:
         return self._hocr_bounding_box
 
 
-
 @dataclasses.dataclass
 class FormField:
     """Represents a wrapped documentai.Document.Page.FormField.
@@ -200,6 +199,8 @@ class FormField:
     Attributes:
         documentai_object (google.cloud.documentai.Document.Page.FormField):
             Required. The original google.cloud.documentai.Document.Page.FormField object.
+        document_text (str):
+            Required. UTF-8 encoded text in reading order from the document.
         field_name (str):
             Required. The form field name
         field_value (str):
@@ -207,8 +208,18 @@ class FormField:
     """
 
     documentai_object: documentai.Document.Page.FormField
-    field_name: str
-    field_value: str
+    document_text: dataclasses.InitVar[str]
+
+    field_name: str = dataclasses.field(init=False)
+    field_value: str = dataclasses.field(init=False)
+
+    def __post_init__(self, document_text) -> None:
+        self.field_name = _trim_text(
+            _text_from_layout(self.documentai_object.field_name, document_text)
+        )
+        self.field_value = _trim_text(
+            _text_from_layout(self.documentai_object.field_value, document_text)
+        )
 
 
 @dataclasses.dataclass
@@ -293,36 +304,33 @@ class Block:
         return self._hocr_bounding_box
 
 
-def _table_wrapper_from_documentai_object(
-    documentai_object: documentai.Document.Page.Table, text: str
-) -> Table:
-    r"""Returns a Table.
+def _table_rows_from_documentai_table_rows(
+    table_rows: List[documentai.Document.Page.Table.TableRow], text: str
+) -> List[List[str]]:
+    r"""Returns a list of rows from table_rows.
 
     Args:
-        documentai_object (documentai.Document.Page.Table):
-            Required. A documentai.Document.Page.Table.
+        table_rows (List[documentai.Document.Page.Table.TableRow]):
+            Required. A documentai.Document.Page.Table.TableRow.
         text (str):
             Required. UTF-8 encoded text in reading order
             from the document.
 
     Returns:
-        Table:
-            A Table.
-
+        List[List[str]]:
+            A list of table rows.
     """
+    body_rows: List[List[str]] = []
+    for row in table_rows:
+        row_text = []
 
-    header_rows = _table_rows_from_documentai_object_rows(
-        table_rows=list(documentai_object.header_rows), text=text
-    )
-    body_rows = _table_rows_from_documentai_object_rows(
-        table_rows=list(documentai_object.body_rows), text=text
-    )
+        for cell in row.cells:
+            row_text.append(
+                _text_from_layout(layout=cell.layout, text=text).replace("\n", "")
+            )
 
-    return Table(
-        documentai_object=documentai_object,
-        body_rows=body_rows,
-        header_rows=header_rows,
-    )
+        body_rows.append(row_text)
+    return body_rows
 
 
 def _get_xy(
@@ -407,7 +415,6 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
         result_text += text[int(text_segment.start_index) : int(text_segment.end_index)]
 
     return result_text
-
 
 
 def _get_children_of_element(element: ElementWithLayout, children: ChildrenElements):
@@ -562,66 +569,6 @@ def _trim_text(text: str) -> str:
     return text.strip().replace("\n", " ")
 
 
-def _get_form_fields(
-    form_fields: List[documentai.Document.Page.FormField], text: str
-) -> List[FormField]:
-    r"""Returns a list of FormField.
-
-    Args:
-        form_fields (List[documentai.Document.Page.FormField]):
-            Required. A list of documentai.Document.Page.FormField objects.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-    Returns:
-        List[FormField]:
-            A list of FormFields.
-    """
-    result = []
-
-    for form_field in form_fields:
-        result.append(
-            FormField(
-                documentai_object=form_field,
-                field_name=_trim_text(_text_from_layout(form_field.field_name, text)),
-                field_value=_trim_text(
-                    _text_from_layout(form_field.field_value, text),
-                ),
-            )
-        )
-
-    return result
-
-
-def _table_rows_from_documentai_object_rows(
-    table_rows: List[documentai.Document.Page.Table.TableRow], text: str
-) -> List[List[str]]:
-    r"""Returns a list of rows from table_rows.
-
-    Args:
-        table_rows (List[documentai.Document.Page.Table.TableRow]):
-            Required. A documentai.Document.Page.Table.TableRow.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-
-    Returns:
-        List[List[str]]:
-            A list of table rows.
-    """
-    body_rows: List[List[str]] = []
-    for row in table_rows:
-        row_text = []
-
-        for cell in row.cells:
-            row_text.append(
-                _text_from_layout(layout=cell.layout, text=text).replace("\n", "")
-            )
-
-        body_rows.append(row_text)
-    return body_rows
-
-
 @dataclasses.dataclass
 class Page:
     """Represents a wrapped documentai.Document.Page .
@@ -655,9 +602,8 @@ class Page:
             page.
     """
 
-
     documentai_object: documentai.Document.Page = dataclasses.field(repr=False)
-    document_text: dataclasses.InitVar[str]
+    document_text: str = dataclasses.field(repr=False)
 
     text: str = dataclasses.field(init=False, repr=False)
     page_number: int = dataclasses.field(init=False, repr=False)
@@ -668,8 +614,11 @@ class Page:
     tables: List[Table] = dataclasses.field(init=False, repr=False)
     _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
-
     def __post_init__(self):
+        self.text = _text_from_layout(
+            self.documentai_object.layout, text=self.document_text
+        )
+        self.page_number = int(self.documentai_object.page_number)
         tables = []
         """
         Order of Init
@@ -680,14 +629,13 @@ class Page:
         """
         for table in self.documentai_object.tables:
             tables.append(
-                _table_wrapper_from_documentai_object(
-                    documentai_object=table, text=self.text
-                )
+                Table(documentai_object=table, document_text=self.document_text)
             )
 
-        self.form_fields = _get_form_fields(
-            form_fields=self.documentai_object.form_fields, text=self.text
-        )
+        self.form_fields = [
+            FormField(documentai_object=form_field, document_text=self.document_text)
+            for form_field in self.documentai_object.form_fields
+        ]
 
         self.tokens = _get_tokens(tokens=self.documentai_object.tokens, page=self)
         self.lines = _get_lines(lines=self.documentai_object.lines, page=self)
@@ -737,4 +685,3 @@ class Page:
                 dimension=self.documentai_object.dimension,
             )
         return self._hocr_bounding_box
-      

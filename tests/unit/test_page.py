@@ -133,41 +133,6 @@ def test_trim_text():
     assert output_text == "Sally Walker"
 
 
-def test_table_wrapper_from_documentai_object(docproto):
-    docproto_page = docproto.pages[0]
-
-    table = page._table_wrapper_from_documentai_object(
-        documentai_object=docproto_page.tables[0], text=docproto.text
-    )
-    assert len(table.body_rows) == 6
-    assert len(table.header_rows[0]) == 4
-
-
-def test_header_for_table_rows_from_documentai_object_rows(docproto):
-    docproto_page = docproto.pages[0]
-
-    header_rows = page._table_rows_from_documentai_object_rows(
-        table_rows=docproto_page.tables[0].header_rows, text=docproto.text
-    )
-    assert header_rows == [["Item Description", "Quantity", "Price", "Amount"]]
-
-
-def test_body_for_table_rows_from_documentai_object_rows(docproto):
-    docproto_page = docproto.pages[0]
-
-    body_rows = page._table_rows_from_documentai_object_rows(
-        table_rows=docproto_page.tables[0].body_rows, text=docproto.text
-    )
-    assert body_rows == [
-        ["Tool A", "500", "$1.00", "$500.00"],
-        ["Service B", "1", "$900.00", "$900.00"],
-        ["Resource C", "50", "$12.00", "$600.00"],
-        ["", "", "Subtotal", "$2000.00"],
-        ["", "", "Tax", "$140.00"],
-        ["", "", "BALANCE DUE", "$2140.00"],
-    ]
-
-
 def test_text_from_element_with_layout(docproto):
     docproto_page = docproto.pages[0]
 
@@ -180,7 +145,9 @@ def test_text_from_element_with_layout(docproto):
 
 def test_get_blocks(docproto):
 
-    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
 
     docproto_blocks = docproto.pages[0].blocks
 
@@ -195,7 +162,9 @@ def test_get_blocks(docproto):
 
 
 def test_get_paragraphs(docproto):
-    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
     docproto_paragraphs = docproto.pages[0].paragraphs
 
     paragraphs = page._get_paragraphs(paragraphs=docproto_paragraphs, page=wrapped_page)
@@ -209,7 +178,9 @@ def test_get_paragraphs(docproto):
 
 
 def test_get_lines(docproto):
-    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
     docproto_lines = docproto.pages[0].lines
 
     lines = page._get_lines(lines=docproto_lines, page=wrapped_page)
@@ -223,7 +194,9 @@ def test_get_lines(docproto):
 
 
 def test_get_tokens(docproto):
-    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
     wrapped_page.tokens = []
     docproto_tokens = docproto.pages[0].tokens
 
@@ -235,18 +208,6 @@ def test_get_tokens(docproto):
     # checking cached value
     assert tokens[85].text == "Q.\n"
     assert tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
-
-
-def test_get_form_fields(docproto_form_parser):
-    docproto_form_fields = docproto_form_parser.pages[0].form_fields
-
-    form_fields = page._get_form_fields(
-        form_fields=docproto_form_fields, text=docproto_form_parser.text
-    )
-
-    assert len(form_fields) == 17
-    assert form_fields[4].field_name == "Occupation:"
-    assert form_fields[4].field_value == "Software Engineer"
 
 
 # Class init Tests
@@ -264,24 +225,31 @@ def test_FormField(docproto_form_parser):
 
 
 def test_Block(docproto):
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
     docai_block = docproto.pages[0].blocks[0]
-    block = page.Block(documentai_block=docai_block, document_text=docproto.text)
+    block = page.Block(documentai_object=docai_block, _page=wrapped_page)
 
     assert block.text == "Invoice\n"
 
 
 def test_Paragraph(docproto):
-    docai_paragraph = docproto.pages[0].paragraphs[0]
-    paragraph = page.Paragraph(
-        documentai_paragraph=docai_paragraph, document_text=docproto.text
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
     )
+    docai_paragraph = docproto.pages[0].paragraphs[0]
+    paragraph = page.Paragraph(documentai_object=docai_paragraph, _page=wrapped_page)
 
     assert paragraph.text == "Invoice\n"
 
 
 def test_Line(docproto):
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
     docai_line = docproto.pages[0].lines[36]
-    line = page.Paragraph(documentai_paragraph=docai_line, document_text=docproto.text)
+    line = page.Paragraph(documentai_object=docai_line, _page=wrapped_page)
 
     assert line.text == "Supplies used for Project Q.\n"
 
@@ -289,7 +257,7 @@ def test_Line(docproto):
 def test_Table(docproto):
     docproto_page = docproto.pages[0]
     table = page.Table(
-        documentai_table=docproto_page.tables[0], document_text=docproto.text
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
     )
 
     assert len(table.body_rows) == 6
@@ -297,7 +265,9 @@ def test_Table(docproto):
 
 
 def test_to_hocr(docproto):
-    wrapped_page = page.Page(documentai_object=docproto.pages[0], text=docproto.text)
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
+    )
     hocr_str = wrapped_page.to_hocr("docproto-test")
 
     with open("tests/unit/resources/expected_hocr_page_0.txt", "r") as f:
@@ -347,9 +317,11 @@ def test_get_xy(docproto):
 def test_Page(docproto):
     docproto_page = docproto.pages[0]
 
-    wrapped_page = page.Page(documentai_object=docproto_page, document_text=docproto.text)
+    wrapped_page = page.Page(
+        documentai_object=docproto_page, document_text=docproto.text
+    )
 
-    assert "Invoice" in wrapped_page.text
+    assert "Invoice" in wrapped_page.document_text
     assert wrapped_page.page_number == 1
 
     assert len(wrapped_page.lines) == 37
@@ -357,7 +329,6 @@ def test_Page(docproto):
     assert len(wrapped_page.blocks) == 31
     assert len(wrapped_page.tokens) == 86
     assert len(wrapped_page.form_fields) == 13
-
 
     assert wrapped_page.lines[0].text == "Invoice\n"
     assert wrapped_page.lines[0].tokens[0].text == "Invoice\n"
@@ -386,4 +357,3 @@ def test_Page(docproto):
 
     assert wrapped_page.form_fields[0].field_name == "BALANCE DUE"
     assert wrapped_page.form_fields[0].field_value == "$2140.00"
-

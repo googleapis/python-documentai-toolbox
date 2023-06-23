@@ -86,7 +86,7 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
     result = []
     for shard in shards:
         for shard_page in shard.pages:
-          result.append(Page(documentai_object=shard_page, document_text=shard.text))
+            result.append(Page(documentai_object=shard_page, document_text=shard.text))
 
     if len(result) > 1 and result[0].page_number:
         result.sort(key=lambda x: x.page_number)
@@ -755,7 +755,7 @@ class Document:
         index = 0
         for entity in self.entities:
             image = entity.crop_image(
-                documentai_page=self.pages[entity.start_page].documentai_page
+                documentai_page=self.pages[entity.start_page].documentai_object
             )
             if not image:
                 continue
