@@ -17,7 +17,7 @@
 
 import dataclasses
 import html
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
 
@@ -140,8 +140,7 @@ class Token:
 
     @property
     def hocr_bounding_box(self):
-        print(self._hocr_bounding_box)
-        if self._hocr_bounding_box is None:
+        if not self._hocr_bounding_box:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -184,7 +183,7 @@ class Line:
 
     @property
     def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
+        if not self._hocr_bounding_box:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -255,7 +254,7 @@ class Paragraph:
 
     @property
     def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
+        if not self._hocr_bounding_box:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -296,7 +295,7 @@ class Block:
 
     @property
     def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
+        if not self._hocr_bounding_box:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -338,8 +337,8 @@ def _get_xy(
     dimension: documentai.Document.Page.Dimension,
     normalized: bool = False,
     min: bool = False,
-):
-    r"""Returns xy coordinates corresponding to element.
+) -> Tuple[int, int]:
+    r"""Returns hocr xy coordinates corresponding to elements bounding box.
 
     Args:
         element (ElementWithLayout):
@@ -352,8 +351,8 @@ def _get_xy(
             Required. Wether xy should be min
 
     Returns:
-        tuplil(int,int):
-            xy coordinates corresponding to element.
+        Tuple[int, int]:
+            hocr xy coordinates corresponding to elements bounding box.
     """
     index = 0 if min else 2
     if not normalized:
@@ -391,7 +390,7 @@ def _get_hocr_bounding_box(
         min_x, min_y = _get_xy(element_with_layout, dimension, True, True)
         max_x, max_y = _get_xy(element_with_layout, dimension, True, False)
 
-    return f"bbox {int(min_x)} {int(min_y)} {int(max_x)} {int(max_y)}"
+    return f"bbox {min_x} {min_y} {max_x} {max_y}"
 
 
 def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str:
@@ -615,11 +614,6 @@ class Page:
     _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self):
-        self.text = _text_from_layout(
-            self.documentai_object.layout, text=self.document_text
-        )
-        self.page_number = int(self.documentai_object.page_number)
-        tables = []
         """
         Order of Init
         Token
@@ -627,10 +621,16 @@ class Page:
         Paragraph,
         Block
         """
-        for table in self.documentai_object.tables:
-            tables.append(
-                Table(documentai_object=table, document_text=self.document_text)
-            )
+
+        self.text = _text_from_layout(
+            self.documentai_object.layout, text=self.document_text
+        )
+        self.page_number = int(self.documentai_object.page_number)
+
+        self.tables = [
+            Table(documentai_object=table, document_text=self.document_text)
+            for table in self.documentai_object.tables
+        ]
 
         self.form_fields = [
             FormField(documentai_object=form_field, document_text=self.document_text)
@@ -646,7 +646,6 @@ class Page:
             blocks=self.documentai_object.blocks,
             page=self,
         )
-        self.tables = tables
 
     def to_hocr(self, title):
         r"""Exports a string hOCR version of the documentai.Document.Page.
@@ -679,7 +678,7 @@ class Page:
 
     @property
     def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
+        if not self._hocr_bounding_box:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self.documentai_object.dimension,

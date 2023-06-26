@@ -270,7 +270,7 @@ def test_to_hocr(docproto):
     )
     hocr_str = wrapped_page.to_hocr("docproto-test")
 
-    with open("tests/unit/resources/expected_hocr_page_0.txt", "r") as f:
+    with open("tests/unit/resources/toolbox_invoice_test_page_hocr.xml", "r") as f:
         expected = f.read()
 
     assert hocr_str == expected

@@ -655,7 +655,7 @@ def test_export_hocr_str():
 
     actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
 
-    with open("tests/unit/resources/expected_export_hocr_str.txt", "r") as f:
+    with open("tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r") as f:
         expected = f.read()
 
     assert actual_hocr == expected
