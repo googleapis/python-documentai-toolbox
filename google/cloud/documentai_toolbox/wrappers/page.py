@@ -140,7 +140,7 @@ class Token:
 
     @property
     def hocr_bounding_box(self):
-        if not self._hocr_bounding_box:
+        if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -183,7 +183,7 @@ class Line:
 
     @property
     def hocr_bounding_box(self):
-        if not self._hocr_bounding_box:
+        if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -254,7 +254,7 @@ class Paragraph:
 
     @property
     def hocr_bounding_box(self):
-        if not self._hocr_bounding_box:
+        if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -295,7 +295,7 @@ class Block:
 
     @property
     def hocr_bounding_box(self):
-        if not self._hocr_bounding_box:
+        if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self._page.documentai_object.dimension,
@@ -647,12 +647,16 @@ class Page:
             page=self,
         )
 
-    def to_hocr(self, title):
+    def to_hocr(self):
         r"""Exports a string hOCR version of the documentai.Document.Page.
 
+        The format for the id of the object follows as such:
+            object_{page_index}_...
+
+        For example words will have the following id format:
+            word_{page_index}_{block_index}_{paragraph_index}_{line_index}_{word_index}
+
         Args:
-            title (str):
-                Required. The title for ocr_page.
 
         Returns:
             str:
@@ -660,7 +664,7 @@ class Page:
         """
         f = ""
         pidx = self.documentai_object.page_number
-        f += f"<div class='ocr_page' lang='unknown' title='image \"{title}\";{self.hocr_bounding_box}'>"
+        f += f"<div class='ocr_page' lang='unknown' title='{self.hocr_bounding_box}'>"
         for bidx, block in enumerate(self.blocks):
             f += f"<span class='ocr_carea' id='block_{pidx}_{bidx}' title='{block.hocr_bounding_box}'>"
             for paridx, paragraph in enumerate(block.paragraphs):
@@ -678,7 +682,7 @@ class Page:
 
     @property
     def hocr_bounding_box(self):
-        if not self._hocr_bounding_box:
+        if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
                 dimension=self.documentai_object.dimension,

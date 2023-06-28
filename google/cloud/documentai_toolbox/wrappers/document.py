@@ -786,7 +786,7 @@ class Document:
         hocr_pages = ""
         number_of_pages = len(self.pages)
         for page_to_export in self.pages:
-            hocr_pages += page_to_export.to_hocr(title=title)
+            hocr_pages += page_to_export.to_hocr()
 
         content = template.render(
             hocr_pages=hocr_pages, number_of_pages=number_of_pages, title=title
