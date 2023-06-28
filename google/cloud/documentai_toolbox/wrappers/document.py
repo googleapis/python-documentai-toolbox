@@ -43,6 +43,8 @@ from google.longrunning.operations_pb2 import GetOperationRequest, Operation
 
 from pikepdf import Pdf
 
+from jinja2 import Environment, FileSystemLoader
+
 
 def _entities_from_shards(
     shards: List[documentai.Document],
@@ -779,21 +781,15 @@ class Document:
             str:
                 A string hOCR version of the Document
         """
-        f = ""
-        f += '<?xml version="1.0" encoding="UTF-8"?>'
-        f += '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
-        f += '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="unknown" lang="unknown">'
-        f += "<head>"
-        f += f"<title>{title}</title>"
-        f += '<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />'
-        f += '<meta name="ocr-system" content="Document AI OCR" />'
-        f += '<meta name="ocr-langs" content="unknown" />'
-        f += f'<meta name="ocr-number-of-pages" content="{len(self.pages)}" />'
-        f += '<meta name="ocr-capabilities" content="ocr_page ocr_carea ocr_par ocr_line ocrx_word" />'
-        f += "</head>"
-        f += "<body>"
+        environment = Environment(loader=FileSystemLoader("templates/"))
+        template = environment.get_template("hocr_xml_template.txt")
+        hocr_pages = ""
+        number_of_pages = len(self.pages)
         for page_to_export in self.pages:
-            f += page_to_export.to_hocr(title=title)
-        f += "</body>"
-        f += "</html>"
-        return f
+            hocr_pages += page_to_export.to_hocr(title=title)
+
+        content = template.render(
+            hocr_pages=hocr_pages, number_of_pages=number_of_pages, title=title
+        )
+
+        return content
