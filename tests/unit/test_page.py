@@ -268,7 +268,7 @@ def test_to_hocr(docproto):
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], document_text=docproto.text
     )
-    hocr_str = wrapped_page.to_hocr("docproto-test")
+    hocr_str = wrapped_page.to_hocr()
 
     with open("tests/unit/resources/toolbox_invoice_test_page_hocr.xml", "r") as f:
         expected = f.read()
