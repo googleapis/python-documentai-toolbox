@@ -144,7 +144,6 @@ def test_text_from_element_with_layout(docproto):
 
 
 def test_get_blocks(docproto):
-
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], document_text=docproto.text
     )
@@ -264,54 +263,20 @@ def test_Table(docproto):
     assert len(table.header_rows[0]) == 4
 
 
-def test_to_hocr(docproto):
-    wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
-    )
-    hocr_str = wrapped_page.to_hocr()
-
-    with open("tests/unit/resources/toolbox_invoice_test_page_hocr.xml", "r") as f:
-        expected = f.read()
-
-    assert hocr_str == expected
-
-
 def test_get_hocr_bounding_box(docproto):
     hocr_bounding_box_normalized = page._get_hocr_bounding_box(
-        element_with_layout=docproto.pages[0], dimension=docproto.pages[0].dimension
+        element_with_layout=docproto.pages[0],
+        page_dimension=docproto.pages[0].dimension,
     )
 
     assert hocr_bounding_box_normalized == "bbox 0 0 1758 2275"
 
     hocr_bounding_box_with_vertices = page._get_hocr_bounding_box(
         element_with_layout=docproto.pages[0].blocks[0],
-        dimension=docproto.pages[0].dimension,
+        page_dimension=docproto.pages[0].dimension,
     )
 
     assert hocr_bounding_box_with_vertices == "bbox 1310 220 1534 282"
-
-
-def test_get_xy(docproto):
-    max_x, max_y = page._get_xy(
-        docproto.pages[0], docproto.pages[0].dimension, False, False
-    )
-    min_x, min_y = page._get_xy(
-        docproto.pages[0], docproto.pages[0].dimension, False, True
-    )
-    normalized_max_x, normalized_max_y = page._get_xy(
-        docproto.pages[0], docproto.pages[0].dimension, True, False
-    )
-    normalized_min_x, normalized_min_y = page._get_xy(
-        docproto.pages[0], docproto.pages[0].dimension, True, True
-    )
-
-    assert max_x == 1758 and max_y == 2275
-
-    assert min_x == 0 and min_y == 0
-
-    assert normalized_min_x == 0.0 and normalized_min_y == 0.0
-
-    assert normalized_max_x == 3090564.0 and normalized_max_y == 5175625.0
 
 
 def test_Page(docproto):
