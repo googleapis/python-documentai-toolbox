@@ -16,11 +16,11 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
-from typing import List, Optional, Tuple, Union
-
-from google.cloud.documentai_toolbox.constants import ElementWithLayout
+from typing import List, Optional, Union
 
 from google.cloud import documentai
+from google.cloud.documentai_toolbox.constants import ElementWithLayout
+
 import pandas as pd
 
 ChildrenElements = Union[
@@ -112,6 +112,36 @@ class Table:
 
 
 @dataclasses.dataclass
+class FormField:
+    """Represents a wrapped documentai.Document.Page.FormField.
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.FormField):
+            Required. The original google.cloud.documentai.Document.Page.FormField object.
+        document_text (str):
+            Required. UTF-8 encoded text in reading order from the document.
+        field_name (str):
+            Required. The form field name
+        field_value (str):
+            Required. The form field value
+    """
+
+    documentai_object: documentai.Document.Page.FormField
+    document_text: dataclasses.InitVar[str]
+
+    field_name: str = dataclasses.field(init=False)
+    field_value: str = dataclasses.field(init=False)
+
+    def __post_init__(self, document_text) -> None:
+        self.field_name = _trim_text(
+            _text_from_layout(self.documentai_object.field_name, document_text)
+        )
+        self.field_value = _trim_text(
+            _text_from_layout(self.documentai_object.field_value, document_text)
+        )
+
+
+@dataclasses.dataclass
 class Token:
     """Represents a wrapped documentai.Document.Page.
     .
@@ -188,36 +218,6 @@ class Line:
                 page_dimension=self._page.documentai_object.dimension,
             )
         return self._hocr_bounding_box
-
-
-@dataclasses.dataclass
-class FormField:
-    """Represents a wrapped documentai.Document.Page.FormField.
-
-    Attributes:
-        documentai_object (google.cloud.documentai.Document.Page.FormField):
-            Required. The original google.cloud.documentai.Document.Page.FormField object.
-        document_text (str):
-            Required. UTF-8 encoded text in reading order from the document.
-        field_name (str):
-            Required. The form field name
-        field_value (str):
-            Required. The form field value
-    """
-
-    documentai_object: documentai.Document.Page.FormField
-    document_text: dataclasses.InitVar[str]
-
-    field_name: str = dataclasses.field(init=False)
-    field_value: str = dataclasses.field(init=False)
-
-    def __post_init__(self, document_text) -> None:
-        self.field_name = _trim_text(
-            _text_from_layout(self.documentai_object.field_name, document_text)
-        )
-        self.field_value = _trim_text(
-            _text_from_layout(self.documentai_object.field_value, document_text)
-        )
 
 
 @dataclasses.dataclass
