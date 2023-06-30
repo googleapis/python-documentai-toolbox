@@ -405,118 +405,6 @@ def _get_children_of_element(element: ElementWithLayout, children: ChildrenEleme
     ]
 
 
-def _get_blocks(
-    blocks: List[documentai.Document.Page.Block], page: "Page"
-) -> List[Block]:
-    r"""Returns a list of wrapped Blocks.
-
-    Args:
-        blocks (List[documentai.Document.Page.Block]):
-            Required. A list of documentai.Document.Page.Block objects.
-        page (Page):
-            Required. The Page object.
-
-    Returns:
-        List[Block]:
-             A list of wrapped Blocks.
-    """
-    result = []
-
-    for block in blocks:
-        result.append(
-            Block(
-                documentai_object=block,
-                _page=page,
-            )
-        )
-
-    return result
-
-
-def _get_paragraphs(
-    paragraphs: List[documentai.Document.Page.Paragraph],
-    page: "Page",
-) -> List[Paragraph]:
-    r"""Returns a list of wrapped Paragraphs.
-
-    Args:
-        paragraphs (List[documentai.Document.Page.Paragraph]):
-            Required. A list of documentai.Document.Page.Paragraph objects.
-        page (Page):
-            Required. The Page object.
-
-    Returns:
-        List[Paragraph]:
-             A list of wrapped Paragraphs.
-    """
-    result = []
-
-    for paragraph in paragraphs:
-        result.append(
-            Paragraph(
-                documentai_object=paragraph,
-                _page=page,
-            )
-        )
-
-    return result
-
-
-def _get_tokens(
-    tokens: List[documentai.Document.Page.Token], page: "Page"
-) -> List[Token]:
-    r"""Returns a list of wrapped tokens.
-
-    Args:
-        tokens (List[documentai.Document.Page.Token]):
-            Required. A list of documentai.Document.Page.Token.
-        page (Page):
-            Required. The Page object.
-
-    Returns:
-        List[Token]:
-            A list of wrapped tokens.
-    """
-    result = []
-
-    for token in tokens:
-        result.append(
-            Token(
-                documentai_object=token,
-                _page=page,
-            )
-        )
-
-    return result
-
-
-def _get_lines(lines: List[documentai.Document.Page.Line], page: "Page") -> List[Line]:
-    r"""Returns a list of wrapped lines.
-
-    Args:
-        lines (List[documentai.Document.Page.Line]):
-            Required. A list of documentai.Document.Page.Line objects.
-        page (Page):
-            Required. The Page object.
-
-    Returns:
-        List[Line]:
-            A list of wrapped Lines.
-    """
-
-    result = []
-
-    for line in lines:
-        result.append(
-            Line(
-                documentai_object=line,
-                _page=page,
-            )
-        )
-
-    return result
-
-
 def _trim_text(text: str) -> str:
     r"""Remove extra space characters from text (blank, newline, tab, etc.)
 
@@ -600,15 +488,28 @@ class Page:
             for form_field in self.documentai_object.form_fields
         ]
 
-        self.tokens = _get_tokens(tokens=self.documentai_object.tokens, page=self)
-        self.lines = _get_lines(lines=self.documentai_object.lines, page=self)
-        self.paragraphs = _get_paragraphs(
-            paragraphs=self.documentai_object.paragraphs, page=self
-        )
-        self.blocks = _get_blocks(
-            blocks=self.documentai_object.blocks,
-            page=self,
-        )
+        self.tokens = [
+            Token(
+                documentai_object=token,
+                _page=self,
+            )
+            for token in self.documentai_object.tokens
+        ]
+
+        self.lines = [
+            Line(documentai_object=line, _page=self)
+            for line in self.documentai_object.lines
+        ]
+
+        self.paragraphs = [
+            Paragraph(documentai_object=paragraph, _page=self)
+            for paragraph in self.documentai_object.paragraphs
+        ]
+
+        self.blocks = [
+            Block(documentai_object=block, _page=self)
+            for block in self.documentai_object.blocks
+        ]
 
     @property
     def hocr_bounding_box(self):

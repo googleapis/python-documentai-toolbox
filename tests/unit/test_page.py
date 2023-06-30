@@ -143,73 +143,33 @@ def test_text_from_element_with_layout(docproto):
     assert text == "Invoice\n"
 
 
-def test_get_blocks(docproto):
-    wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
+def test_get_hocr_bounding_box(docproto):
+    hocr_bounding_box_normalized = page._get_hocr_bounding_box(
+        element_with_layout=docproto.pages[0],
+        page_dimension=docproto.pages[0].dimension,
     )
 
-    docproto_blocks = docproto.pages[0].blocks
+    assert hocr_bounding_box_normalized == "bbox 0 0 1758 2275"
 
-    blocks = page._get_blocks(blocks=docproto_blocks, page=wrapped_page)
-
-    assert len(blocks) == 31
-    assert blocks[0].text == "Invoice\n"
-    assert blocks[0].hocr_bounding_box == "bbox 1310 220 1534 282"
-    # checking cached value
-    assert blocks[0].text == "Invoice\n"
-    assert blocks[0].hocr_bounding_box == "bbox 1310 220 1534 282"
-
-
-def test_get_paragraphs(docproto):
-    wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
+    hocr_bounding_box_with_vertices = page._get_hocr_bounding_box(
+        element_with_layout=docproto.pages[0].blocks[0],
+        page_dimension=docproto.pages[0].dimension,
     )
-    docproto_paragraphs = docproto.pages[0].paragraphs
 
-    paragraphs = page._get_paragraphs(paragraphs=docproto_paragraphs, page=wrapped_page)
-
-    assert len(paragraphs) == 31
-    assert paragraphs[0].text == "Invoice\n"
-    assert paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
-    # checking cached value
-    assert paragraphs[0].text == "Invoice\n"
-    assert paragraphs[0].hocr_bounding_box == "bbox 1310 220 1534 282"
-
-
-def test_get_lines(docproto):
-    wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
-    )
-    docproto_lines = docproto.pages[0].lines
-
-    lines = page._get_lines(lines=docproto_lines, page=wrapped_page)
-
-    assert len(lines) == 37
-    assert lines[36].text == "Supplies used for Project Q.\n"
-    assert lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
-    # checking cached value
-    assert lines[36].text == "Supplies used for Project Q.\n"
-    assert lines[36].hocr_bounding_box == "bbox 223 1781 620 1818"
-
-
-def test_get_tokens(docproto):
-    wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
-    )
-    wrapped_page.tokens = []
-    docproto_tokens = docproto.pages[0].tokens
-
-    tokens = page._get_tokens(tokens=docproto_tokens, page=wrapped_page)
-
-    assert len(tokens) == 86
-    assert tokens[85].text == "Q.\n"
-    assert tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
-    # checking cached value
-    assert tokens[85].text == "Q.\n"
-    assert tokens[85].hocr_bounding_box == "bbox 585 1781 620 1818"
+    assert hocr_bounding_box_with_vertices == "bbox 1310 220 1534 282"
 
 
 # Class init Tests
+
+
+def test_Table(docproto):
+    docproto_page = docproto.pages[0]
+    table = page.Table(
+        documentai_object=docproto_page.tables[0], document_text=docproto.text
+    )
+
+    assert len(table.body_rows) == 6
+    assert len(table.header_rows[0]) == 4
 
 
 def test_FormField(docproto_form_parser):
@@ -231,6 +191,10 @@ def test_Block(docproto):
     block = page.Block(documentai_object=docai_block, _page=wrapped_page)
 
     assert block.text == "Invoice\n"
+    assert block.hocr_bounding_box == "bbox 1310 220 1534 282"
+    # checking cached value
+    assert block.text == "Invoice\n"
+    assert block.hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
 def test_Paragraph(docproto):
@@ -241,6 +205,10 @@ def test_Paragraph(docproto):
     paragraph = page.Paragraph(documentai_object=docai_paragraph, _page=wrapped_page)
 
     assert paragraph.text == "Invoice\n"
+    assert paragraph.hocr_bounding_box == "bbox 1310 220 1534 282"
+    # checking cached value
+    assert paragraph.text == "Invoice\n"
+    assert paragraph.hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
 def test_Line(docproto):
@@ -248,35 +216,27 @@ def test_Line(docproto):
         documentai_object=docproto.pages[0], document_text=docproto.text
     )
     docai_line = docproto.pages[0].lines[36]
-    line = page.Paragraph(documentai_object=docai_line, _page=wrapped_page)
+    line = page.Line(documentai_object=docai_line, _page=wrapped_page)
 
     assert line.text == "Supplies used for Project Q.\n"
+    assert line.hocr_bounding_box == "bbox 223 1781 620 1818"
+    # checking cached value
+    assert line.text == "Supplies used for Project Q.\n"
+    assert line.hocr_bounding_box == "bbox 223 1781 620 1818"
 
 
-def test_Table(docproto):
-    docproto_page = docproto.pages[0]
-    table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+def test_Token(docproto):
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], document_text=docproto.text
     )
+    docai_token = docproto.pages[0].tokens[85]
+    token = page.Token(documentai_object=docai_token, _page=wrapped_page)
 
-    assert len(table.body_rows) == 6
-    assert len(table.header_rows[0]) == 4
-
-
-def test_get_hocr_bounding_box(docproto):
-    hocr_bounding_box_normalized = page._get_hocr_bounding_box(
-        element_with_layout=docproto.pages[0],
-        page_dimension=docproto.pages[0].dimension,
-    )
-
-    assert hocr_bounding_box_normalized == "bbox 0 0 1758 2275"
-
-    hocr_bounding_box_with_vertices = page._get_hocr_bounding_box(
-        element_with_layout=docproto.pages[0].blocks[0],
-        page_dimension=docproto.pages[0].dimension,
-    )
-
-    assert hocr_bounding_box_with_vertices == "bbox 1310 220 1534 282"
+    assert token.text == "Q.\n"
+    assert token.hocr_bounding_box == "bbox 585 1781 620 1818"
+    # checking cached value
+    assert token.text == "Q.\n"
+    assert token.hocr_bounding_box == "bbox 585 1781 620 1818"
 
 
 def test_Page(docproto):
