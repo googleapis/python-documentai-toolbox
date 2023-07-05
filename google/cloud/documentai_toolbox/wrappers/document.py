@@ -51,10 +51,16 @@ def _entities_from_shards(
     # Needed to load the correct page index for sharded documents.
     page_offset = 0
     for shard in shards:
-        for entity in shard.entities:
-            result.append(Entity(documentai_entity=entity, page_offset=page_offset))
-            for prop in entity.properties:
-                result.append(Entity(documentai_entity=prop, page_offset=page_offset))
+        entities = [
+            Entity(documentai_entity=entity, page_offset=page_offset)
+            for entity in shard.entities
+        ]
+        properties = [
+            Entity(documentai_entity=prop, page_offset=page_offset)
+            for entity in shard.entities
+            for prop in entity.properties
+        ]
+        result.extend(entities + properties)
         page_offset += len(shard.pages)
 
     if len(result) > 1 and result[0].documentai_entity.id:
@@ -73,10 +79,11 @@ def _pages_from_shards(shards: List[documentai.Document]) -> List[Page]:
         List[Page]:
             A list of Pages.
     """
-    result = []
-    for shard in shards:
-        for shard_page in shard.pages:
-            result.append(Page(documentai_object=shard_page, document_text=shard.text))
+    result = [
+        Page(documentai_object=shard_page, document_text=shard.text)
+        for shard in shards
+        for shard_page in shard.pages
+    ]
 
     if len(result) > 1 and result[0].page_number:
         result.sort(key=lambda x: x.page_number)
@@ -100,55 +107,31 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
             A list of documentai.Documents.
 
     """
-    shards = []
-
     file_check = re.match(constants.FILE_CHECK_REGEX, gcs_prefix)
-
     if file_check is not None:
         raise ValueError("gcs_prefix cannot contain file types")
 
     byte_array = gcs_utilities.get_bytes(gcs_bucket_name, gcs_prefix)
-
-    for byte in byte_array:
-        shards.append(documentai.Document.from_json(byte, ignore_unknown_fields=True))
+    shards = [
+        documentai.Document.from_json(byte, ignore_unknown_fields=True)
+        for byte in byte_array
+    ]
 
     if not shards:
         raise ValueError("Incomplete Document - No JSON files found.")
 
     total_shards = len(shards)
 
-    if total_shards == 1:
-        return shards
+    if total_shards > 1:
+        shards.sort(key=lambda x: int(x.shard_info.shard_index))
 
-    shards.sort(key=lambda x: int(x.shard_info.shard_index))
-
-    for shard in shards:
-        if int(shard.shard_info.shard_count) != total_shards:
-            raise ValueError(
-                f"Invalid Document - shardInfo.shardCount ({shard.shard_info.shard_count}) does not match number of shards ({total_shards})."
-            )
+        for shard in shards:
+            if int(shard.shard_info.shard_count) != total_shards:
+                raise ValueError(
+                    f"Invalid Document - shardInfo.shardCount ({shard.shard_info.shard_count}) does not match number of shards ({total_shards})."
+                )
 
     return shards
-
-
-def _text_from_shards(shards: List[documentai.Document]) -> str:
-    r"""Gets text from shards.
-
-    Args:
-        shards (List[google.cloud.documentai.Document]):
-            Required. List of document shards.
-    Returns:
-        str:
-            Text in all shards.
-    """
-    total_text = ""
-    for shard in shards:
-        if total_text == "":
-            total_text = shard.text
-        elif total_text != shard.text:
-            total_text += shard.text
-
-    return total_text
 
 
 def _get_batch_process_metadata(
@@ -348,7 +331,7 @@ class Document:
     def __post_init__(self):
         self.pages = _pages_from_shards(shards=self.shards)
         self.entities = _entities_from_shards(shards=self.shards)
-        self.text = _text_from_shards(shards=self.shards)
+        self.text = "".join(shard.text for shard in self.shards)
 
     @classmethod
     def from_document_path(
@@ -517,19 +500,18 @@ class Document:
                 A list of Pages.
 
         """
-        if (target_string and pattern) or (not target_string and not pattern):
+        if bool(target_string) == bool(pattern):
             raise ValueError(
                 "Exactly one of target_string and pattern must be specified."
             )
 
-        found_pages = []
-        for p in self.pages:
-            for paragraph in p.paragraphs:
-                if (target_string and target_string in paragraph.text) or (
-                    pattern and re.search(pattern, paragraph.text)
-                ):
-                    found_pages.append(p)
-                    break
+        found_pages = [
+            page
+            for page in self.pages
+            if (target_string and target_string in page.text)
+            or (pattern and re.search(pattern, page.text))
+        ]
+
         return found_pages
 
     def get_form_field_by_name(self, target_field: str) -> List[FormField]:
@@ -544,13 +526,13 @@ class Document:
                 A list of `FormField` matching `target_field`.
 
         """
-        found_fields = []
-        for p in self.pages:
-            for form_field in p.form_fields:
-                if target_field.lower() in form_field.field_name.lower():
-                    found_fields.append(form_field)
-
-        return found_fields
+        target_field = target_field.lower()
+        return [
+            form_field
+            for p in self.pages
+            for form_field in p.form_fields
+            if target_field in form_field.field_name.lower()
+        ]
 
     def form_fields_to_dict(self) -> Dict[str, Union[str, List[str]]]:
         r"""Returns dictionary of form fields in document.
@@ -665,30 +647,25 @@ class Document:
         """
         output_files: List[str] = []
         input_filename, input_extension = os.path.splitext(os.path.basename(pdf_path))
-        with Pdf.open(pdf_path) as f:
+        with Pdf.open(pdf_path) as pdf:
             for entity in self.entities:
                 subdoc_type = entity.type_ or "subdoc"
-
-                if entity.start_page == entity.end_page:
-                    page_range = f"pg{entity.start_page + 1}"
-                else:
-                    page_range = f"pg{entity.start_page + 1}-{entity.end_page + 1}"
-
+                page_range = (
+                    f"pg{entity.start_page + 1}"
+                    if entity.start_page == entity.end_page
+                    else f"pg{entity.start_page + 1}-{entity.end_page + 1}"
+                )
                 output_filename = (
                     f"{input_filename}_{page_range}_{subdoc_type}{input_extension}"
                 )
 
                 subdoc = Pdf.new()
-                for page_num in range(entity.start_page, entity.end_page + 1):
-                    subdoc.pages.append(f.pages[page_num])
-
+                subdoc.pages.extend(pdf.pages[entity.start_page : entity.end_page + 1])
                 subdoc.save(
-                    os.path.join(
-                        output_path,
-                        output_filename,
-                    ),
-                    min_version=f.pdf_version,
+                    os.path.join(output_path, output_filename),
+                    min_version=pdf.pdf_version,
                 )
+
                 output_files.append(output_filename)
         return output_files
 
