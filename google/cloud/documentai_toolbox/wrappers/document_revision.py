@@ -62,15 +62,15 @@ def _get_base_and_revision_bytes(output_bucket: str, output_prefix: str) -> List
     for blob in blob_list:
         name = blob.name.split("/")[-1]
 
-        if re.search(r"^doc.dp.bp", name) != None:
+        if re.search(r"^doc.dp.bp", name) is not None:
             if blob.name.endswith(".dp.bp"):
                 blob_as_bytes = blob.download_as_bytes()
                 text = pb.FromString(blob_as_bytes).text
-        if re.search(r"^pages_*.*", name) != None:
+        if re.search(r"^pages_*.*", name) is not None:
             if blob.name.endswith(".dp.bp"):
                 blob_as_bytes = blob.download_as_bytes()
                 base_doc.append(blob_as_bytes)
-        elif re.search(r"^rev_*.*", name) != None:
+        elif re.search(r"^rev_*.*", name) is not None:
             if blob.name.endswith(".dp.bp"):
                 blob_as_bytes = blob.download_as_bytes()
                 revisions_doc.append(blob_as_bytes)
@@ -193,7 +193,7 @@ def get_level(doc: DocumentWithRevisions):
                 p = p.parent
                 level += 1
         return level
-    except:
+    except Exception:
         return 0
 
 
@@ -311,44 +311,48 @@ class DocumentWithRevisions:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index != 0:
                 return self.parent.children[current_index - 1]
-            elif current_index != None:
+            elif current_index is not None:
                 return self.parent
         elif self.revision_id in self.parent_ids:
             non_parent_index = self.parent_ids.index(self.revision_id)
-            index = self.all_node_ids.index(self.revision_id)
             if non_parent_index > 0:
-                return self.root_revision_nodes[index - 1]
+                next_parent = self.parent_ids[non_parent_index - 1]
+                index = self.all_node_ids.index(next_parent)
+                return self.root_revision_nodes[index]
             else:
                 return self
         return self
 
     def next_revision(self):
-        if self.children:
+        if self.children is not None:
             return self.children[0]
-        elif self.parent:
+        elif self.parent is not None:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index < len(self.parent.children) - 1:
                 return self.parent.children[current_index + 1]
         return self
 
     def jump_revision(self):
-        if self.parent:
+        if self.parent is not None:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index < len(self.parent.children) - 1:
                 return self.parent.children[current_index + 1]
         elif self.parent_ids:
             non_parent_index = self.parent_ids.index(self.revision_id)
-            index = self.all_node_ids.index(self.revision_id)
             if non_parent_index < len(self.parent_ids) - 1:
-                return self.root_revision_nodes[index + 1]
+                next_parent = self.parent_ids[non_parent_index + 1]
+                index = self.all_node_ids.index(next_parent)
+                return self.root_revision_nodes[index]
 
         return self
 
     def jump_to_revision(self, id):
+
         if id == self.revision_id:
             return self
 
         if id in self.all_node_ids:
+            print(self.all_node_ids.index(id))
             return self.root_revision_nodes[self.all_node_ids.index(id)]
 
         return "Not Found"
@@ -357,7 +361,7 @@ class DocumentWithRevisions:
         seen_id = []
 
         for root in self.root_revision_nodes:
-            if root == None or root.revision_id == None or root.revision_id in seen_id:
+            if root is None or root.revision_id is None or root.revision_id in seen_id:
                 continue
 
             if root.children:

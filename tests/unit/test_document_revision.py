@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import shutil
-
 from google.cloud.documentai_toolbox.wrappers.document_revision import _OP_TYPE
 
 # try/except added for compatibility with python < 3.8
@@ -26,52 +23,79 @@ except ImportError:  # pragma: NO COVER
     import mock
 
 import pytest
-import glob
 
 from google.cloud.documentai_toolbox import document_revision
-from google.cloud.documentai_toolbox import gcs_utilities
 
 from google.cloud import documentai
-from google.cloud.vision import AnnotateFileResponse
-from google.cloud import storage
 
 
 @pytest.fixture
 def get_revisions():
     parent = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
-    second_parent = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
+    second_parent = document_revision.DocumentWithRevisions(
+        document=None, revision_nodes=None
+    )
     child = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
+    second_child = document_revision.DocumentWithRevisions(
+        document=None, revision_nodes=None
+    )
     sub_child = document_revision.DocumentWithRevisions(
         document=None, revision_nodes=None
     )
+
     parent.revision_id = 1
     child.revision_id = 2
+    second_child.revision_id = 5
     sub_child.revision_id = 3
     second_parent.revision_id = 4
 
     child.parent = parent
+    second_child.parent = parent
     sub_child.parent = child
 
-    parent.root_revision_nodes = [parent, child, sub_child,second_parent]
-    child.root_revision_nodes = [parent, child, sub_child,second_parent]
-    sub_child.root_revision_nodes = [parent, child, sub_child,second_parent]
-    second_parent.root_revision_nodes = [parent, child, sub_child,second_parent]
+    parent.root_revision_nodes = [parent, child, sub_child, second_parent, second_child]
+    child.root_revision_nodes = [parent, child, sub_child, second_parent, second_child]
+    sub_child.root_revision_nodes = [
+        parent,
+        child,
+        sub_child,
+        second_parent,
+        second_child,
+    ]
+    second_parent.root_revision_nodes = [
+        parent,
+        child,
+        sub_child,
+        second_parent,
+        second_child,
+    ]
+    second_child.root_revision_nodes = [
+        parent,
+        child,
+        sub_child,
+        second_parent,
+        second_child,
+    ]
 
-    parent.all_node_ids = [1,2,3,4]
-    child.all_node_ids = [1,2,3,4]
-    sub_child.all_node_ids = [1,2,3,4]
-    second_parent.all_node_ids = [1,2,3,4]
+    parent.all_node_ids = [1, 2, 3, 4, 5]
+    child.all_node_ids = [1, 2, 3, 4, 5]
+    sub_child.all_node_ids = [1, 2, 3, 4, 5]
+    second_parent.all_node_ids = [1, 2, 3, 4, 5]
+    second_child.all_node_ids = [1, 2, 3, 4, 5]
 
-    parent.children_ids = [2]
+    parent.children_ids = [2, 5]
     child.children_ids = [3]
 
-    parent.parent_ids = [1,4]
-    second_parent.parent_ids = [1,4]
+    parent.parent_ids = [1, 4]
+    second_parent.parent_ids = [1, 4]
 
     child.children.append(sub_child)
     parent.children.append(child)
+    parent.children.append(second_child)
+    second_child.children = None
+    second_parent.children = None
 
-    yield [parent,child,sub_child,second_parent]
+    yield [parent, child, sub_child, second_parent, second_child]
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document_revision.storage")
@@ -152,7 +176,7 @@ def test_get_base_and_revision_bytes(mock_storage):
 
     assert actual_text == expected
     assert len(actual_revision_doc) == 5
-    assert actual_base_docproto != None
+    assert actual_base_docproto is not None
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document_revision.storage")
@@ -160,7 +184,6 @@ def test_get_base_docproto(mock_storage):
     client = mock_storage.Client.return_value
     mock_bucket = mock.Mock()
     client.Bucket.return_value = mock_bucket
-    pb = documentai.Document.pb()
     with open("tests/unit/resources/revisions/doc.dp.bp", "rb") as f:
         doc_bytes = f.read()
 
@@ -343,11 +366,101 @@ def test_print_child_tree(capfd, get_revisions):
 
     out, err = capfd.readouterr()
 
-    assert out == "└──1\n  └──2\n    └──>3\n"
+    assert out == "└──1\n  └──2\n    └──>3\n  └──5\n"
+
+    document_revision._print_child_tree(
+        currect_revision=get_revisions[0], doc=get_revisions[0], seen=[]
+    )
+
+    out, err = capfd.readouterr()
+
+    assert out == "└──>1\n  └──2\n    └──3\n  └──5\n"
 
 
-# def test_from_gcs_prefix_with_revisions():
-#     pass
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document_revision.storage")
+def test_from_gcs_prefix_with_revisions(mock_storage):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    with open("tests/unit/resources/revisions/doc.dp.bp", "rb") as f:
+        doc_bytes = f.read()
+
+    with open("tests/unit/resources/revisions/pages_00001.dp.bp", "rb") as f:
+        pages_bytes = f.read()
+
+    with open("tests/unit/resources/revisions/rev_00000.dp.bp", "rb") as f:
+        rev0_bytes = f.read()
+
+    with open("tests/unit/resources/revisions/rev_00001.dp.bp", "rb") as f:
+        rev1_bytes = f.read()
+
+    with open("tests/unit/resources/revisions/rev_00002.dp.bp", "rb") as f:
+        rev2_bytes = f.read()
+
+    with open("tests/unit/resources/revisions/rev_00003.dp.bp", "rb") as f:
+        rev3_bytes = f.read()
+
+    with open("tests/unit/resources/revisions/rev_00004.dp.bp", "rb") as f:
+        rev4_bytes = f.read()
+
+    doc = mock.Mock(name=[])
+    doc.name = "gs://test-directory/1/doc.dp.bp"
+    doc.download_as_bytes.return_value = doc_bytes
+
+    pages_00001 = mock.Mock(name=[])
+    pages_00001.name = "gs://test-directory/1/pages_00001.dp.bp"
+    pages_00001.download_as_bytes.return_value = pages_bytes
+
+    rev_00000 = mock.Mock(name=[])
+    rev_00000.name = "gs://test-directory/1/rev_00000.dp.bp"
+    rev_00000.download_as_bytes.return_value = rev0_bytes
+
+    rev_00001 = mock.Mock(name=[])
+    rev_00001.name = "gs://test-directory/1/rev_00001.dp.bp"
+    rev_00001.download_as_bytes.return_value = rev1_bytes
+
+    rev_00002 = mock.Mock(name=[])
+    rev_00002.name = "gs://test-directory/1/rev_00002.dp.bp"
+    rev_00002.download_as_bytes.return_value = rev2_bytes
+
+    rev_00003 = mock.Mock(name=[])
+    rev_00003.name = "gs://test-directory/1/rev_00003.dp.bp"
+    rev_00003.download_as_bytes.return_value = rev3_bytes
+
+    rev_00004 = mock.Mock(name=[])
+    rev_00004.name = "gs://test-directory/1/rev_00004.dp.bp"
+    rev_00004.download_as_bytes.return_value = rev4_bytes
+
+    client.list_blobs.return_value = [
+        doc,
+        pages_00001,
+        rev_00000,
+        rev_00001,
+        rev_00002,
+        rev_00003,
+        rev_00004,
+    ]
+
+    actual_document = (
+        document_revision.DocumentWithRevisions.from_gcs_prefix_with_revisions(
+            gcs_prefix="gs://output/prefix"
+        )
+    )
+
+    assert actual_document.revision_id == "1f35dee33db746e7"
+    assert len(actual_document.document.pages) == 1
+    assert len(actual_document.document.entities) == 6
+
+    assert actual_document.document.entities[0].type_ == "invoice_date"
+    assert actual_document.document.entities[0].mention_text == "01/01/1970"
+
+    assert actual_document.document.entities[5].type_ == "ship_to_address"
+    assert (
+        actual_document.document.entities[5].mention_text
+        == "222 Main Street\nAnytown, USA"
+    )
+
 
 def test_last_revision(get_revisions):
     current_revision = get_revisions[2].last_revision()
@@ -358,6 +471,17 @@ def test_last_revision(get_revisions):
 
     assert current_revision.revision_id == 1
 
+    current_revision = get_revisions[3].last_revision()
+
+    assert current_revision.revision_id == 1
+
+    current_revision = get_revisions[0].last_revision()
+
+    assert current_revision.revision_id == 1
+
+    current_revision = get_revisions[0].last_revision()
+
+    assert current_revision.revision_id == 1
 
 
 def test_next_revision(get_revisions):
@@ -368,23 +492,62 @@ def test_next_revision(get_revisions):
     current_revision = current_revision.next_revision()
 
     assert current_revision.revision_id == 3
-    
 
-# def test_jump_revision(get_revisions):
-#     jumped_revision = get_revisions[0].jump_revision()
+    current_revision = get_revisions[3].next_revision()
 
-#     assert jumped_revision.revision_id == 4
+    assert current_revision.revision_id == 4
+
+    current_revision = get_revisions[4].next_revision()
+
+    assert current_revision.revision_id == 5
+
+    current_revision = get_revisions[4].next_revision()
+
+    assert current_revision.revision_id == 5
+
+
+def test_jump_revision(get_revisions):
+    jumped_revision = get_revisions[0].jump_revision()
+
+    assert jumped_revision.revision_id == 4
+
+    jumped_revision = get_revisions[1].jump_revision()
+
+    assert jumped_revision.revision_id == 5
+
+    jumped_revision = get_revisions[2].jump_revision()
+
+    assert jumped_revision.revision_id == 3
+
+    jumped_revision = get_revisions[3].jump_revision()
+
+    assert jumped_revision.revision_id == 4
+
 
 def test_jump_to_revision(get_revisions):
     jumped_revision = get_revisions[2].jump_to_revision(1)
 
     assert jumped_revision.revision_id == 1
 
+    jumped_revision = get_revisions[0].jump_to_revision(1)
+
+    assert jumped_revision.revision_id == 1
+
+
+def test_jump_to_revision_not_found(get_revisions):
+    assert get_revisions[2].jump_to_revision(8) == "Not Found"
+
 
 def test_print_tree(capfd, get_revisions):
+
+    get_revisions[4].print_tree()
+
+    out, err = capfd.readouterr()
+
+    assert out == "└──1\n  └──2\n    └──3\n  └──>5\n├──4\n"
 
     get_revisions[2].print_tree()
 
     out, err = capfd.readouterr()
 
-    assert out == "└──1\n  └──2\n    └──>3\n├──4\n"
+    assert out == "└──1\n  └──2\n    └──>3\n  └──5\n├──4\n"
