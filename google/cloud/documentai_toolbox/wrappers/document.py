@@ -43,7 +43,7 @@ from google.longrunning.operations_pb2 import GetOperationRequest, Operation
 
 from pikepdf import Pdf
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, PackageLoader
 
 
 def _entities_from_shards(
@@ -787,7 +787,9 @@ class Document:
             str:
                 A string hOCR version of the Document
         """
-        environment = Environment(loader=FileSystemLoader("templates/"))
+        environment = Environment(
+            loader=PackageLoader("google.cloud.documentai_toolbox", "templates")
+        )
         template = environment.get_template("hocr_document_template.xml.j2")
         content = template.render(pages=self.pages, title=title)
         return content
