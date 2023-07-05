@@ -91,6 +91,20 @@ def get_bytes_images_mock():
         yield byte_factory
 
 
+@pytest.fixture
+def get_bytes_empty_directory_mock():
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/fake_directory")
+        yield byte_factory
+
+
+@pytest.fixture
+def get_bytes_missing_shard_mock():
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/missing_shard")
+        yield byte_factory
+
+
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document._get_shards(
@@ -109,6 +123,27 @@ def test_get_shards_with_valid_gcs_uri(get_bytes_single_file_mock):
     assert actual[0].pages[0].page_number == 1
 
 
+def test_get_shards_with_no_shards(get_bytes_empty_directory_mock):
+    with pytest.raises(ValueError, match="Incomplete Document - No JSON files found."):
+        document._get_shards(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0/",
+        )
+        get_bytes_empty_directory_mock.assert_called_once()
+
+
+def test_get_shards_with_missing_shard(get_bytes_missing_shard_mock):
+    with pytest.raises(
+        ValueError,
+        match=r"Invalid Document - shardInfo\.shardCount",
+    ):
+        document._get_shards(
+            gcs_bucket_name="test-directory",
+            gcs_prefix="documentai/output/123456789/0/",
+        )
+        get_bytes_missing_shard_mock.assert_called_once()
+
+
 def test_pages_from_shards():
     shards = []
     for byte in get_bytes("tests/unit/resources/0"):
@@ -118,7 +153,7 @@ def test_pages_from_shards():
     assert len(actual[0].paragraphs) == 31
 
     for page_index, page in enumerate(actual):
-        assert page.documentai_page.page_number == page_index + 1
+        assert page.page_number == page_index + 1
 
 
 def test_entities_from_shard():
@@ -160,6 +195,44 @@ def test_get_batch_process_metadata_with_valid_operation(
     )
 
     mock_client.get_operation.return_value = mock_operation
+
+    location = "us"
+    operation_name = "projects/123456/locations/us/operations/7890123"
+    document._get_batch_process_metadata(location, operation_name)
+
+    mock_client.get_operation.assert_called()
+    mock_docai.BatchProcessMetadata.deserialize.assert_called()
+
+
+@mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
+def test_get_batch_process_metadata_with_running_operation(
+    mock_docai,
+):
+    mock_client = mock_docai.DocumentProcessorServiceClient.return_value
+
+    metadata = documentai.BatchProcessMetadata(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            documentai.BatchProcessMetadata.IndividualProcessStatus(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+            )
+        ],
+    )
+
+    mock_operation_running = mock.Mock(done=False)
+    mock_operation_finished = mock.Mock(
+        done=True,
+        metadata=mock.Mock(
+            type_url="type.googleapis.com/google.cloud.documentai.v1.BatchProcessMetadata",
+            value=documentai.BatchProcessMetadata.serialize(metadata),
+        ),
+    )
+
+    mock_client.get_operation.side_effect = [
+        mock_operation_running,
+        mock_operation_finished,
+    ]
 
     location = "us"
     operation_name = "projects/123456/locations/us/operations/7890123"
@@ -269,7 +342,7 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
         current_text_offset += len(shard.text)
 
     for page_index, page in enumerate(actual.pages):
-        assert page.documentai_page.page_number == page_index + 1
+        assert page.page_number == page_index + 1
 
 
 def test_document_from_batch_process_metadata_with_multiple_input_files(
@@ -345,7 +418,7 @@ def test_search_page_with_multiple_pages(get_bytes_multiple_files_mock):
     actual_pages = doc.search_pages(target_string="Invoice")
 
     get_bytes_multiple_files_mock.assert_called_once()
-    assert len(actual_pages) == 48
+    assert len(actual_pages) == 5
 
 
 def test_search_page_with_no_results(get_bytes_single_file_mock):
@@ -550,10 +623,13 @@ def test_convert_document_to_annotate_file_json_response():
 
 
 def test_export_images(get_bytes_images_mock):
+    output_path = "resources/output/"
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
     )
-    output_path = "resources/output/"
 
     os.makedirs(output_path)
 
@@ -564,9 +640,22 @@ def test_export_images(get_bytes_images_mock):
     )
     get_bytes_images_mock.assert_called_once()
 
-    assert os.path.exists(output_path)
-    shutil.rmtree(output_path)
-
     assert actual == [
         "exported_photo_0_Portrait.png",
     ]
+
+    assert os.path.exists(output_path)
+    shutil.rmtree(output_path)
+
+
+def test_export_hocr_str():
+    wrapped_document = document.Document.from_document_path(
+        document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
+    )
+
+    actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
+
+    with open("tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r") as f:
+        expected = f.read()
+
+    assert actual_hocr == expected
