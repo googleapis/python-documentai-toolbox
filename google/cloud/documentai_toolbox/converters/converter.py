@@ -15,6 +15,8 @@
 #
 """Document.proto converters."""
 
+from typing import Optional
+
 from google.cloud.documentai_toolbox.converters.config.converter_helpers import (
     _convert_documents_with_config,
 )
@@ -26,7 +28,7 @@ def convert_from_config(
     processor_id: str,
     gcs_input_path: str,
     gcs_output_path: str,
-    config_path: str = None,
+    config_path: Optional[str] = None,
 ) -> None:
     r"""Converts all documents in gcs_input_path to docproto using configs.
 

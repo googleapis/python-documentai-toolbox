@@ -17,7 +17,7 @@
 from concurrent import futures
 import re
 import time
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from google.cloud import documentai, storage
 from google.cloud.documentai_toolbox import constants
@@ -211,8 +211,8 @@ def _get_bytes(
     prefix: str,
     annotation_file_prefix: str,
     config_file_prefix: str,
-    config_path: str = None,
-    storage_client: storage.Client = None,
+    config_path: Optional[str] = None,
+    storage_client: Optional[storage.Client] = None,
 ) -> List[bytes]:
     r"""Downloads documents and returns them as bytes.
 
@@ -273,7 +273,7 @@ def _upload_file(
     bucket_name: str,
     output_prefix: str,
     file: str,
-    storage_client: storage.Client = None,
+    storage_client: Optional[storage.Client] = None,
 ) -> None:
     r"""Uploads the converted docproto to gcs.
 
@@ -303,8 +303,8 @@ def _get_files(
     blob_list: List[storage.blob.Blob],
     input_bucket: str,
     input_prefix: str,
-    config_path: str = None,
-    storage_client: storage.Client = None,
+    config_path: Optional[str] = None,
+    storage_client: Optional[storage.Client] = None,
 ):
     r"""Returns a list of Futures of documents as bytes.
 
@@ -405,7 +405,7 @@ def _get_docproto_files(
 
 
 def _upload(
-    files: dict, gcs_output_path: str, storage_client: storage.Client = None
+    files: dict, gcs_output_path: str, storage_client: Optional[storage.Client] = None
 ) -> None:
     r"""Upload converted document.proto to gcs location.
 
@@ -460,7 +460,7 @@ def _convert_documents_with_config(
     project_id: str,
     location: str,
     processor_id: str,
-    config_path: str = None,
+    config_path: Optional[str] = None,
 ) -> None:
     r"""Converts all documents in gcs_path to docproto.
 

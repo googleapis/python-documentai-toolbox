@@ -403,7 +403,9 @@ class Document:
         return cls(shards=[documentai_document])
 
     @classmethod
-    def from_gcs(cls, gcs_bucket_name: str, gcs_prefix: str, gcs_input_uri: str = None):
+    def from_gcs(
+        cls, gcs_bucket_name: str, gcs_prefix: str, gcs_input_uri: Optional[str] = None
+    ):
         r"""Loads Document from Cloud Storage.
 
         Args:

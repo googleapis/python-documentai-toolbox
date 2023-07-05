@@ -16,7 +16,7 @@
 """Document AI utilities."""
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from google.api_core import client_info
 
@@ -24,7 +24,7 @@ from google.cloud import documentai, documentai_toolbox, storage
 from google.cloud.documentai_toolbox import constants
 
 
-def _get_client_info(module: str = None) -> client_info.ClientInfo:
+def _get_client_info(module: Optional[str] = None) -> client_info.ClientInfo:
     r"""Returns a custom user agent header.
 
     Returns:
@@ -42,7 +42,7 @@ def _get_client_info(module: str = None) -> client_info.ClientInfo:
     )
 
 
-def _get_storage_client(module: str = None) -> storage.Client:
+def _get_storage_client(module: Optional[str] = None) -> storage.Client:
     r"""Returns a Storage client with custom user agent header.
 
     Returns:
