@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""Document AI utilities."""
+"""Google Cloud Storage utilities."""
 import os
 import re
 from typing import Dict, List, Optional, Tuple
@@ -69,17 +69,15 @@ def get_bytes(gcs_bucket_name: str, gcs_prefix: str) -> List[bytes]:
             A list of bytes.
 
     """
-    result = []
-
     storage_client = _get_storage_client(module="get-bytes")
     blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
 
-    for blob in blob_list:
-        if (
-            blob.name.endswith(constants.JSON_EXTENSION)
-            or blob.content_type == constants.JSON_MIMETYPE
-        ):
-            result.append(blob.download_as_bytes())
+    result = [
+        blob.download_as_bytes()
+        for blob in blob_list
+        if blob.name.endswith(constants.JSON_EXTENSION)
+        or blob.content_type == constants.JSON_MIMETYPE
+    ]
 
     return result
 
@@ -103,8 +101,9 @@ def split_gcs_uri(gcs_uri: str) -> Tuple[str, str]:
         raise ValueError(
             "gcs_uri must follow format 'gs://{bucket_name}/{gcs_prefix}'."
         )
+
     bucket, prefix = matches.groups()
-    return str(bucket), str(prefix)
+    return bucket, prefix
 
 
 def create_gcs_uri(gcs_bucket_name: str, gcs_prefix: str) -> str:
@@ -159,11 +158,7 @@ def list_gcs_document_tree(
 
     for blob in blob_list:
         directory, file_name = os.path.split(blob.name)
-
-        if directory in path_list:
-            path_list[directory].append(file_name)
-        else:
-            path_list[directory] = [file_name]
+        path_list.setdefault(directory, []).append(file_name)
 
     return path_list
 
@@ -186,7 +181,6 @@ def print_gcs_document_tree(
             Optional. The amount of files to display. Default is `4`.
     Returns:
         None.
-
     """
     FILENAME_TREE_MIDDLE = "├──"
     FILENAME_TREE_LAST = "└──"
@@ -196,7 +190,7 @@ def print_gcs_document_tree(
     )
 
     for directory, files in path_list.items():
-        print(f"{directory}")
+        print(directory)
         dir_size = len(files)
         for idx, file_name in enumerate(files):
             if idx == dir_size - 1:
@@ -209,9 +203,7 @@ def print_gcs_document_tree(
 
 
 def create_batches(
-    gcs_bucket_name: str,
-    gcs_prefix: str,
-    batch_size: int = constants.BATCH_MAX_FILES,
+    gcs_bucket_name: str, gcs_prefix: str, batch_size: int = constants.BATCH_MAX_FILES
 ) -> List[documentai.BatchDocumentsInputConfig]:
     """Create batches of documents in Cloud Storage to process with `batch_process_documents()`.
 
@@ -238,6 +230,7 @@ def create_batches(
 
     storage_client = _get_storage_client(module="create-batches")
     blob_list = storage_client.list_blobs(gcs_bucket_name, prefix=gcs_prefix)
+
     batches: List[documentai.BatchDocumentsInputConfig] = []
     batch: List[documentai.GcsDocument] = []
 
@@ -256,6 +249,13 @@ def create_batches(
             )
             continue
 
+        batch.append(
+            documentai.GcsDocument(
+                gcs_uri=create_gcs_uri(gcs_bucket_name, blob.name),
+                mime_type=blob.content_type,
+            )
+        )
+
         if len(batch) == batch_size:
             batches.append(
                 documentai.BatchDocumentsInputConfig(
@@ -263,13 +263,6 @@ def create_batches(
                 )
             )
             batch = []
-
-        batch.append(
-            documentai.GcsDocument(
-                gcs_uri=create_gcs_uri(gcs_bucket_name, blob.name),
-                mime_type=blob.content_type,
-            )
-        )
 
     if batch:
         # Append the last batch, which could be less than `batch_size`
