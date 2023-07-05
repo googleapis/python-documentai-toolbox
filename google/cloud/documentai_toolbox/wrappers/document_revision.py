@@ -157,11 +157,11 @@ def _modify_docproto(entities):
                     "replace_text": e.mention_text,
                 }
             )
-            entities_array[int(e.id) - 1].replace(documentai_entity=e)
+            entities_array[int(e.id) - 1] = e
     return entities_array, history
 
 
-def _get_revised_documents(revision: documentai.Document):
+def _get_revised_entities(revision: documentai.Document):
     """
     Given the immutable_document and revisions this function
     will create Document objects correlating to the provenance in revision
@@ -185,35 +185,39 @@ def _get_revised_documents(revision: documentai.Document):
 
 
 def get_level(doc: DocumentWithRevisions):
-        try:
-            level = 0 
-            p = doc.parent
-            if p.revision_id:
-                while p :
-                    p = p.parent
-                    level += 1
-            return level 
-        except:
-            return 0
-    
-def _print_child_tree(currect_revision: DocumentWithRevisions, doc:DocumentWithRevisions,seen):
-    tab = '  '*get_level(doc)
+    try:
+        level = 0
+        p = doc.parent
+        if p.revision_id:
+            while p:
+                p = p.parent
+                level += 1
+        return level
+    except:
+        return 0
+
+
+def _print_child_tree(
+    currect_revision: DocumentWithRevisions, doc: DocumentWithRevisions, seen
+):
+    tab = "  " * get_level(doc)
 
     if doc.children:
         if currect_revision.revision_id == doc.revision_id:
-            print(tab + '└──>', end = '')
+            print(tab + "└──>", end="")
         else:
-            print(tab + '└──', end = '')
+            print(tab + "└──", end="")
         print(doc.revision_id)
         for each in doc.children:
             seen.append(each.revision_id)
-            _print_child_tree(currect_revision,each,seen)
+            _print_child_tree(currect_revision, each, seen)
     else:
         if currect_revision.revision_id == doc.revision_id:
-            print(tab + '└──>', end = '')
+            print(tab + "└──>", end="")
         else:
-            print(tab + '└──', end = '')
+            print(tab + "└──", end="")
         print(doc.revision_id)
+
 
 @dataclasses.dataclass
 class DocumentWithRevisions:
@@ -236,8 +240,8 @@ class DocumentWithRevisions:
     document: Document = dataclasses.field(init=True, repr=False)
     revision_nodes: List[documentai.Document] = dataclasses.field(init=True, repr=False)
     gcs_prefix: str = dataclasses.field(init=True, repr=False, default=None)
-    parent_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
-    all_node_ids : List[str] = dataclasses.field(init=True, repr=False, default=None)
+    parent_ids: List[str] = dataclasses.field(init=True, repr=False, default=None)
+    all_node_ids: List[str] = dataclasses.field(init=True, repr=False, default=None)
     next_: Document = dataclasses.field(init=False, repr=False, default=None)
     last: Document = dataclasses.field(init=False, repr=False, default=None)
     revision_id: str = dataclasses.field(init=False, repr=False, default=None)
@@ -265,16 +269,22 @@ class DocumentWithRevisions:
         revisions = [r.revisions for r in revs]
         parent_ids = [r.revisions[0].id for r in revs if not r.revisions[0].parent]
         all_node_ids = [r.revisions[0].id for r in revs]
-        
+
         immutable_doc = Document(shards=base_docproto, gcs_prefix=gcs_prefix)
         root_revision_nodes = []
 
         for rev in revs:
             copied_doc = copy.deepcopy(immutable_doc)
             d = Document(shards=copied_doc.shards, gcs_prefix=copied_doc.gcs_prefix)
-            d.entities, history = _get_revised_documents(rev)
+            d.entities, history = _get_revised_entities(rev)
 
-            revision_doc = DocumentWithRevisions(document=d,revision_nodes=revisions,gcs_prefix=gcs_prefix,parent_ids=parent_ids, all_node_ids=all_node_ids)
+            revision_doc = DocumentWithRevisions(
+                document=d,
+                revision_nodes=revisions,
+                gcs_prefix=gcs_prefix,
+                parent_ids=parent_ids,
+                all_node_ids=all_node_ids,
+            )
             revision_doc.history += history
 
             revision_doc.revision_id = rev.revisions[0].id
@@ -320,17 +330,17 @@ class DocumentWithRevisions:
             if current_index < len(self.parent.children) - 1:
                 return self.parent.children[current_index + 1]
         return self
-    
+
     def jump_revision(self):
         if self.parent:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index < len(self.parent.children) - 1:
-                return self.parent.children[current_index+1]
+                return self.parent.children[current_index + 1]
         elif self.parent_ids:
             non_parent_index = self.parent_ids.index(self.revision_id)
             index = self.all_node_ids.index(self.revision_id)
             if non_parent_index < len(self.parent_ids) - 1:
-                return self.root_revision_nodes[index+1]
+                return self.root_revision_nodes[index + 1]
 
         return self
 
@@ -357,9 +367,9 @@ class DocumentWithRevisions:
                 _print_child_tree(self, root, seen_id)
             else:
                 if self.revision_id == root.revision_id:
-                    print('└──>', end = '')
+                    print("└──>", end="")
                 else:
-                    print('├──', end = '')
+                    print("├──", end="")
                 print(root.revision_id)
 
             seen_id.append(root.revision_id)

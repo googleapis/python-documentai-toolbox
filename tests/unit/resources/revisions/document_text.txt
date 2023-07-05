@@ -1,0 +1,37 @@
+Invoice
+DATE: 01/01/1970
+INVOICE: NO. 001
+FROM: Company ABC
+user@companyabc.com
+TO: John Doe
+johndoe@email.com
+ADDRESS: 111 Main Street
+Anytown, USA
+ADDRESS: 222 Main Street
+Anytown, USA
+TERMS: 6 month contract
+DUE: 01/01/2025
+Item Description
+Quantity
+Price
+Amount
+Tool A
+500
+$1.00
+$500.00
+Service B
+1
+$900.00
+$900.00
+Resource C
+50
+$12.00
+$600.00
+Subtotal
+$2000.00
+Tax
+$140.00
+BALANCE DUE
+$2140.00
+NOTES:
+Supplies used for Project Q.
