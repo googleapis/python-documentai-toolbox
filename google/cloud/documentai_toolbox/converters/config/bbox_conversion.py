@@ -15,10 +15,11 @@
 #
 
 from typing import Callable
+
+from google.cloud.documentai_v1.types import geometry
 from intervaltree import intervaltree
 
 from google.cloud import documentai
-from google.cloud.documentai_v1.types import geometry
 
 
 def _midpoint_in_bpoly(

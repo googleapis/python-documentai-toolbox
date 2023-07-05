@@ -23,14 +23,13 @@ try:
 except ImportError:  # pragma: NO COVER
     import mock
 
-import pytest
 import glob
 
-from google.cloud.documentai_toolbox import document
-from google.cloud.documentai_toolbox import gcs_utilities
+from google.cloud.vision import AnnotateFileResponse
+import pytest
 
 from google.cloud import documentai
-from google.cloud.vision import AnnotateFileResponse
+from google.cloud.documentai_toolbox import document, gcs_utilities
 
 
 def get_bytes(file_name):

@@ -14,11 +14,13 @@
 # limitations under the License.
 #
 
+from concurrent import futures
 import re
 import time
-from concurrent import futures
 from typing import List, Tuple
 
+from google.cloud import documentai, storage
+from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.converters.config.bbox_conversion import (
     _convert_bbox_to_docproto_bbox,
     _get_text_anchor_in_bbox,
@@ -27,11 +29,7 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
     Block,
     _load_blocks_from_schema,
 )
-
-from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
-
-from google.cloud import documentai, storage
 
 
 def _get_base_ocr(

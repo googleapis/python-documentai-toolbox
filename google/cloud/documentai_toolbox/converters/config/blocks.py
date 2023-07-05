@@ -15,9 +15,9 @@
 #
 
 import dataclasses
-from typing import List
 import json
 from types import SimpleNamespace
+from typing import List
 
 from google.cloud import documentai
 

@@ -16,13 +16,13 @@
 """Wrappers for Document AI Entity type."""
 
 import dataclasses
-
 from io import BytesIO
 from typing import Optional
 
+from PIL import Image
+
 from google.cloud import documentai
 from google.cloud.documentai_toolbox import constants
-from PIL import Image
 
 
 @dataclasses.dataclass

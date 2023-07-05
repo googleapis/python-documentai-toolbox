@@ -1,5 +1,6 @@
-from google.cloud import documentai
 from google.cloud.documentai_v1.types import geometry
+
+from google.cloud import documentai
 from google.cloud.documentai_toolbox.converters.config import bbox_conversion, blocks
 
 

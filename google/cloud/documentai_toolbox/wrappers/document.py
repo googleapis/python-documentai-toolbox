@@ -21,29 +21,17 @@ import re
 from typing import Dict, List, Optional, Union
 
 from google.api_core.client_options import ClientOptions
-
-from google.cloud import bigquery
-from google.cloud import documentai
-
-from google.cloud.documentai_toolbox import constants
-
-from google.cloud.documentai_toolbox.converters import vision_helpers
-
-from google.cloud.documentai_toolbox.utilities import gcs_utilities
-
-from google.cloud.documentai_toolbox.wrappers.entity import Entity
-from google.cloud.documentai_toolbox.wrappers.page import FormField
-from google.cloud.documentai_toolbox.wrappers.page import Page
-
-from google.cloud.vision import (
-    AnnotateFileResponse,
-)
-
+from google.cloud.vision import AnnotateFileResponse
 from google.longrunning.operations_pb2 import GetOperationRequest, Operation
-
+from jinja2 import Environment, PackageLoader
 from pikepdf import Pdf
 
-from jinja2 import Environment, PackageLoader
+from google.cloud import bigquery, documentai
+from google.cloud.documentai_toolbox import constants
+from google.cloud.documentai_toolbox.converters import vision_helpers
+from google.cloud.documentai_toolbox.utilities import gcs_utilities
+from google.cloud.documentai_toolbox.wrappers.entity import Entity
+from google.cloud.documentai_toolbox.wrappers.page import FormField, Page
 
 
 def _entities_from_shards(

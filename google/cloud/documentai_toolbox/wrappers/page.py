@@ -18,10 +18,10 @@
 import dataclasses
 from typing import List, Optional, Union
 
+import pandas as pd
+
 from google.cloud import documentai
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
-
-import pandas as pd
 
 ChildrenElements = Union[
     List["Paragraph"],

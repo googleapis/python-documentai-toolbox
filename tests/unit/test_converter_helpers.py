@@ -20,9 +20,10 @@ try:
 except ImportError:  # pragma: NO COVER
     import mock
 
-from google.cloud.documentai_toolbox.converters.config import blocks, converter_helpers
-from google.cloud import documentai
 import pytest
+
+from google.cloud import documentai
+from google.cloud.documentai_toolbox.converters.config import blocks, converter_helpers
 
 
 @mock.patch(

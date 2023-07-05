@@ -19,10 +19,8 @@ import re
 from typing import Dict, List, Tuple
 
 from google.api_core import client_info
-from google.cloud import documentai
-from google.cloud import storage
-from google.cloud import documentai_toolbox
 
+from google.cloud import documentai, documentai_toolbox, storage
 from google.cloud.documentai_toolbox import constants
 
 
