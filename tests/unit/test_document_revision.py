@@ -36,6 +36,44 @@ from google.cloud.vision import AnnotateFileResponse
 from google.cloud import storage
 
 
+@pytest.fixture
+def get_revisions():
+    parent = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
+    second_parent = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
+    child = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
+    sub_child = document_revision.DocumentWithRevisions(
+        document=None, revision_nodes=None
+    )
+    parent.revision_id = 1
+    child.revision_id = 2
+    sub_child.revision_id = 3
+    second_parent.revision_id = 4
+
+    child.parent = parent
+    sub_child.parent = child
+
+    parent.root_revision_nodes = [parent, child, sub_child,second_parent]
+    child.root_revision_nodes = [parent, child, sub_child,second_parent]
+    sub_child.root_revision_nodes = [parent, child, sub_child,second_parent]
+    second_parent.root_revision_nodes = [parent, child, sub_child,second_parent]
+
+    parent.all_node_ids = [1,2,3,4]
+    child.all_node_ids = [1,2,3,4]
+    sub_child.all_node_ids = [1,2,3,4]
+    second_parent.all_node_ids = [1,2,3,4]
+
+    parent.children_ids = [2]
+    child.children_ids = [3]
+
+    parent.parent_ids = [1,4]
+    second_parent.parent_ids = [1,4]
+
+    child.children.append(sub_child)
+    parent.children.append(child)
+
+    yield [parent,child,sub_child,second_parent]
+
+
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document_revision.storage")
 def test_get_base_and_revision_bytes(mock_storage):
     client = mock_storage.Client.return_value
@@ -188,7 +226,6 @@ def test_get_base_docproto(mock_storage):
     with open("tests/unit/resources/revisions/document_text.txt", "r") as f:
         text = f.read()
 
-    page_pb = documentai.Document.Page.pb()
     with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
         expected_base_shard = documentai.Document()
         expected_base_shard.pages = documentai.Document.from_json(f.read()).pages
@@ -288,47 +325,66 @@ def test_get_revised_documents():
     assert history[3]["original_text"] == "Replaced Mention Text 2"
 
 
-def test_get_level():
-    parent = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
-    child = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
-    sub_child = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
-    parent.revision_id = 1
-    child.revision_id = 2
-    sub_child.revision_id = 3
+def test_get_level(get_revisions):
+    actual_level = document_revision.get_level(get_revisions[2])
 
-    parent.children.append(child)
-    child.parent = parent
-    sub_child.parent = child
-
-    actual_level = document_revision.get_level(sub_child)
-    
     assert actual_level == 2
 
-    parent_level = document_revision.get_level(parent)
+    parent_level = document_revision.get_level(get_revisions[0])
 
     assert parent_level == 0
 
 
-# def test_print_child_tree():
-#     pass
+def test_print_child_tree(capfd, get_revisions):
+
+    document_revision._print_child_tree(
+        currect_revision=get_revisions[2], doc=get_revisions[0], seen=[]
+    )
+
+    out, err = capfd.readouterr()
+
+    assert out == "└──1\n  └──2\n    └──>3\n"
+
 
 # def test_from_gcs_prefix_with_revisions():
 #     pass
 
-# def test_last_revision():
-#     pass
+def test_last_revision(get_revisions):
+    current_revision = get_revisions[2].last_revision()
 
-# def test_next_revision():
-#     pass
+    assert current_revision.revision_id == 2
 
-# def test_jump_revision():
-#     pass
+    current_revision = current_revision.last_revision()
 
-# def test_jump_to_revision():
-#     pass
+    assert current_revision.revision_id == 1
 
-# def test_get_revisions():
-#     pass
 
-# def print_tree():
-#     pass
+
+def test_next_revision(get_revisions):
+    current_revision = get_revisions[0].next_revision()
+
+    assert current_revision.revision_id == 2
+
+    current_revision = current_revision.next_revision()
+
+    assert current_revision.revision_id == 3
+    
+
+# def test_jump_revision(get_revisions):
+#     jumped_revision = get_revisions[0].jump_revision()
+
+#     assert jumped_revision.revision_id == 4
+
+def test_jump_to_revision(get_revisions):
+    jumped_revision = get_revisions[2].jump_to_revision(1)
+
+    assert jumped_revision.revision_id == 1
+
+
+def test_print_tree(capfd, get_revisions):
+
+    get_revisions[2].print_tree()
+
+    out, err = capfd.readouterr()
+
+    assert out == "└──1\n  └──2\n    └──>3\n├──4\n"

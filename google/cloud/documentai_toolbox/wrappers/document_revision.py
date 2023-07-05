@@ -353,9 +353,6 @@ class DocumentWithRevisions:
 
         return "Not Found"
 
-    def get_revisions(cls):
-        return cls.revision_nodes
-
     def print_tree(self):
         seen_id = []
 
