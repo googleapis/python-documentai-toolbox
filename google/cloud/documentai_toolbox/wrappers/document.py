@@ -723,11 +723,15 @@ class Document:
         output_filenames: List[str] = []
         index = 0
         for entity in self.entities:
+            if entity.type_ not in constants.IMAGE_ENTITIES or entity.mention_text:
+                return None
+
             image = entity.crop_image(
                 documentai_page=self.pages[entity.start_page].documentai_object
             )
             if not image:
                 continue
+
             output_filename = (
                 f"{output_file_prefix}_{index}_{entity.type_}.{output_file_extension}"
             )

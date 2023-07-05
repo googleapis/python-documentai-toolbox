@@ -22,6 +22,7 @@ import pandas as pd
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
+from google.cloud.documentai_toolbox.utilities import docai_utilities
 
 ChildrenElements = Union[
     List["Paragraph"],
@@ -344,12 +345,10 @@ def _get_hocr_bounding_box(
         str:
             hOCR bounding box sring.
     """
-    vertices = [
-        (int(v.x * page_dimension.width + 0.5), int(v.y * page_dimension.height + 0.5))
-        for v in element_with_layout.layout.bounding_poly.normalized_vertices
-    ]
-    (min_x, min_y), (max_x, max_y) = vertices[0], vertices[2]
-
+    min_x, min_y, max_x, max_y = docai_utilities.get_bounding_box(
+        bounding_poly=element_with_layout.layout.bounding_poly,
+        page_dimension=page_dimension,
+    )
     return f"bbox {min_x} {min_y} {max_x} {max_y}"
 
 

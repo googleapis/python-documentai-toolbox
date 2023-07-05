@@ -22,7 +22,7 @@ from typing import Optional
 from PIL import Image
 
 from google.cloud import documentai
-from google.cloud.documentai_toolbox import constants
+from google.cloud.documentai_toolbox.utilities import docai_utilities
 
 
 @dataclasses.dataclass
@@ -92,19 +92,12 @@ class Entity:
             PIL.Image.Image:
                 Image from `Document.Entity`. Returns `None` if there is no image.
         """
-        if self.type_ not in constants.IMAGE_ENTITIES or self.mention_text:
-            return None
-
-        page_ref = self.documentai_object.page_anchor.page_refs[0]
-
         if not documentai_page.image:
             raise ValueError("Document does not contain images.")
 
+        top, left, bottom, right = docai_utilities.get_bounding_box(
+            bounding_poly=self.documentai_object.page_anchor.page_refs[0].bounding_poly,
+            page_dimension=documentai_page.dimension,
+        )
         doc_image = Image.open(BytesIO(documentai_page.image.content))
-        w, h = doc_image.size
-        vertices = [
-            (int(v.x * w + 0.5), int(v.y * h + 0.5))
-            for v in page_ref.bounding_poly.normalized_vertices
-        ]
-        (top, left), (bottom, right) = vertices[0], vertices[2]
         return doc_image.crop((top, left, bottom, right))
