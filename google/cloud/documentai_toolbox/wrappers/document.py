@@ -52,19 +52,19 @@ def _entities_from_shards(
     page_offset = 0
     for shard in shards:
         entities = [
-            Entity(documentai_entity=entity, page_offset=page_offset)
+            Entity(documentai_object=entity, page_offset=page_offset)
             for entity in shard.entities
         ]
         properties = [
-            Entity(documentai_entity=prop, page_offset=page_offset)
+            Entity(documentai_object=prop, page_offset=page_offset)
             for entity in shard.entities
             for prop in entity.properties
         ]
         result.extend(entities + properties)
         page_offset += len(shard.pages)
 
-    if len(result) > 1 and result[0].documentai_entity.id:
-        result.sort(key=lambda x: int(x.documentai_entity.id))
+    if len(result) > 1 and result[0].documentai_object.id:
+        result.sort(key=lambda x: int(x.documentai_object.id))
     return result
 
 
