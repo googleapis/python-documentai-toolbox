@@ -724,7 +724,7 @@ class Document:
         index = 0
         for entity in self.entities:
             if entity.type_ not in constants.IMAGE_ENTITIES or entity.mention_text:
-                return None
+                continue
 
             image = entity.crop_image(
                 documentai_page=self.pages[entity.start_page].documentai_object
