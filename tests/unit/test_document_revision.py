@@ -307,11 +307,17 @@ def test_get_revised_entites():
 
 
 def test_get_level(get_revisions):
-    actual_level = document_revision.get_level(get_revisions[2])
+    child_level = document_revision._get_level(get_revisions[2])
 
-    assert actual_level == 2
+    assert child_level == 2
 
-    parent_level = document_revision.get_level(get_revisions[0])
+    parent_level = document_revision._get_level(get_revisions[0])
+
+    assert parent_level == 0
+
+    child = get_revisions[2]
+    child.revision_id = None
+    document_revision._get_level(child)
 
     assert parent_level == 0
 

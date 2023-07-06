@@ -164,7 +164,7 @@ def _get_revised_entites(
     return entities_array, history
 
 
-def get_level(current_revision: "DocumentWithRevisions") -> int:
+def _get_level(current_revision: "DocumentWithRevisions") -> int:
     r"""Returns the level of the current revision in the revision tree.
 
     Args:
@@ -200,7 +200,7 @@ def _print_child_tree(
     Returns:
         None.
     """
-    tab = "  " * get_level(doc)
+    tab = "  " * _get_level(doc)
 
     if doc.children:
         if current_revision.revision_id == doc.revision_id:
