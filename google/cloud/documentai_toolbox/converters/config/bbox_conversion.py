@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from typing import Callable
+from typing import Callable, Optional
 
 from google.cloud.documentai_v1.types import geometry
 from intervaltree import intervaltree
@@ -44,7 +44,6 @@ def _merge_text_anchors(
     text_anchor_2: documentai.Document.TextAnchor,
 ) -> documentai.Document.TextAnchor:
     """Merges two TextAnchor objects into one ascending sorted TextAnchor."""
-    merged_text_anchor = documentai.Document.TextAnchor()
     intervals = []
     for text_segment in text_anchor_1.text_segments:
         intervals.append(
@@ -55,18 +54,17 @@ def _merge_text_anchors(
             intervaltree.Interval(text_segment.start_index, text_segment.end_index)
         )
 
-    interval_tree = intervaltree.IntervalTree(intervals)
-    interval_tree.merge_overlaps(strict=False)
-    ts = []
-    for iv in sorted(interval_tree):
-        ts.append(
-            documentai.Document.TextAnchor.TextSegment(
-                start_index=iv.begin, end_index=iv.end
-            )
-        )
+    merged_tree = intervaltree.IntervalTree(intervals)
+    merged_tree.merge_overlaps(strict=False)
 
-    merged_text_anchor.text_segments = ts
-    return merged_text_anchor
+    merged_text_segments = [
+        documentai.Document.TextAnchor.TextSegment(
+            start_index=iv.begin, end_index=iv.end
+        )
+        for iv in sorted(merged_tree)
+    ]
+
+    return documentai.Document.TextAnchor(text_segments=merged_text_segments)
 
 
 def _get_text_anchor_in_bbox(
@@ -110,7 +108,11 @@ def _convert_to_pixels(x: float, conversion_rate: float) -> float:
 
 
 def _convert_bbox_units(
-    coordinate, input_bbox_units, width=None, height=None, multiplier=1
+    coordinate: float,
+    input_bbox_units: str,
+    width: Optional[float] = None,
+    height: Optional[float] = None,
+    multiplier: int = 1,
 ) -> float:
     r"""Returns a converted coordinate.
 
@@ -131,27 +133,19 @@ def _convert_bbox_units(
             A converted coordinate.
 
     """
-    final_coordinate = coordinate
-    if input_bbox_units != "normalized":
-        if input_bbox_units == "pxl":
-            if width is None:
-                final_coordinate = _normalize_coordinates(coordinate, height)
-            else:
-                final_coordinate = _normalize_coordinates(coordinate, width)
-        if input_bbox_units == "inch":
-            x = _convert_to_pixels(coordinate, 96)
-            if width is None:
-                final_coordinate = _normalize_coordinates(x, height)
-            else:
-                final_coordinate = _normalize_coordinates(x, width)
-        if input_bbox_units == "cm":
-            x = _convert_to_pixels(coordinate, 37.795)
-            if width is None:
-                final_coordinate = _normalize_coordinates(x, height)
-            else:
-                final_coordinate = _normalize_coordinates(x, width)
+    pixel_conversion_rates = {
+        "pxl": 1,
+        "inch": 96,
+        "cm": 37.795,
+    }
 
-    return final_coordinate * multiplier
+    if input_bbox_units == "normalized":
+        return coordinate * multiplier
+
+    x = _convert_to_pixels(coordinate, pixel_conversion_rates.get(input_bbox_units, 1))
+    y = width or height
+
+    return _normalize_coordinates(x, y) * multiplier
 
 
 def _get_multiplier(
