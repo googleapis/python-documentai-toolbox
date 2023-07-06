@@ -92,8 +92,8 @@ def get_revisions():
     child.children.append(sub_child)
     parent.children.append(child)
     parent.children.append(second_child)
-    second_child.children = None
-    second_parent.children = None
+    second_child.children = []
+    second_parent.children = []
 
     yield [parent, child, sub_child, second_parent, second_child]
 
@@ -361,7 +361,7 @@ def test_get_level(get_revisions):
 def test_print_child_tree(capfd, get_revisions):
 
     document_revision._print_child_tree(
-        currect_revision=get_revisions[2], doc=get_revisions[0], seen=[]
+        current_revision=get_revisions[2], doc=get_revisions[0], seen=[]
     )
 
     out, err = capfd.readouterr()
@@ -369,7 +369,7 @@ def test_print_child_tree(capfd, get_revisions):
     assert out == "└──1\n  └──2\n    └──>3\n  └──5\n"
 
     document_revision._print_child_tree(
-        currect_revision=get_revisions[0], doc=get_revisions[0], seen=[]
+        current_revision=get_revisions[0], doc=get_revisions[0], seen=[]
     )
 
     out, err = capfd.readouterr()

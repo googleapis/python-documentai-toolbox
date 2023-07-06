@@ -317,12 +317,21 @@ class DocumentWithRevisions:
         return self
 
     def next_revision(self):
-        if self.children is not None:
+        if self.children != []:
             return self.children[0]
-        elif self.parent is not None:
+        elif self.parent:
             current_index = self.parent.children_ids.index(self.revision_id)
             if current_index < len(self.parent.children) - 1:
                 return self.parent.children[current_index + 1]
+        elif self.revision_id in self.parent_ids:
+            non_parent_index = self.parent_ids.index(self.revision_id)
+            if non_parent_index < len(self.parent_ids) - 1:
+                next_parent = self.parent_ids[non_parent_index + 1]
+                index = self.all_node_ids.index(next_parent)
+                return self.root_revision_nodes[index]
+            else:
+                return self
+
         return self
 
     def jump_revision(self):
@@ -345,7 +354,6 @@ class DocumentWithRevisions:
             return self
 
         if id in self.all_node_ids:
-            print(self.all_node_ids.index(id))
             return self.root_revision_nodes[self.all_node_ids.index(id)]
 
         return "Not Found"
