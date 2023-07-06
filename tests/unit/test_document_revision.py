@@ -244,7 +244,7 @@ def test_get_base_docproto(mock_storage):
     ]
 
     actual_base_shard, actual_revision_shards = document_revision._get_base_docproto(
-        gcs_prefix="gs://output/prefix"
+        gcs_bucket_name="output", gcs_prefix="prefix"
     )
     with open("tests/unit/resources/revisions/document_text.txt", "r") as f:
         text = f.read()
@@ -263,7 +263,7 @@ def test_get_base_docproto(mock_storage):
     assert actual_revision_shards[0].revisions[0].processor == "OCR"
 
 
-def test_modify_docproto():
+def test_get_revised_entites():
     with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
         docproto = documentai.Document.from_json(f.read())
     e0 = docproto.entities[0]
@@ -280,7 +280,7 @@ def test_modify_docproto():
 
     entities = [e0, e1]
 
-    actual_entities = document_revision._modify_docproto(entities=entities)
+    actual_entities = document_revision._get_revised_entites(entities=entities)
 
     assert actual_entities[0][0].type_ == "Type 1"
     assert actual_entities[0][0].mention_text == "Mention Text 1"
@@ -300,52 +300,10 @@ def test_modify_docproto():
 
     entities = [e0, e1, e2, e3]
 
-    actual_entities = document_revision._modify_docproto(entities=entities)
+    actual_entities = document_revision._get_revised_entites(entities=entities)
 
     assert actual_entities[0][0].type_ == "Replaced Type 2"
     assert actual_entities[0][0].mention_text == "Replaced Mention Text 2"
-
-
-def test_get_revised_documents():
-    with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
-        docproto = documentai.Document.from_json(f.read())
-
-    e0 = docproto.entities[0]
-    e0.type_ = "Type 1"
-    e0.mention_text = "Mention Text 1"
-    e0.id = "1"
-    e0.provenance.type_ = _OP_TYPE.ADD
-
-    e1 = docproto.entities[1]
-    e1.type_ = "Type 2"
-    e1.mention_text = "Mention Text 2"
-    e1.id = "2"
-    e1.provenance.type_ = _OP_TYPE.ADD
-
-    e2 = documentai.Document.Entity(
-        type_="Type 1", mention_text="Mention Text 1", id="1"
-    )
-    e2.provenance.type_ = _OP_TYPE.REMOVE
-
-    e3 = documentai.Document.Entity(
-        type_="Replaced Type 2", mention_text="Replaced Mention Text 2", id="1"
-    )
-    e3.provenance.type_ = _OP_TYPE.REPLACE
-
-    docproto.entities = [e0, e1, e2, e3]
-
-    actual_revised_entities, history = document_revision._get_revised_entities(
-        revision=docproto
-    )
-
-    assert actual_revised_entities[0].type_ == "Replaced Type 2"
-    assert actual_revised_entities[0].mention_text == "Replaced Mention Text 2"
-
-    assert history[0]["entity_provenance_type"] == "ADD"
-    assert history[0]["original_text"] == "Mention Text 1"
-
-    assert history[3]["entity_provenance_type"] == "REPLACE"
-    assert history[3]["original_text"] == "Replaced Mention Text 2"
 
 
 def test_get_level(get_revisions):
@@ -444,7 +402,7 @@ def test_from_gcs_prefix_with_revisions(mock_storage):
 
     actual_document = (
         document_revision.DocumentWithRevisions.from_gcs_prefix_with_revisions(
-            gcs_prefix="gs://output/prefix"
+            gcs_bucket_name="output", gcs_prefix="prefix"
         )
     )
 
