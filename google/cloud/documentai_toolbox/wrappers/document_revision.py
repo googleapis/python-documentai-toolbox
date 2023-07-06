@@ -98,10 +98,9 @@ def _get_base_docproto(gcs_prefix) -> List[documentai.Document]:
     page_pb = documentai.Document.Page.pb()
     pb = documentai.Document.pb()
     for byte in base_bytes:
-        base_shards.append(documentai.Document(
-            pages=[page_pb.FromString(byte)],
-            text=text
-        ))
+        base_shards.append(
+            documentai.Document(pages=[page_pb.FromString(byte)], text=text)
+        )
 
     for byte in revision_bytes:
         revision_shards.append(pb.FromString(byte))
