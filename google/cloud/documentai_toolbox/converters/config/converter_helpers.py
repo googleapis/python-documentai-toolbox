@@ -97,8 +97,10 @@ def _get_entity_content(
         docai_entity.id = str(entity_id)
 
         entity_id += 1
+
         # Generates the text anchors from bounding boxes
-        if block.bounding_box:
+        if block.bounding_box is not None:
+
             # Converts external bounding box format to docproto bounding box
 
             b1 = _convert_bbox_to_docproto_bbox(block)

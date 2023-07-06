@@ -523,6 +523,12 @@ def test_jump_revision(get_revisions):
 
     assert jumped_revision.revision_id == 4
 
+    none_parent = get_revisions[0]
+    none_parent.parent = None
+    none_parent.parent_ids = None
+
+    assert none_parent.jump_revision().revision_id == 1
+
 
 def test_jump_to_revision(get_revisions):
     jumped_revision = get_revisions[2].jump_to_revision(1)

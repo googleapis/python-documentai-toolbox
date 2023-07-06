@@ -114,6 +114,46 @@ def test_get_entity_content_type_1():
     assert actual[0].mention_text == "411 I.T. Group"
 
 
+def test_get_entity_content_no_page_number():
+    docproto = documentai.Document()
+    page = documentai.Document.Page()
+    dimensions = documentai.Document.Page.Dimension()
+    dimensions.width = 2550
+    dimensions.height = 3300
+    page.dimension = dimensions
+    docproto.pages = [page]
+    with open("tests/unit/resources/converters/test_type_1.json", "r") as (f):
+        invoice = f.read()
+    with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
+        config = f.read()
+
+    b = blocks._load_blocks_from_schema(
+        input_data=invoice, input_config=config, base_docproto=docproto
+    )
+
+    b[0].page_number = None
+    b[0].bounding_box = None
+
+    actual = converter_helpers._get_entity_content(blocks=b, docproto=docproto)
+
+    assert actual[0].type == "BusinessName"
+    assert actual[0].mention_text == "411 I.T. Group"
+
+
+def test_get_entity_content_block_is_none():
+    docproto = documentai.Document()
+    page = documentai.Document.Page()
+    dimensions = documentai.Document.Page.Dimension()
+    dimensions.width = 2550
+    dimensions.height = 3300
+    page.dimension = dimensions
+    docproto.pages = [page]
+
+    actual = converter_helpers._get_entity_content(blocks=[], docproto=docproto)
+
+    assert len(actual) == 0
+
+
 @mock.patch(
     "google.cloud.documentai_toolbox.converters.config.converter_helpers._get_base_ocr"
 )
