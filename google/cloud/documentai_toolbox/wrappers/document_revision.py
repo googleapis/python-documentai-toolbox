@@ -61,18 +61,13 @@ def _get_base_and_revision_bytes(output_bucket: str, output_prefix: str) -> List
     pb = documentai.Document.pb()
     for blob in blob_list:
         name = blob.name.split("/")[-1]
-
-        if re.search(r"^doc.dp.bp", name) is not None:
-            if blob.name.endswith(".dp.bp"):
-                blob_as_bytes = blob.download_as_bytes()
+        if blob.name.endswith(".dp.bp"):
+            blob_as_bytes = blob.download_as_bytes()
+            if re.search(r"^doc.dp.bp", name):
                 text = pb.FromString(blob_as_bytes).text
-        if re.search(r"^pages_*.*", name) is not None:
-            if blob.name.endswith(".dp.bp"):
-                blob_as_bytes = blob.download_as_bytes()
+            elif re.search(r"^pages_*.*", name):
                 base_doc.append(blob_as_bytes)
-        elif re.search(r"^rev_*.*", name) is not None:
-            if blob.name.endswith(".dp.bp"):
-                blob_as_bytes = blob.download_as_bytes()
+            elif re.search(r"^rev_*.*", name):
                 revisions_doc.append(blob_as_bytes)
 
     return text, base_doc, revisions_doc
@@ -85,7 +80,6 @@ def _get_base_docproto(gcs_prefix) -> List[documentai.Document]:
     """
     base_shards = []
     revision_shards = []
-    text = []
     match = re.match(r"gs://(.*?)/(.*)", gcs_prefix)
 
     if match is None:
@@ -104,10 +98,10 @@ def _get_base_docproto(gcs_prefix) -> List[documentai.Document]:
     page_pb = documentai.Document.Page.pb()
     pb = documentai.Document.pb()
     for byte in base_bytes:
-        doc = documentai.Document()
-        doc.pages = [page_pb.FromString(byte)]
-        doc.text = text
-        base_shards.append(doc)
+        base_shards.append(documentai.Document(
+            pages=[page_pb.FromString(byte)],
+            text=text
+        ))
 
     for byte in revision_bytes:
         revision_shards.append(pb.FromString(byte))
@@ -198,21 +192,21 @@ def get_level(doc: DocumentWithRevisions):
 
 
 def _print_child_tree(
-    currect_revision: DocumentWithRevisions, doc: DocumentWithRevisions, seen
+    current_revision: DocumentWithRevisions, doc: DocumentWithRevisions, seen: List[str]
 ):
     tab = "  " * get_level(doc)
 
     if doc.children:
-        if currect_revision.revision_id == doc.revision_id:
+        if current_revision.revision_id == doc.revision_id:
             print(tab + "└──>", end="")
         else:
             print(tab + "└──", end="")
         print(doc.revision_id)
         for each in doc.children:
             seen.append(each.revision_id)
-            _print_child_tree(currect_revision, each, seen)
+            _print_child_tree(current_revision, each, seen)
     else:
-        if currect_revision.revision_id == doc.revision_id:
+        if current_revision.revision_id == doc.revision_id:
             print(tab + "└──>", end="")
         else:
             print(tab + "└──", end="")
