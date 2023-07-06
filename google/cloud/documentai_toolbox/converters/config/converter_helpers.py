@@ -15,11 +15,13 @@
 #
 
 from concurrent import futures
-import re
+import os
 import time
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
-from google.cloud import documentai, storage
+from google.api_core.client_options import ClientOptions
+
+from google.cloud import documentai
 from google.cloud.documentai_toolbox import constants
 from google.cloud.documentai_toolbox.converters.config.bbox_conversion import (
     _convert_bbox_to_docproto_bbox,
@@ -29,13 +31,23 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
     Block,
     _load_blocks_from_schema,
 )
+
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
 
 
+FILES_TO_IGNORE = [".DS_Store"]
+
+
 def _get_base_ocr(
-    project_id: str, location: str, processor_id: str, file_bytes: bytes, mime_type: str
+    project_id: str,
+    location: str,
+    processor_id: str,
+    file_bytes: bytes,
+    mime_type: str,
+    field_mask: Optional[str] = None,
+    processor_version_id: Optional[str] = None,
 ) -> documentai.Document:
-    r"""Returns documentai.Document from OCR processor.
+    r"""Returns `documentai.Document` from OCR processor.
 
     Args:
         project_id (str):
@@ -47,24 +59,40 @@ def _get_base_ocr(
         file_bytes (bytes):
             Required. The bytes of the original pdf.
         mime_type (str):
-            Required. usually "application/pdf".
+            Required. Usually `application/pdf`.
+        field_mask (Optional[str]):
+            Optional.  Specifies which fields to include in the `Document` output.
+        processor_version_id (Optional[str]):
+            Optional. Specifies the processor version to use.
+
     Returns:
         documentai.Document:
             A documentai.Document from OCR processor.
 
     """
+    client = documentai.DocumentProcessorServiceClient(
+        client_options=ClientOptions(
+            api_endpoint=f"{location}-documentai.googleapis.com"
+        )
+    )
 
-    client = documentai.DocumentProcessorServiceClient()
+    name = (
+        client.processor_version_path(
+            project_id, location, processor_id, processor_version_id
+        )
+        if processor_version_id
+        else client.processor_path(project_id, location, processor_id)
+    )
 
-    name = client.processor_path(project_id, location, processor_id)
-
-    # Load Binary Data into Document AI RawDocument Object
-    raw_document = documentai.RawDocument(content=file_bytes, mime_type=mime_type)
-
-    # Configure the process request
-    request = documentai.ProcessRequest(name=name, raw_document=raw_document)
-
-    result = client.process_document(request=request)
+    result = client.process_document(
+        request=documentai.ProcessRequest(
+            name=name,
+            raw_document=documentai.RawDocument(
+                content=file_bytes, mime_type=mime_type
+            ),
+            field_mask=field_mask,
+        )
+    )
     return result.document
 
 
@@ -82,43 +110,29 @@ def _get_entity_content(
         List[documentai.Document.Entity]:
             A list of documentai.Document entities.
     """
-    entities = []
-    entity_id = 0
+    entities: List[documentai.Document.Entity] = []
 
-    for block in blocks:
-        docai_entity = documentai.Document.Entity()
-        if block.confidence:
-            docai_entity.confidence = block.confidence
+    for entity_id, block in enumerate(blocks):
+        docai_entity = documentai.Document.Entity(
+            type=block.type_,
+            mention_text=block.text,
+            id=str(entity_id),
+            confidence=block.confidence if block.confidence else None,
+        )
 
-        docai_entity.type = block.type_
-        docai_entity.mention_text = block.text
-        docai_entity.id = str(entity_id)
-
-        entity_id += 1
-        # Generates the text anchors from bounding boxes
         if block.bounding_box:
-            # Converts external bounding box format to docproto bounding box
+            bounding_box = _convert_bbox_to_docproto_bbox(block)
+            page_number = int(block.page_number) - 1 if block.page_number else 0
+            page = docproto.pages[page_number]
 
-            b1 = _convert_bbox_to_docproto_bbox(block)
-
-            if block.page_number:
-                docai_entity.text_anchor = _get_text_anchor_in_bbox(
-                    b1, docproto.pages[int(block.page_number) - 1]
-                )
-            else:
-                docai_entity.text_anchor = _get_text_anchor_in_bbox(
-                    b1, docproto.pages[0]
-                )
-
+            docai_entity.text_anchor = _get_text_anchor_in_bbox(bounding_box, page)
             docai_entity.text_anchor.content = block.text
+            docai_entity.page_anchor = documentai.Document.PageAnchor(
+                page_refs=[
+                    documentai.Document.PageAnchor.PageRef(bounding_poly=bounding_box)
+                ]
+            )
 
-            page_anchor = documentai.Document.PageAnchor()
-            page_ref = documentai.Document.PageAnchor.PageRef()
-
-            page_ref.bounding_poly = b1
-
-            page_anchor.page_refs = [page_ref]
-            docai_entity.page_anchor = page_anchor
         entities.append(docai_entity)
 
     return entities
@@ -131,9 +145,10 @@ def _convert_to_docproto_with_config(
     project_id: str,
     location: str,
     processor_id: str,
-    retry_number: int,
-    name: str = "",
-) -> documentai.Document:
+    wait_time: Optional[int] = 1,
+    max_retries: Optional[int] = 6,
+    name: Optional[str] = "",
+) -> Optional[documentai.Document]:
     r"""Converts a single document to docproto.
 
     Args:
@@ -149,78 +164,64 @@ def _convert_to_docproto_with_config(
             Required.
         processor_id (str):
             Required.
-        retry_number (str):
-            Required. The number of seconds needed to wait if an error occured.
-        name (str):
+        wait_time (Optional[str]):
+            Optional. The number of seconds needed to wait if an error occured.
+        max_retries (Optional[str]):
+            Optional. Maximum times to retry before stopping.
+        name (Optional[str]):
             Optional. Name of the document to be converted. This is used for logging.
 
     Returns:
-        documentai.Document:
-            documentai.Document object.
+        Optional[documentai.Document]:
+            documentai.Document object. Returns None if the conversion fails.
 
     TODO: Depending on input type you will need to modify load_blocks.
           Depending on input format, if your annotated data is not separate from the base OCR data you will need to modify _get_entity_content
           Depending on input BoundingBox, if the input BoundingBox object is like https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#BoundingPoly then you will need to
             modify _convert_bbox_to_docproto_bbox since the objects are different.
     """
-    try:
-        base_docproto = _get_base_ocr(
-            project_id=project_id,
-            location=location,
-            processor_id=processor_id,
-            file_bytes=document_bytes,
-            mime_type="application/pdf",
-        )
-
-        # Loads OCR data into Blocks
-        # blocks = load_blocks(ocr_object=doc_object)
-        blocks = _load_blocks_from_schema(
-            input_data=annotated_bytes,
-            input_config=config_bytes,
-            base_docproto=base_docproto,
-        )
-
-        # Gets List[documentai.Document.Entity]
-        entities = _get_entity_content(blocks=blocks, docproto=base_docproto)
-
-        base_docproto.entities = entities
-        print("Converted : %s\r" % name, end="")
-        return base_docproto
-
-    except Exception as e:
-        print(e)
-        print(f"Could Not Convert {name}\nretrying")
-        if retry_number == 6:
-            return None
-        else:
-            time.sleep(retry_number)
-            return _convert_to_docproto_with_config(
-                name=name,
-                annotated_bytes=annotated_bytes,
-                config_bytes=config_bytes,
-                document_bytes=document_bytes,
+    for i in range(max_retries):
+        try:
+            base_docproto = _get_base_ocr(
                 project_id=project_id,
                 location=location,
                 processor_id=processor_id,
-                retry_number=retry_number + 1,
+                file_bytes=document_bytes,
+                mime_type=constants.PDF_MIMETYPE,
             )
+
+            blocks = _load_blocks_from_schema(
+                input_data=annotated_bytes,
+                input_config=config_bytes,
+                base_docproto=base_docproto,
+            )
+
+            base_docproto.entities = _get_entity_content(blocks, base_docproto)
+
+            print(f"Converted: {name}", end="\r")
+            return base_docproto
+
+        except Exception as e:
+            print(e)
+            print(f"Could Not Convert {name}\nretrying")
+            time.sleep(wait_time + i)
+
+    return None
 
 
 def _get_bytes(
-    bucket_name: str,
-    prefix: str,
+    gcs_uri: str,
     annotation_file_prefix: str,
     config_file_prefix: str,
     config_path: Optional[str] = None,
-    storage_client: Optional[storage.Client] = None,
 ) -> List[bytes]:
     r"""Downloads documents and returns them as bytes.
 
     Args:
-        bucket_name (str):
-            Required. The bucket name.
-        prefix (str):
-            Required. The prefix for the location of the output folder.
+        gcs_uri (str):
+            Required: The fully-qualified Google Cloud Storage URI.
+
+            Format: `gs://{bucket_name}/{optional_folder}/{target_folder}`
         annotation_file_prefix (str):
             Required. The prefix to search for annotation file.
         config_file_prefix (str):
@@ -232,180 +233,117 @@ def _get_bytes(
         List[bytes].
 
     """
-    if not storage_client:
-        storage_client = gcs_utilities._get_storage_client(module="get-bytes")
-
-    bucket = storage_client.bucket(bucket_name=bucket_name)
-    blobs = storage_client.list_blobs(bucket_or_name=bucket_name, prefix=prefix)
-
+    blobs = gcs_utilities.get_blobs(gcs_uri=gcs_uri)
     metadata_blob = None
 
     try:
         for blob in blobs:
-            if "DS_Store" in blob.name:
+            if FILES_TO_IGNORE[0] in blob.name or blob.name.endswith("/"):
                 continue
-            if not blob.name.endswith("/"):
-                blob_name = blob.name
-                file_name = blob_name.split("/")[-1]
-                if annotation_file_prefix in file_name:
-                    annotation_blob = blob
-                elif config_file_prefix in file_name:
-                    metadata_blob = blob
-                elif "pdf" in file_name:
-                    doc_blob = blob
+            file_name = os.path.basename(blob.name)
+            if annotation_file_prefix in file_name:
+                annotation_blob = blob
+            elif config_file_prefix in file_name:
+                metadata_blob = blob
+            elif constants.PDF_EXTENSION in file_name:
+                doc_blob = blob
 
         if metadata_blob and config_path:
-            metadata_blob = bucket.get_blob(config_path)
+            metadata_blob = gcs_utilities.get_blob(config_path)
 
-        print("Downloaded : %s\r" % prefix.split("/")[-1], end="")
+        directory_name = os.path.basename(gcs_uri)
+        print(f"Downloaded: {directory_name}", end="\r")
+
         return [
             annotation_blob.download_as_bytes(),
             doc_blob.download_as_bytes(),
             metadata_blob.download_as_bytes(),
-            prefix.split("/")[-1],
-            file_name.split(".")[0],
+            directory_name,
+            os.path.splitext(file_name)[0],
         ]
     except Exception as e:
         raise e
 
 
-def _upload_file(
-    bucket_name: str,
-    output_prefix: str,
-    file: str,
-    storage_client: Optional[storage.Client] = None,
-) -> None:
-    r"""Uploads the converted docproto to gcs.
-
-    Args:
-        bucket_name (str):
-            Required. The bucket name.
-        output_prefix (str):
-            Required. The prefix for the location of the output folder.
-        file (str):
-            Required. The docproto file in string format.
-
-    Returns:
-        None.
-
-    """
-    if not storage_client:
-        storage_client = gcs_utilities._get_storage_client(module="upload-file")
-
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(output_prefix)
-
-    print("Uploaded : %s\r" % output_prefix.split("/")[-1], end="")
-    blob.upload_from_string(file, content_type="application/json")
-
-
 def _get_files(
-    blob_list: List[storage.blob.Blob],
-    input_bucket: str,
-    input_prefix: str,
-    config_path: Optional[str] = None,
-    storage_client: Optional[storage.Client] = None,
-):
+    blob_list: List, config_path: Optional[str] = None
+) -> List[futures.Future]:
     r"""Returns a list of Futures of documents as bytes.
 
     Args:
         blob_list (List[storage.blob.Blob]):
             Required. The list of Futures from _get_files.
-        input_bucket (str):
-            Required. The name of the input bucket.
-        input_prefix (str):
-            Required. The prefix for the location of the input folder.
-        config_path (str):
-            Required. The optional
+        config_path (Optional[str]):
+            Optional. The configuration path.
     Returns:
-        Tuple[dict, list, list]:
-            Converted document.proto, unique entity types and documents that were not converted.
+        List[futures.Future]:
+            A list of Futures.
 
     """
-    download_pool = futures.ThreadPoolExecutor(10)
-    downloads = []
-    prev = None
+
+    download_pool = futures.ThreadPoolExecutor(max_workers=10)
+
+    dirs = {os.path.dirname(blob.name) for blob in blob_list}
+
     print("-------- Downloading Started --------")
-    for i, blob in enumerate(blob_list):
-        if "DS_Store" in blob.name:
-            continue
-
-        file_path = blob.name.split("/")
-        file_path.pop()
-        doc_directory = file_path[-1]
-        file_path2 = "/".join(file_path)
-        if prev == doc_directory or f"{file_path2}/" == input_prefix:
-            continue
-
-        download = download_pool.submit(
-            _get_bytes,
-            input_bucket,
-            file_path2,
-            "annotation",
-            "config",
-            config_path,
-            storage_client,
-        )
-        downloads.append(download)
-
-        prev = doc_directory
-
-    return downloads
+    return [
+        download_pool.submit(_get_bytes, dir, "annotation", "config", config_path)
+        for dir in dirs
+    ]
 
 
 def _get_docproto_files(
-    f: List[futures.Future],
+    futures_list: List[futures.Future],
     project_id: str,
     location: str,
     processor_id: str,
-) -> Tuple[dict, list, list]:
-    r"""Returns converted document.proto, unique entity types and documents that were not converted.
+) -> Tuple[Dict[str, str], Set[str], List[str]]:
+    r"""Returns converted document.proto, unique entity types, and documents that were not converted.
 
     Args:
-        f (List[futures.Future]):
+        futures_list (List[futures.Future]):
             Required. The list of Futures from _get_files.
         project_id (str):
-            Required.
+            Required. The project ID.
         location (str):
-            Required.
+            Required. The location.
         processor_id (str):
-            Required.
+            Required. The processor ID.
+
     Returns:
-        Tuple[dict, list, list]:
-            Converted document.proto, unique entity types and documents that were not converted.
+        Tuple[dict, set, list]:
+            Converted document.proto, unique entity types, and documents that were not converted.
 
     """
-    did_not_convert = []
-    files = {}
-    unique_types = []
-    for future in f:
-        blobs = future.result()
+    files: Dict[str, str] = {}
+    unique_types: Set[str] = set()
+    did_not_convert: List[str] = []
+
+    for future in futures_list:
+        annotated_bytes, document_bytes, config_bytes, name = future.result()
         docproto = _convert_to_docproto_with_config(
-            annotated_bytes=blobs[0],
-            document_bytes=blobs[1],
-            config_bytes=blobs[2],
+            annotated_bytes=annotated_bytes,
+            document_bytes=document_bytes,
+            config_bytes=config_bytes,
             project_id=project_id,
             location=location,
             processor_id=processor_id,
-            retry_number=1,
-            name=blobs[3],
+            name=name,
         )
 
         if docproto is None:
-            did_not_convert.append(f"{blobs[3]}")
+            did_not_convert.append(name)
             continue
 
-        for entity in docproto.entities:
-            if entity.type_ not in unique_types:
-                unique_types.append(entity.type_)
-
-        files[blobs[3]] = str(documentai.Document.to_json(docproto))
+        unique_types.update(entity.type_ for entity in docproto.entities)
+        files[name] = documentai.Document.to_json(docproto)
 
     return files, unique_types, did_not_convert
 
 
 def _upload(
-    files: dict, gcs_output_path: str, storage_client: Optional[storage.Client] = None
+    files: dict,
+    gcs_output_path: str,
 ) -> None:
     r"""Upload converted document.proto to gcs location.
 
@@ -420,36 +358,24 @@ def _upload(
         None.
 
     """
-    match = re.match(r"gs://(.*?)/(.*)", gcs_output_path)
+    # gcs_bucket_name, gcs_prefix = gcs_utilities.split_gcs_uri(gcs_output_path)
 
-    if match is None:
-        raise ValueError("gcs_prefix does not match accepted format")
+    # if re.match(constants.FILE_CHECK_REGEX, gcs_prefix):
+    #     raise ValueError("gcs_prefix cannot contain file types")
 
-    output_bucket, output_prefix = match.groups()
+    upload_pool = futures.ThreadPoolExecutor(max_workers=10)
 
-    if output_prefix is None:
-        output_prefix = "/"
-
-    file_check = re.match(constants.FILE_CHECK_REGEX, output_prefix)
-
-    if file_check:
-        raise ValueError("gcs_prefix cannot contain file types")
-
-    download_pool = futures.ThreadPoolExecutor(10)
-    uploads = []
     print("-------- Uploading Started --------")
-    for i, key in enumerate(files):
-        op = output_prefix.split("/")
-        op.pop()
-        if "config" not in key and "annotations" not in key:
-            upload = download_pool.submit(
-                _upload_file,
-                output_bucket,
-                f"{output_prefix}/{key}.json",
-                files[key],
-                storage_client,
-            )
-            uploads.append(upload)
+    uploads = [
+        upload_pool.submit(
+            gcs_utilities.upload_file,
+            gcs_output_path,
+            f"{name}{constants.JSON_EXTENSION}",
+            content,
+        )
+        for name, content in files.items()
+        if "config" not in name and "annotations" not in name
+    ]
 
     futures.wait(uploads)
 
@@ -488,57 +414,30 @@ def _convert_documents_with_config(
         None.
 
     """
-    match = re.match(r"gs://(.*?)/(.*)", gcs_input_path)
-
-    if match is None:
-        raise ValueError("gcs_prefix does not match accepted format")
-
-    input_bucket, input_prefix = match.groups()
-
-    if input_prefix is None:
-        input_prefix = "/"
-
-    file_check = re.match(constants.FILE_CHECK_REGEX, input_prefix)
-
-    if file_check:
-        raise ValueError("gcs_prefix cannot contain file types")
-
-    storage_client = gcs_utilities._get_storage_client(module="config-converter")
-
-    blob_list = storage_client.list_blobs(input_bucket, prefix=input_prefix)
-
+    blob_list = gcs_utilities.get_blobs(
+        gcs_uri=gcs_input_path, module="config-converter"
+    )
     downloads = _get_files(
         blob_list=blob_list,
-        input_prefix=input_prefix,
-        input_bucket=input_bucket,
         config_path=config_path,
-        storage_client=storage_client,
     )
 
-    f, _ = futures.wait(downloads)
+    futures_list, _ = futures.wait(downloads)
 
     print("-------- Finished Downloading --------")
 
     print("-------- Converting Started --------")
-
-    files = []
-    did_not_convert = []
-    labels = []
-
     files, labels, did_not_convert = _get_docproto_files(
-        f, project_id, location, processor_id
+        futures_list, project_id, location, processor_id
     )
 
     print("-------- Finished Converting --------")
-    if did_not_convert != []:
+    if did_not_convert:
         print(f"Did not convert {len(did_not_convert)} documents")
         print(did_not_convert)
 
-    _upload(files, gcs_output_path, storage_client)
+    _upload(files, gcs_output_path)
 
     print("-------- Finished Uploading --------")
     print("-------- Schema Information --------")
     print(f"Unique Entity Types: {labels}")
-
-
-# [min,min],[max,min],[max,max],[min,max]

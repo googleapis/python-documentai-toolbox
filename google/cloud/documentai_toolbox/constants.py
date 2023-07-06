@@ -23,6 +23,9 @@ USER_AGENT_PRODUCT = "documentai-toolbox"
 JSON_EXTENSION = ".json"
 JSON_MIMETYPE = "application/json"
 
+PDF_EXTENSION = ".pdf"
+PDF_MIMETYPE = "application/pdf"
+
 FILE_CHECK_REGEX = r"(.*[.].*$)"
 
 # https://cloud.google.com/document-ai/quotas#content_limits
@@ -33,7 +36,7 @@ BATCH_MAX_REQUESTS = 5
 
 # https://cloud.google.com/document-ai/docs/file-types
 VALID_MIME_TYPES = {
-    "application/pdf",
+    PDF_MIMETYPE,
     "image/bmp",
     "image/gif",
     "image/jpeg",

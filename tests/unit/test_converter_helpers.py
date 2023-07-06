@@ -143,7 +143,7 @@ def test_convert_to_docproto_with_config(mock_ocr):
         project_id="project_id",
         processor_id="processor_id",
         location="location",
-        retry_number=0,
+        wait_time=0,
     )
 
     assert len(actual.pages) == 1
@@ -173,7 +173,7 @@ def test_convert_to_docproto_with_config_with_error(mock_ocr, capfd):
         project_id="project_id",
         processor_id="processor_id",
         location="location",
-        retry_number=6,
+        wait_time=2,
     )
 
     out, err = capfd.readouterr()
@@ -203,7 +203,8 @@ def test_convert_to_docproto_with_config_with_error_and_retry(mock_ocr, capfd):
         project_id="project_id",
         processor_id="processor_id",
         location="location",
-        retry_number=5,
+        wait_time=2,
+        max_retries=2,
     )
 
     out, err = capfd.readouterr()
@@ -219,7 +220,7 @@ def test_get_bytes(mock_storage):
     client.Bucket.return_value = mock_bucket
 
     mock_ds_store = mock.Mock(name=[])
-    mock_ds_store.name = "DS_Store"
+    mock_ds_store.name = ".DS_Store"
 
     mock_blob1 = mock.Mock(name=[])
     mock_blob1.name = "gs://test-directory/1/test-annotations.json"
@@ -238,8 +239,7 @@ def test_get_bytes(mock_storage):
     client.list_blobs.return_value = [mock_ds_store, mock_blob1, mock_blob2, mock_blob3]
 
     actual = converter_helpers._get_bytes(
-        bucket_name="bucket",
-        prefix="prefix",
+        gcs_uri="gs://bucket/prefix",
         annotation_file_prefix="annotations",
         config_file_prefix="config",
     )
@@ -267,23 +267,10 @@ def test_get_bytes_with_error(mock_storage):
         client.list_blobs.return_value = [mock_blob1]
 
         converter_helpers._get_bytes(
-            bucket_name="bucket",
-            prefix="prefix",
+            gcs_uri="gs://bucket/prefix",
             annotation_file_prefix="annotations",
             config_file_prefix="config",
         )
-
-
-@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
-def test_upload_file(mock_storage):
-    client = mock_storage.Client.return_value
-
-    converter_helpers._upload_file(
-        bucket_name="bucket", output_prefix="prefix", file="file"
-    )
-    client.bucket.return_value.blob.return_value.upload_from_string.assert_called_with(
-        "file", content_type="application/json"
-    )
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
@@ -297,7 +284,7 @@ def test_get_files(mock_storage, mock_get_bytes):
     client.Bucket.return_value = mock_bucket
 
     mock_ds_store = mock.Mock(name=[])
-    mock_ds_store.name = "DS_Store"
+    mock_ds_store.name = ".DS_Store"
 
     mock_blob1 = mock.Mock(name=[])
     mock_blob1.name = "gs://test-directory/1/test-annotations.json"
@@ -314,10 +301,7 @@ def test_get_files(mock_storage, mock_get_bytes):
     mock_blob3.download_as_bytes.return_value = "gs://test-directory/1/test.pdf"
 
     blob_list = [mock_ds_store, mock_blob1, mock_blob2, mock_blob3]
-
-    actual = converter_helpers._get_files(
-        blob_list=blob_list, input_prefix="", input_bucket="test-directory"
-    )
+    actual = converter_helpers._get_files(blob_list=blob_list)
 
     assert actual[0].result() == "file_bytes"
 
@@ -344,7 +328,7 @@ def test_get_docproto_files(mocked_convert_docproto):
         actual_unique_types,
         actual_did_not_convert,
     ) = converter_helpers._get_docproto_files(
-        f=[mock_result],
+        futures_list=[mock_result],
         project_id="project-id",
         processor_id="processor-id",
         location="us",
@@ -359,7 +343,6 @@ def test_get_docproto_files(mocked_convert_docproto):
         project_id="project-id",
         location="us",
         processor_id="processor-id",
-        retry_number=1,
         name="document_1",
     )
 
@@ -382,7 +365,7 @@ def test_get_docproto_files_with_no_docproto(mocked_convert_docproto):
         actual_unique_types,
         actual_did_not_convert,
     ) = converter_helpers._get_docproto_files(
-        f=[mock_result],
+        futures_list=[mock_result],
         project_id="project-id",
         processor_id="processor-id",
         location="us",
@@ -395,34 +378,19 @@ def test_get_docproto_files_with_no_docproto(mocked_convert_docproto):
         project_id="project-id",
         location="us",
         processor_id="processor-id",
-        retry_number=1,
         name="document_1",
     )
 
 
 @mock.patch(
-    "google.cloud.documentai_toolbox.converters.config.converter_helpers._upload_file",
+    "google.cloud.documentai_toolbox.utilities.gcs_utilities.upload_file",
 )
 def test_upload(mock_upload_file):
     files = {}
     files["document_1"] = "Document"
     converter_helpers._upload(files, gcs_output_path="gs://output/")
 
-    mock_upload_file.assert_called_with("output", "/document_1.json", "Document", None)
-
-
-def test_upload_with_format_error():
-    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
-        files = {}
-        files["document_1"] = "Document"
-        converter_helpers._upload(files, gcs_output_path="output/path")
-
-
-def test_upload_with_file_error():
-    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
-        files = {}
-        files["document_1"] = "Document"
-        converter_helpers._upload(files, gcs_output_path="gs://output/path.json")
+    mock_upload_file.assert_called_with("gs://output/", "document_1.json", "Document")
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
@@ -469,7 +437,10 @@ def test_convert_documents_with_config(
 
 
 def test_convert_documents_with_config_with_gcs_path_error():
-    with pytest.raises(ValueError, match="gcs_prefix does not match accepted format"):
+    with pytest.raises(
+        ValueError,
+        match="gcs_uri must follow format 'gs://{bucket_name}/{gcs_prefix}'.",
+    ):
         converter_helpers._convert_documents_with_config(
             project_id="project-id",
             location="location",
