@@ -122,15 +122,14 @@ def _get_target_object(json_data: any, target_object: str) -> SimpleNamespace:
     if not hasattr(json_data_s, target_object_parts[0]):
         return None
 
-    current_object = json_data_s
     for part in target_object_parts:
-        if type(current_object) == dict:
-            current_object = SimpleNamespace(**current_object)
-        elif type(current_object) == list and part.isnumeric():
-            current_object = current_object[int(part)]
+        if type(json_data_s) == dict:
+            json_data_s = SimpleNamespace(**json_data_s)
+        elif type(json_data_s) == list and part.isnumeric():
+            json_data_s = json_data_s[int(part)]
             continue
-        current_object = getattr(current_object, part)
-    return current_object
+        json_data_s = getattr(json_data_s, part)
+    return json_data_s
 
 
 def _load_blocks_from_schema(
@@ -159,65 +158,29 @@ def _load_blocks_from_schema(
 
     mention_text = schema_json.entity.mention_text
 
-    document_height = None
-    document_width = None
-
-    id_ = schema_json.entity.id if hasattr(schema_json.entity, "id") else None
-    if hasattr(schema_json, "page"):
-        document_height = (
-            schema_json.page.height if hasattr(schema_json.page, "height") else None
-        )
-        document_width = (
-            schema_json.page.width if hasattr(schema_json.page, "width") else None
-        )
-
-    confidence = (
-        schema_json.entity.confidence
-        if hasattr(schema_json.entity, "confidence")
+    id_ = getattr(schema_json.entity, "id", None)
+    document_height = (
+        getattr(schema_json.page, "height", None)
+        if hasattr(schema_json, "page")
         else None
     )
-    page_number = (
-        schema_json.entity.page_number
-        if hasattr(schema_json.entity, "page_number")
-        else None
-    )
-    normalized_vertices = (
-        schema_json.entity.normalized_vertices.base
-        if hasattr(schema_json.entity.normalized_vertices, "base")
-        else None
-    )
-    bounding_width = (
-        schema_json.entity.normalized_vertices.width
-        if hasattr(schema_json.entity.normalized_vertices, "width")
-        else None
-    )
-    bounding_height = (
-        schema_json.entity.normalized_vertices.height
-        if hasattr(schema_json.entity.normalized_vertices, "height")
-        else None
-    )
-    bounding_type = (
-        schema_json.entity.normalized_vertices.type
-        if hasattr(schema_json.entity.normalized_vertices, "type")
-        else None
-    )
-    bounding_unit = (
-        schema_json.entity.normalized_vertices.unit
-        if hasattr(schema_json.entity.normalized_vertices, "unit")
-        else None
-    )
-    bounding_x = (
-        schema_json.entity.normalized_vertices.x
-        if hasattr(schema_json.entity.normalized_vertices, "x")
-        else None
-    )
-    bounding_y = (
-        schema_json.entity.normalized_vertices.y
-        if hasattr(schema_json.entity.normalized_vertices, "y")
+    document_width = (
+        getattr(schema_json.page, "width", None)
+        if hasattr(schema_json, "page")
         else None
     )
 
-    blocks = []
+    confidence = getattr(schema_json.entity, "confidence", None)
+    page_number = getattr(schema_json.entity, "page_number", None)
+    normalized_vertices = getattr(schema_json.entity.normalized_vertices, "base", None)
+    bounding_width = getattr(schema_json.entity.normalized_vertices, "width", None)
+    bounding_height = getattr(schema_json.entity.normalized_vertices, "height", None)
+    bounding_type = getattr(schema_json.entity.normalized_vertices, "type", None)
+    bounding_unit = getattr(schema_json.entity.normalized_vertices, "unit", None)
+    bounding_x = getattr(schema_json.entity.normalized_vertices, "x", None)
+    bounding_y = getattr(schema_json.entity.normalized_vertices, "y", None)
+
+    blocks: List[Block] = []
     ens = _get_target_object(objects, entities)
     for i in ens:
         entity = i
