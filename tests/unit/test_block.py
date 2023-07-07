@@ -1,9 +1,9 @@
 from google.cloud import documentai
-from google.cloud.documentai_toolbox.converters.config import blocks
+from google.cloud.documentai_toolbox.converters.config import block
 
 
 def test_create():
-    actual = blocks.Block.create(
+    actual = block.Block(
         type_="test_type",
         text="test_text",
         bounding_box="",
@@ -32,10 +32,10 @@ def test_get_target_object():
         "document": {"entities": [{}, {"text": "test_text", "type": "test_type"}]}
     }
 
-    text = blocks._get_target_object(
+    text = block._get_target_object(
         json_data=test_json_data, target_object="document.entities.1.text"
     )
-    type = blocks._get_target_object(
+    type = block._get_target_object(
         json_data=test_json_data, target_object="document.entities.1.type"
     )
 
@@ -46,7 +46,7 @@ def test_get_target_object():
 def test_get_target_object_with_one_object():
     test_json_data = {"document": "document_test"}
 
-    text = blocks._get_target_object(json_data=test_json_data, target_object="document")
+    text = block._get_target_object(json_data=test_json_data, target_object="document")
 
     assert text == "document_test"
 
@@ -56,14 +56,14 @@ def test_get_target_object_without_target():
         "document": {"entities": [{}, {"text": "test_text", "type": "test_type"}]}
     }
 
-    text = blocks._get_target_object(
+    text = block._get_target_object(
         json_data=test_json_data, target_object="entities.text"
     )
 
     assert text is None
 
 
-def test_load_blocks_from_scheme_type_1():
+def test_load_blocks_from_schema_type_1():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -76,7 +76,7 @@ def test_load_blocks_from_scheme_type_1():
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
         config = f.read()
 
-    actual = blocks._load_blocks_from_schema(
+    actual = block.Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
@@ -84,7 +84,7 @@ def test_load_blocks_from_scheme_type_1():
     assert actual[0].type_ == "BusinessName"
 
 
-def test_load_blocks_from_scheme_type_2():
+def test_load_blocks_from_schema_type_2():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -97,7 +97,7 @@ def test_load_blocks_from_scheme_type_2():
     with open("tests/unit/resources/converters/test_config_type_2.json", "r") as (f):
         config = f.read()
 
-    actual = blocks._load_blocks_from_schema(
+    actual = block.Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
@@ -105,7 +105,7 @@ def test_load_blocks_from_scheme_type_2():
     assert actual[0].type_ == "invoice_id"
 
 
-def test__load_blocks_from_schema_type_3():
+def test_load_blocks_from_schema_type_3():
     docproto = documentai.Document()
     page = documentai.Document.Page()
     dimensions = documentai.Document.Page.Dimension()
@@ -118,7 +118,7 @@ def test__load_blocks_from_schema_type_3():
     with open("tests/unit/resources/converters/test_config_type_3.json", "r") as (f):
         config = f.read()
 
-    actual = blocks._load_blocks_from_schema(
+    actual = block.Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 

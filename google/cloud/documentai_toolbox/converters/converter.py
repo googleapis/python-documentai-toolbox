@@ -24,14 +24,8 @@ from google.api_core.client_options import ClientOptions
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox import constants
-from google.cloud.documentai_toolbox.converters.config.bbox_conversion import (
-    _convert_bbox_to_docproto_bbox,
-    _get_text_anchor_in_bbox,
-)
-from google.cloud.documentai_toolbox.converters.config.blocks import (
-    Block,
-    _load_blocks_from_schema,
-)
+from google.cloud.documentai_toolbox.converters.config import bbox_conversion
+from google.cloud.documentai_toolbox.converters.config.block import Block
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
 
 FILES_TO_IGNORE = [".DS_Store"]
@@ -120,11 +114,13 @@ def _get_entity_content(
         )
 
         if block.bounding_box:
-            bounding_box = _convert_bbox_to_docproto_bbox(block)
+            bounding_box = bbox_conversion._convert_bbox_to_docproto_bbox(block)
             page_number = int(block.page_number) - 1 if block.page_number else 0
             page = docproto.pages[page_number]
 
-            docai_entity.text_anchor = _get_text_anchor_in_bbox(bounding_box, page)
+            docai_entity.text_anchor = bbox_conversion._get_text_anchor_in_bbox(
+                bounding_box, page
+            )
             docai_entity.text_anchor.content = block.text
             docai_entity.page_anchor = documentai.Document.PageAnchor(
                 page_refs=[
@@ -177,7 +173,7 @@ def _convert_to_docproto_with_config(
     TODO: Depending on input type you will need to modify load_blocks.
           Depending on input format, if your annotated data is not separate from the base OCR data you will need to modify _get_entity_content
           Depending on input BoundingBox, if the input BoundingBox object is like https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#BoundingPoly then you will need to
-            modify _convert_bbox_to_docproto_bbox since the objects are different.
+            modify bbox_conversion._convert_bbox_to_docproto_bbox since the objects are different.
     """
     for i in range(max_retries):
         try:
@@ -189,7 +185,7 @@ def _convert_to_docproto_with_config(
                 mime_type=constants.PDF_MIMETYPE,
             )
 
-            blocks = _load_blocks_from_schema(
+            blocks = Block.load_blocks_from_schema(
                 input_data=annotated_bytes,
                 input_config=config_bytes,
                 base_docproto=base_docproto,

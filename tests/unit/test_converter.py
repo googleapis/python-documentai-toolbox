@@ -24,7 +24,7 @@ import pytest
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox.converters import converter
-from google.cloud.documentai_toolbox.converters.config import blocks
+from google.cloud.documentai_toolbox.converters.config.block import Block
 
 
 @mock.patch("google.cloud.documentai_toolbox.converters.converter.documentai")
@@ -58,7 +58,7 @@ def test_get_entity_content_type_3():
     with open("tests/unit/resources/converters/test_config_type_3.json", "r") as (f):
         config = f.read()
 
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
@@ -81,7 +81,7 @@ def test_get_entity_content_type_2():
     with open("tests/unit/resources/converters/test_config_type_2.json", "r") as (f):
         config = f.read()
 
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
@@ -104,7 +104,7 @@ def test_get_entity_content_type_1():
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
         config = f.read()
 
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
