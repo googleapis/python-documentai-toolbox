@@ -18,7 +18,7 @@
 import dataclasses
 import os
 import re
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Type, Union
 
 from google.api_core.client_options import ClientOptions
 from google.cloud.vision import AnnotateFileResponse
@@ -328,16 +328,16 @@ class Document:
     entities: List[Entity] = dataclasses.field(init=False, repr=False)
     text: str = dataclasses.field(init=False, repr=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.pages = _pages_from_shards(shards=self.shards)
         self.entities = _entities_from_shards(shards=self.shards)
         self.text = "".join(shard.text for shard in self.shards)
 
     @classmethod
     def from_document_path(
-        cls,
+        cls: Type["Document"],
         document_path: str,
-    ):
+    ) -> "Document":
         r"""Loads `Document` from local `document_path`.
 
             .. code-block:: python
@@ -362,9 +362,9 @@ class Document:
 
     @classmethod
     def from_documentai_document(
-        cls,
+        cls: Type["Document"],
         documentai_document: documentai.Document,
-    ):
+    ) -> "Document":
         r"""Loads `Document` from local `documentai_document`.
 
             .. code-block:: python
@@ -387,8 +387,11 @@ class Document:
 
     @classmethod
     def from_gcs(
-        cls, gcs_bucket_name: str, gcs_prefix: str, gcs_input_uri: Optional[str] = None
-    ):
+        cls: Type["Document"],
+        gcs_bucket_name: str,
+        gcs_prefix: str,
+        gcs_input_uri: Optional[str] = None,
+    ) -> "Document":
         r"""Loads Document from Cloud Storage.
 
         Args:
@@ -417,7 +420,9 @@ class Document:
         )
 
     @classmethod
-    def from_batch_process_metadata(cls, metadata: documentai.BatchProcessMetadata):
+    def from_batch_process_metadata(
+        cls: Type["Document"], metadata: documentai.BatchProcessMetadata
+    ) -> "Document":
         r"""Loads Documents from Cloud Storage, using the output from `BatchProcessMetadata`.
 
             .. code-block:: python
@@ -456,7 +461,9 @@ class Document:
         return documents
 
     @classmethod
-    def from_batch_process_operation(cls, location: str, operation_name: str):
+    def from_batch_process_operation(
+        cls: Type["Document"], location: str, operation_name: str
+    ) -> "Document":
         r"""Loads Documents from Cloud Storage, using the operation name returned from `batch_process_documents()`.
 
             .. code-block:: python
