@@ -283,11 +283,20 @@ def _get_files(
 
     download_pool = futures.ThreadPoolExecutor(max_workers=10)
 
-    dirs = {os.path.dirname(blob.name) for blob in blob_list}
+    dirs = {
+        gcs_utilities.create_gcs_uri(blob.bucket.name, os.path.dirname(blob.name))
+        for blob in blob_list
+    }
 
     print("-------- Downloading Started --------")
     return [
-        download_pool.submit(_get_bytes, dir, "annotation", "config", config_path)
+        download_pool.submit(
+            _get_bytes,
+            dir,
+            "annotation",
+            "config",
+            config_path,
+        )
         for dir in dirs
     ]
 
@@ -358,11 +367,6 @@ def _upload(
         None.
 
     """
-    # gcs_bucket_name, gcs_prefix = gcs_utilities.split_gcs_uri(gcs_output_path)
-
-    # if re.match(constants.FILE_CHECK_REGEX, gcs_prefix):
-    #     raise ValueError("gcs_prefix cannot contain file types")
-
     upload_pool = futures.ThreadPoolExecutor(max_workers=10)
 
     print("-------- Uploading Started --------")
