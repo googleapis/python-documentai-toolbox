@@ -172,43 +172,45 @@ def test_get_multiplier_cm():
 
 
 def test_convert_bbox_to_docproto_bbox_empty_coordinate():
-    docproto = documentai.Document()
-    page = documentai.Document.Page()
-    dimensions = documentai.Document.Page.Dimension()
-    dimensions.width = 2550
-    dimensions.height = 3300
-    page.dimension = dimensions
-    docproto.pages = [page]
-    with open("tests/unit/resources/converters/test_type_1.json", "r") as (f):
+    docproto = documentai.Document(
+        pages=[
+            documentai.Document.Page(
+                dimension=documentai.Document.Page.Dimension(width=2550, height=3300)
+            )
+        ]
+    )
+    with open("tests/unit/resources/converters/test_type_1.json", "r") as f:
         invoice = f.read()
-    with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
+    with open("tests/unit/resources/converters/test_config_type_1.json", "r") as f:
         config = f.read()
     b = blocks._load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
     b[0].bounding_box = []
 
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=(b[0]))
+    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual == []
 
 
 def test_convert_bbox_to_docproto_bbox_type_1():
-    docproto = documentai.Document()
-    page = documentai.Document.Page()
-    dimensions = documentai.Document.Page.Dimension()
-    dimensions.width = 2550
-    dimensions.height = 3300
-    page.dimension = dimensions
-    docproto.pages = [page]
-    with open("tests/unit/resources/converters/test_type_1.json", "r") as (f):
+    docproto = documentai.Document(
+        pages=[
+            documentai.Document.Page(
+                dimension=documentai.Document.Page.Dimension(width=2550, height=3300)
+            )
+        ]
+    )
+    with open("tests/unit/resources/converters/test_type_1.json", "r") as f:
         invoice = f.read()
-    with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
+    with open("tests/unit/resources/converters/test_config_type_1.json", "r") as f:
         config = f.read()
+
     b = blocks._load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=(b[0]))
+
+    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual.normalized_vertices != []
     assert actual.vertices == []
@@ -217,21 +219,22 @@ def test_convert_bbox_to_docproto_bbox_type_1():
 
 
 def test_convert_bbox_to_docproto_bbox_type_2():
-    docproto = documentai.Document()
-    page = documentai.Document.Page()
-    dimensions = documentai.Document.Page.Dimension()
-    dimensions.width = 2550
-    dimensions.height = 3300
-    page.dimension = dimensions
-    docproto.pages = [page]
-    with open("tests/unit/resources/converters/test_type_2.json", "r") as (f):
+    docproto = documentai.Document(
+        pages=[
+            documentai.Document.Page(
+                dimension=documentai.Document.Page.Dimension(width=2550, height=3300)
+            )
+        ]
+    )
+    with open("tests/unit/resources/converters/test_type_2.json", "r") as f:
         invoice = f.read()
-    with open("tests/unit/resources/converters/test_config_type_2.json", "r") as (f):
+    with open("tests/unit/resources/converters/test_config_type_2.json", "r") as f:
         config = f.read()
     b = blocks._load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=(b[0]))
+
+    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual.normalized_vertices != []
     assert actual.vertices == []
@@ -240,24 +243,22 @@ def test_convert_bbox_to_docproto_bbox_type_2():
 
 
 def test_convert_bbox_to_docproto_bbox_type_3():
-    docproto = documentai.Document()
-    page = documentai.Document.Page()
-    dimensions = documentai.Document.Page.Dimension()
-    dimensions.width = 2550
-    dimensions.height = 3300
-    page.dimension = dimensions
-    docproto.pages = [page]
-    with open("tests/unit/resources/converters/test_type_3.json", "r") as (f):
+    docproto = documentai.Document(
+        pages=[
+            documentai.Document.Page(
+                dimension=documentai.Document.Page.Dimension(width=2550, height=3300)
+            )
+        ]
+    )
+    with open("tests/unit/resources/converters/test_type_3.json", "r") as f:
         invoice = f.read()
-    with open("tests/unit/resources/converters/test_config_type_3.json", "r") as (f):
+    with open("tests/unit/resources/converters/test_config_type_3.json", "r") as f:
         config = f.read()
     b = blocks._load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
-    print(b[0].bounding_type)
-
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=(b[0]))
+    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual.normalized_vertices != []
     assert actual.vertices == []
