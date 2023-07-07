@@ -173,7 +173,7 @@ def test_convert_to_docproto_with_config_with_error(mock_ocr, capfd):
         project_id="project_id",
         processor_id="processor_id",
         location="location",
-        wait_time=2,
+        wait_time=1,
     )
 
     out, err = capfd.readouterr()
@@ -203,7 +203,7 @@ def test_convert_to_docproto_with_config_with_error_and_retry(mock_ocr, capfd):
         project_id="project_id",
         processor_id="processor_id",
         location="location",
-        wait_time=2,
+        wait_time=1,
         max_retries=2,
     )
 
