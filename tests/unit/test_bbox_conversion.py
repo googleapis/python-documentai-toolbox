@@ -1,7 +1,8 @@
 from google.cloud.documentai_v1.types import geometry
 
 from google.cloud import documentai
-from google.cloud.documentai_toolbox.converters.config import bbox_conversion, blocks
+from google.cloud.documentai_toolbox.converters.config import bbox_conversion
+from google.cloud.documentai_toolbox.converters.config.block import Block
 
 
 def test_midpoint_in_bpoly():
@@ -183,7 +184,7 @@ def test_convert_bbox_to_docproto_bbox_empty_coordinate():
         invoice = f.read()
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as f:
         config = f.read()
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
     b[0].bounding_box = []
@@ -206,7 +207,7 @@ def test_convert_bbox_to_docproto_bbox_type_1():
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as f:
         config = f.read()
 
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
@@ -230,7 +231,7 @@ def test_convert_bbox_to_docproto_bbox_type_2():
         invoice = f.read()
     with open("tests/unit/resources/converters/test_config_type_2.json", "r") as f:
         config = f.read()
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
@@ -254,7 +255,7 @@ def test_convert_bbox_to_docproto_bbox_type_3():
         invoice = f.read()
     with open("tests/unit/resources/converters/test_config_type_3.json", "r") as f:
         config = f.read()
-    b = blocks._load_blocks_from_schema(
+    b = Block.load_blocks_from_schema(
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
