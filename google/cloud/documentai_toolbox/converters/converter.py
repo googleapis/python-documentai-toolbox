@@ -32,9 +32,7 @@ from google.cloud.documentai_toolbox.converters.config.blocks import (
     Block,
     _load_blocks_from_schema,
 )
-
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
-
 
 FILES_TO_IGNORE = [".DS_Store"]
 

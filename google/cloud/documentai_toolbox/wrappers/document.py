@@ -33,6 +33,7 @@ from google.cloud.documentai_toolbox.utilities import gcs_utilities
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
 from google.cloud.documentai_toolbox.wrappers.page import FormField, Page
 
+
 def _entities_from_shards(
     shards: List[documentai.Document],
 ) -> List[Entity]:

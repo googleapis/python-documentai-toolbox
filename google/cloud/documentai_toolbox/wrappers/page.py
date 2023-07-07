@@ -328,6 +328,7 @@ def _table_rows_from_documentai_table_rows(
         for row in table_rows
     ]
 
+
 def _get_hocr_bounding_box(
     element_with_layout: ElementWithLayout,
     page_dimension: documentai.Document.Page.Dimension,
