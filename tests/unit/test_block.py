@@ -7,20 +7,6 @@ def test_create():
         type_="test_type",
         text="test_text",
         bounding_box="",
-        block_references="",
-        block_id="",
-        confidence="",
-        page_number="",
-        page_width="",
-        page_height="",
-        bounding_width="",
-        bounding_height="",
-        bounding_type="",
-        bounding_unit="",
-        bounding_x="",
-        bounding_y="",
-        docproto_width="",
-        docproto_height="",
     )
 
     assert actual.type_ == "test_type"

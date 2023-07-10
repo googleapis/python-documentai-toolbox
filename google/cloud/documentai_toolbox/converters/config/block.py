@@ -17,12 +17,12 @@
 import dataclasses
 import json
 from types import SimpleNamespace
-from typing import List, Type
+from typing import List, Optional, Type
 
 from google.cloud import documentai
 
 
-def _get_target_object(json_data: any, target_object: str) -> SimpleNamespace:
+def _get_target_object(json_data: any, target_object: str) -> Optional[SimpleNamespace]:
     r"""Returns SimpleNamespace of target_object.
 
     Args:
@@ -32,7 +32,7 @@ def _get_target_object(json_data: any, target_object: str) -> SimpleNamespace:
             Required. The path to the target object.
 
     Returns:
-        SimpleNamespace.
+        Optional[SimpleNamespace].
 
     """
     json_data_s = SimpleNamespace(**json_data)
@@ -72,23 +72,53 @@ class Block:
         page_number:
             Optional.
     """
-    type_: dataclasses.field(init=True, repr=False)
-    text: dataclasses.field(init=True, repr=False)
-    bounding_box: dataclasses.field(init=True, repr=False, default=None)
-    block_references: dataclasses.field(init=False, repr=False, default=None)
-    block_id: dataclasses.field(init=False, repr=False, default=None)
-    confidence: dataclasses.field(init=False, repr=False, default=None)
-    page_number: dataclasses.field(init=False, repr=False, default=None)
-    page_width: dataclasses.field(init=False, repr=False, default=None)
-    page_height: dataclasses.field(init=False, repr=False, default=None)
-    bounding_width: dataclasses.field(init=False, repr=False, default=None)
-    bounding_height: dataclasses.field(init=False, repr=False, default=None)
-    bounding_type: dataclasses.field(init=False, repr=False, default=None)
-    bounding_unit: dataclasses.field(init=False, repr=False, default=None)
-    bounding_x: dataclasses.field(init=False, repr=False, default=None)
-    bounding_y: dataclasses.field(init=False, repr=False, default=None)
-    docproto_width: dataclasses.field(init=False, repr=False, default=None)
-    docproto_height: dataclasses.field(init=False, repr=False, default=None)
+    type_: SimpleNamespace = dataclasses.field(init=True, repr=False)
+    text: SimpleNamespace = dataclasses.field(init=True, repr=False)
+    bounding_box: Optional[SimpleNamespace] = dataclasses.field(
+        init=True, repr=False, default=None
+    )
+    block_references: Optional[SimpleNamespace] = dataclasses.field(
+        init=True, repr=False, default=None
+    )
+    block_id: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    confidence: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    page_number: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    page_width: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    page_height: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    bounding_width: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    bounding_height: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    bounding_type: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    bounding_unit: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    bounding_x: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    bounding_y: Optional[SimpleNamespace] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    docproto_width: Optional[float] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    docproto_height: Optional[float] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @classmethod
     def load_blocks_from_schema(
@@ -173,9 +203,8 @@ class Block:
             b = Block(
                 type_=block_type,
                 text=block_text,
+                bounding_box=_get_target_object(entity, normalized_vertices),
             )
-
-            b.bounding_box = _get_target_object(entity, normalized_vertices)
 
             if id_:
                 b.id_ = _get_target_object(entity, id_)
