@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""Wrappers for Document AI Document type."""
+"""Wrappers for Document AI Document with revisions."""
 
 import dataclasses
+import os
 import re
 import copy
 
@@ -44,35 +45,36 @@ def _get_base_and_revision_bytes(
             Required. The prefix of the folder where files are excluding the bucket name.
 
     Returns:
-        Tuple[str, list, list]:
-            document text, base document.proto, revision shards.
+        Tuple[str, list[Bytes], list[Bytes]]:
+            document text, list of page bytes from the base document, list of revision bytes from the base document.
 
     """
     text = ""
-    base_doc = []
-    revisions_doc = []
+    pages_bytes = []
+    revision_bytes = []
 
     storage_client = storage.Client()
 
     blob_list = storage_client.list_blobs(output_bucket, prefix=output_prefix)
     pb = documentai.Document.pb()
     for blob in blob_list:
-        name = blob.name.split("/")[-1]
+        name = os.path.basename(blob.name)
         if blob.name.endswith(".dp.bp"):
             blob_as_bytes = blob.download_as_bytes()
             if re.search(r"^doc.dp.bp", name):
                 text = pb.FromString(blob_as_bytes).text
             elif re.search(r"^pages_*.*", name):
-                base_doc.append(blob_as_bytes)
+                pages_bytes.append(blob_as_bytes)
             elif re.search(r"^rev_*.*", name):
-                revisions_doc.append(blob_as_bytes)
+                print(name)
+                revision_bytes.append(blob_as_bytes)
 
-    return text, base_doc, revisions_doc
+    return text, pages_bytes, revision_bytes
 
 
 def _get_base_docproto(gcs_bucket_name, gcs_prefix) -> Tuple[list, list]:
     r"""
-    Returns base document.proto and list of revision shards.
+    Returns a list of documentai.Document with pages from the base document and list of revision shards.
 
     Args:
         gcs_bucket_name (str):
@@ -84,10 +86,10 @@ def _get_base_docproto(gcs_bucket_name, gcs_prefix) -> Tuple[list, list]:
 
             Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
     Returns:
-        Tuple[list, list]:
-            base document.proto, revision shards.
+        Tuple[list[documentai.Document], list[documentai.Document]]:
+            list of documentai.Document with base pages, list of revisions.
     """
-    base_shards = []
+    base_page_shards = []
     revision_shards = []
 
     text, base_bytes, revision_bytes = _get_base_and_revision_bytes(
@@ -96,17 +98,17 @@ def _get_base_docproto(gcs_bucket_name, gcs_prefix) -> Tuple[list, list]:
     page_pb = documentai.Document.Page.pb()
     pb = documentai.Document.pb()
     for byte in base_bytes:
-        base_shards.append(
+        base_page_shards.append(
             documentai.Document(pages=[page_pb.FromString(byte)], text=text)
         )
 
     for byte in revision_bytes:
         revision_shards.append(pb.FromString(byte))
 
-    return base_shards, revision_shards
+    return base_page_shards, revision_shards
 
 
-def _get_revised_entites(
+def _modify_entities(
     entities: List[documentai.Document.Entity],
 ) -> Tuple[list, list]:
     r"""Modifies the entities using the providence field in the entities.
@@ -153,9 +155,9 @@ def _get_revised_entites(
                 {
                     "object": "Entity",
                     "entity_provenance_type": _OP_TYPE(e.provenance.type_).name,
-                    "original_entity": e,
-                    "original_type": e.type_,
-                    "original_text": e.mention_text,
+                    "original_entity": entities_array[int(e.id) - 1],
+                    "original_type": entities_array[int(e.id) - 1].type_,
+                    "original_text": entities_array[int(e.id) - 1].mention_text,
                     "replace_type": e.type_,
                     "replace_text": e.mention_text,
                 }
@@ -175,16 +177,12 @@ def _get_level(current_revision: "DocumentWithRevisions") -> int:
         int:
             The level of the current revision in the revision tree.
     """
-    try:
-        level = 0
-        p = current_revision.parent
-        if p.revision_id:
-            while p:
-                p = p.parent
-                level += 1
-        return level
-    except Exception:
-        return 0
+    level = 0
+    p = current_revision.parent
+    while hasattr(p, "parent"):
+        level += 1
+        p = p.parent
+    return level
 
 
 def _print_child_tree(
@@ -223,7 +221,7 @@ def _print_child_tree(
 class DocumentWithRevisions:
     r"""Represents a wrapped Document.
 
-    A single Document protobuf message with revisions will written as several `dp.bp` files on
+    A single Document protobuf message with revisions will be written as several `dp.bp` files on
     GCS by Document AI's Processor Training UI.  This class hides away the
     shards from the users and implements convenient methods for reading and moving between different document revisions.
 
@@ -315,7 +313,7 @@ class DocumentWithRevisions:
                 gcs_bucket_name=copied_doc.gcs_bucket_name,
                 gcs_prefix=copied_doc.gcs_prefix,
             )
-            d.entities, history = _get_revised_entites(rev.entities)
+            d.entities, history = _modify_entities(rev.entities)
 
             revision_doc = DocumentWithRevisions(
                 document=d,

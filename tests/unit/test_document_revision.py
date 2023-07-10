@@ -31,30 +31,64 @@ from google.cloud import documentai
 
 @pytest.fixture
 def get_revisions():
-    parent = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
-    second_parent = document_revision.DocumentWithRevisions(
-        document=None, revision_nodes=None
-    )
-    child = document_revision.DocumentWithRevisions(document=None, revision_nodes=None)
-    second_child = document_revision.DocumentWithRevisions(
-        document=None, revision_nodes=None
-    )
-    sub_child = document_revision.DocumentWithRevisions(
-        document=None, revision_nodes=None
+    # Create the parent document
+    parent = document_revision.DocumentWithRevisions(
+        document=None,
+        revision_nodes=None,
+        all_node_ids=[1, 2, 3, 4, 5],
+        parent_ids=[1, 4],
     )
 
+    # Create the second parent document
+    second_parent = document_revision.DocumentWithRevisions(
+        document=None,
+        revision_nodes=None,
+        all_node_ids=[1, 2, 3, 4, 5],
+        parent_ids=[1, 4],
+    )
+
+    # Create the child document
+    child = document_revision.DocumentWithRevisions(
+        document=None, revision_nodes=None, all_node_ids=[1, 2, 3, 4, 5]
+    )
+
+    # Create the second child document
+    second_child = document_revision.DocumentWithRevisions(
+        document=None, revision_nodes=None, all_node_ids=[1, 2, 3, 4, 5]
+    )
+
+    # Create the sub-child document
+    sub_child = document_revision.DocumentWithRevisions(
+        document=None, revision_nodes=None, all_node_ids=[1, 2, 3, 4, 5]
+    )
+
+    # Set the revision IDs
     parent.revision_id = 1
     child.revision_id = 2
     second_child.revision_id = 5
     sub_child.revision_id = 3
     second_parent.revision_id = 4
 
+    # Set the parent relationships
     child.parent = parent
     second_child.parent = parent
     sub_child.parent = child
 
-    parent.root_revision_nodes = [parent, child, sub_child, second_parent, second_child]
-    child.root_revision_nodes = [parent, child, sub_child, second_parent, second_child]
+    # Set the root revision nodes
+    parent.root_revision_nodes = [
+        parent,
+        child,
+        sub_child,
+        second_parent,
+        second_child,
+    ]
+    child.root_revision_nodes = [
+        parent,
+        child,
+        sub_child,
+        second_parent,
+        second_child,
+    ]
     sub_child.root_revision_nodes = [
         parent,
         child,
@@ -77,24 +111,20 @@ def get_revisions():
         second_child,
     ]
 
-    parent.all_node_ids = [1, 2, 3, 4, 5]
-    child.all_node_ids = [1, 2, 3, 4, 5]
-    sub_child.all_node_ids = [1, 2, 3, 4, 5]
-    second_parent.all_node_ids = [1, 2, 3, 4, 5]
-    second_child.all_node_ids = [1, 2, 3, 4, 5]
-
+    # Set the children IDs
     parent.children_ids = [2, 5]
     child.children_ids = [3]
 
-    parent.parent_ids = [1, 4]
-    second_parent.parent_ids = [1, 4]
-
+    # Add the sub-child to the child document
     child.children.append(sub_child)
-    parent.children.append(child)
-    parent.children.append(second_child)
-    second_child.children = []
-    second_parent.children = []
 
+    # Add the child document to the parent document
+    parent.children.append(child)
+
+    # Add the second child document to the parent document
+    parent.children.append(second_child)
+
+    # Yield the documents
     yield [parent, child, sub_child, second_parent, second_child]
 
 
@@ -263,7 +293,7 @@ def test_get_base_docproto(mock_storage):
     assert actual_revision_shards[0].revisions[0].processor == "OCR"
 
 
-def test_get_revised_entites():
+def test_modify_entities():
     with open("tests/unit/resources/0/toolbox_invoice_test-0.json", "r") as f:
         docproto = documentai.Document.from_json(f.read())
     e0 = docproto.entities[0]
@@ -280,7 +310,7 @@ def test_get_revised_entites():
 
     entities = [e0, e1]
 
-    actual_entities = document_revision._get_revised_entites(entities=entities)
+    actual_entities = document_revision._modify_entities(entities=entities)
 
     assert actual_entities[0][0].type_ == "Type 1"
     assert actual_entities[0][0].mention_text == "Mention Text 1"
@@ -300,7 +330,7 @@ def test_get_revised_entites():
 
     entities = [e0, e1, e2, e3]
 
-    actual_entities = document_revision._get_revised_entites(entities=entities)
+    actual_entities = document_revision._modify_entities(entities=entities)
 
     assert actual_entities[0][0].type_ == "Replaced Type 2"
     assert actual_entities[0][0].mention_text == "Replaced Mention Text 2"

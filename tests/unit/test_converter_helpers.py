@@ -115,13 +115,13 @@ def test_get_entity_content_type_1():
 
 
 def test_get_entity_content_no_page_number():
-    docproto = documentai.Document()
-    page = documentai.Document.Page()
-    dimensions = documentai.Document.Page.Dimension()
-    dimensions.width = 2550
-    dimensions.height = 3300
-    page.dimension = dimensions
-    docproto.pages = [page]
+    docproto = documentai.Document(
+        pages=[
+            documentai.Document.Page(
+                dimension=documentai.Document.Page.Dimension(width=2550, height=3300)
+            )
+        ]
+    )
     with open("tests/unit/resources/converters/test_type_1.json", "r") as (f):
         invoice = f.read()
     with open("tests/unit/resources/converters/test_config_type_1.json", "r") as (f):
