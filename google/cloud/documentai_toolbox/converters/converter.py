@@ -209,7 +209,7 @@ def _get_bytes(
     annotation_file_prefix: str,
     config_file_prefix: str,
     config_path: Optional[str] = None,
-) -> List[bytes]:
+) -> Tuple[bytes, bytes, bytes, str, str]:
     r"""Downloads documents and returns them as bytes.
 
     Args:
@@ -225,7 +225,8 @@ def _get_bytes(
             Optional. The gcs path to a config file. This should be used when there is a single config file.
 
     Returns:
-        List[bytes].
+        Tuple[bytes, bytes, bytes, str, str].
+        Annotation, Document PDF, Config File, Directory Name, File Name.
 
     """
     blobs = gcs_utilities.get_blobs(gcs_uri=gcs_uri)
@@ -249,13 +250,12 @@ def _get_bytes(
         directory_name = os.path.basename(gcs_uri)
         print(f"Downloaded: {directory_name}", end="\r")
 
-        return [
+        return (
             annotation_blob.download_as_bytes(),
             doc_blob.download_as_bytes(),
             metadata_blob.download_as_bytes(),
             directory_name,
-            os.path.splitext(file_name)[0],
-        ]
+        )
     except Exception as e:
         raise e
 

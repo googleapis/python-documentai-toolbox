@@ -237,13 +237,12 @@ def test_get_bytes(mock_storage):
         config_file_prefix="config",
     )
 
-    assert actual == [
+    assert actual == (
         "gs://test-directory/1/test-annotations.json",
         "gs://test-directory/1/test.pdf",
         "gs://test-directory/1/test-config.json",
         "prefix",
-        "test",
-    ]
+    )
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
