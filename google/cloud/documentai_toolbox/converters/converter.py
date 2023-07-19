@@ -241,7 +241,7 @@ def _get_bytes(
             elif constants.PDF_EXTENSION in file_name:
                 doc_blob = blob
 
-        if metadata_blob and config_path:
+        if config_path:
             metadata_blob = gcs_utilities.get_blob(config_path)
 
         directory_name = os.path.basename(gcs_uri)
