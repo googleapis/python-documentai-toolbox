@@ -28,8 +28,6 @@ from google.cloud.documentai_toolbox.converters.config import bbox_conversion
 from google.cloud.documentai_toolbox.converters.config.block import Block
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
 
-FILES_TO_IGNORE = [".DS_Store"]
-
 
 def _get_base_ocr(
     project_id: str,
@@ -114,11 +112,11 @@ def _get_entity_content(
         )
 
         if block.bounding_box:
-            bounding_box = bbox_conversion._convert_bbox_to_docproto_bbox(block)
+            bounding_box = bbox_conversion.convert_bbox_to_docproto_bbox(block)
             page_number = int(block.page_number) - 1 if block.page_number else 0
             page = docproto.pages[page_number]
 
-            docai_entity.text_anchor = bbox_conversion._get_text_anchor_in_bbox(
+            docai_entity.text_anchor = bbox_conversion.get_text_anchor_in_bbox(
                 bounding_box, page
             )
             docai_entity.text_anchor.content = block.text
@@ -140,9 +138,9 @@ def _convert_to_docproto_with_config(
     project_id: str,
     location: str,
     processor_id: str,
-    wait_time: Optional[int] = 1,
-    max_retries: Optional[int] = 6,
-    name: Optional[str] = "",
+    wait_time: int = 1,
+    max_retries: int = 6,
+    name: str = "",
 ) -> Optional[documentai.Document]:
     r"""Converts a single document to docproto.
 
@@ -159,11 +157,11 @@ def _convert_to_docproto_with_config(
             Required.
         processor_id (str):
             Required.
-        wait_time (Optional[str]):
+        wait_time (str):
             Optional. The number of seconds needed to wait if an error occured.
-        max_retries (Optional[str]):
+        max_retries (str):
             Optional. Maximum times to retry before stopping.
-        name (Optional[str]):
+        name (str):
             Optional. Name of the document to be converted. This is used for logging.
 
     Returns:
@@ -173,7 +171,7 @@ def _convert_to_docproto_with_config(
     TODO: Depending on input type you will need to modify load_blocks.
           Depending on input format, if your annotated data is not separate from the base OCR data you will need to modify _get_entity_content
           Depending on input BoundingBox, if the input BoundingBox object is like https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#BoundingPoly then you will need to
-            modify bbox_conversion._convert_bbox_to_docproto_bbox since the objects are different.
+            modify bbox_conversion.convert_bbox_to_docproto_bbox since the objects are different.
     """
     for i in range(max_retries):
         try:
@@ -209,7 +207,7 @@ def _get_bytes(
     annotation_file_prefix: str,
     config_file_prefix: str,
     config_path: Optional[str] = None,
-) -> Tuple[bytes, bytes, bytes, str, str]:
+) -> Tuple[bytes, bytes, bytes, str]:
     r"""Downloads documents and returns them as bytes.
 
     Args:
@@ -225,16 +223,15 @@ def _get_bytes(
             Optional. The gcs path to a config file. This should be used when there is a single config file.
 
     Returns:
-        Tuple[bytes, bytes, bytes, str, str].
-        Annotation, Document PDF, Config File, Directory Name, File Name.
+        Tuple[bytes, bytes, bytes, str].
+        Annotation, Document PDF, Config File, Directory Name.
 
     """
     blobs = gcs_utilities.get_blobs(gcs_uri=gcs_uri)
-    metadata_blob = None
 
     try:
         for blob in blobs:
-            if FILES_TO_IGNORE[0] in blob.name or blob.name.endswith("/"):
+            if blob.name.endswith("/"):
                 continue
             file_name = os.path.basename(blob.name)
             if annotation_file_prefix in file_name:

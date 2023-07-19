@@ -68,7 +68,7 @@ def test_get_text_anchor_in_bbox():
     token2 = documentai.Document.Page.Token(layout=layout2)
 
     page = documentai.Document.Page(tokens=[token1, token2])
-    actual = bbox_conversion._get_text_anchor_in_bbox(bbox=box_a, page=page)
+    actual = bbox_conversion.get_text_anchor_in_bbox(bbox=box_a, page=page)
 
     text_segment_3 = documentai.Document.TextAnchor.TextSegment(
         start_index="0", end_index="200"
@@ -189,7 +189,7 @@ def test_convert_bbox_to_docproto_bbox_empty_coordinate():
     )
     b[0].bounding_box = []
 
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
+    actual = bbox_conversion.convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual == []
 
@@ -211,7 +211,7 @@ def test_convert_bbox_to_docproto_bbox_type_1():
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
+    actual = bbox_conversion.convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual.normalized_vertices != []
     assert actual.vertices == []
@@ -235,7 +235,7 @@ def test_convert_bbox_to_docproto_bbox_type_2():
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
+    actual = bbox_conversion.convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual.normalized_vertices != []
     assert actual.vertices == []
@@ -259,7 +259,7 @@ def test_convert_bbox_to_docproto_bbox_type_3():
         input_data=invoice, input_config=config, base_docproto=docproto
     )
 
-    actual = bbox_conversion._convert_bbox_to_docproto_bbox(block=b[0])
+    actual = bbox_conversion.convert_bbox_to_docproto_bbox(block=b[0])
 
     assert actual.normalized_vertices != []
     assert actual.vertices == []
