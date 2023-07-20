@@ -16,10 +16,11 @@
 
 from typing import Callable, List, Optional
 
-from google.cloud.documentai_v1.types import geometry
+from google.cloud import documentai
+from google.cloud.documentai_toolbox.converters.config.block import Block
+
 from intervaltree import intervaltree
 
-from google.cloud import documentai
 
 PIXEL_CONVERSION_RATES = {
     "pxl": 1,
@@ -29,7 +30,7 @@ PIXEL_CONVERSION_RATES = {
 
 
 def _midpoint_in_bpoly(
-    box_a: geometry.BoundingPoly, box_b: geometry.BoundingPoly
+    box_a: documentai.BoundingPoly, box_b: documentai.BoundingPoly
 ) -> bool:
     """Returns whether the midpoint in box_a is inside box_b."""
 
@@ -89,19 +90,19 @@ def get_text_anchor_in_bbox(
     return text_anchor
 
 
-def _get_norm_x_max(bbox: geometry.BoundingPoly) -> float:
+def _get_norm_x_max(bbox: documentai.BoundingPoly) -> float:
     return max([vertex.x for vertex in bbox.normalized_vertices])
 
 
-def _get_norm_x_min(bbox: geometry.BoundingPoly) -> float:
+def _get_norm_x_min(bbox: documentai.BoundingPoly) -> float:
     return min([vertex.x for vertex in bbox.normalized_vertices])
 
 
-def _get_norm_y_max(bbox: geometry.BoundingPoly) -> float:
+def _get_norm_y_max(bbox: documentai.BoundingPoly) -> float:
     return max([vertex.y for vertex in bbox.normalized_vertices])
 
 
-def _get_norm_y_min(bbox: geometry.BoundingPoly) -> float:
+def _get_norm_y_min(bbox: documentai.BoundingPoly) -> float:
     return min([vertex.y for vertex in bbox.normalized_vertices])
 
 
@@ -172,19 +173,19 @@ def _get_multiplier(
     return docproto_coordinate / converted_coordinate
 
 
-def convert_bbox_to_docproto_bbox(block) -> geometry.BoundingPoly:
+def convert_bbox_to_docproto_bbox(block: Block) -> documentai.BoundingPoly:
     r"""Returns a converted bounding box from Block.
 
     Args:
         block (Block):
             Required.
     Returns:
-        geometry.BoundingPoly:
-            A geometry.BoundingPoly from bounding box.
+        documentai.BoundingPoly:
+            A documentai.BoundingPoly from bounding box.
 
     """
     if block.bounding_box == []:
-        return geometry.BoundingPoly()
+        return documentai.BoundingPoly()
 
     x_multiplier = 1.0
     y_multiplier = 1.0
@@ -264,4 +265,4 @@ def convert_bbox_to_docproto_bbox(block) -> geometry.BoundingPoly:
             )
             normalized_vertices.append(documentai.NormalizedVertex(x=x, y=y))
 
-    return geometry.BoundingPoly(normalized_vertices=normalized_vertices)
+    return documentai.BoundingPoly(normalized_vertices=normalized_vertices)
