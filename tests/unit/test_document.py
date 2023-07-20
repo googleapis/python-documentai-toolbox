@@ -658,3 +658,16 @@ def test_export_hocr_str():
         expected = f.read()
 
     assert actual_hocr == expected
+
+
+def test_document_to_documentai_document(get_bytes_multiple_files_mock):
+    wrapped_document = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
+    )
+    get_bytes_multiple_files_mock.assert_called_once()
+
+    actual = wrapped_document.to_documentai_document()
+    with open("tests/unit/resources/merged_document/merged_shards.json", "r") as f:
+        expected = documentai.Document.from_json(f.read())
+
+    assert actual == expected

@@ -18,7 +18,7 @@
 import dataclasses
 import os
 import re
-from typing import Dict, List, Optional, Type, Union
+from typing import cast, Dict, List, Optional, Type, Union
 
 from google.api_core.client_options import ClientOptions
 from google.cloud.vision import AnnotateFileResponse
@@ -282,6 +282,35 @@ def _dict_to_bigquery(
         destination=table_ref,
         job_config=job_config,
     )
+
+
+def _apply_text_offset(documentai_object: object, text_offset: int) -> object:
+    if not hasattr(documentai_object, "text_segments"):
+        return documentai_object
+
+    object_with_offset = documentai_object
+
+    object_with_offset.text_segments = [
+        documentai.Document.TextSegment(
+            start_index=str(int(text_segment.start_index) + text_offset)
+            if hasattr(text_segment, "start_index")
+            else None,
+            end_index=str(int(text_segment.end_index) + text_offset)
+            if hasattr(text_segment, "end_index")
+            else None,
+        )
+        for text_segment in documentai_object.text_segments
+    ]
+
+    for attr_name, attr_value in vars(documentai_object).items():
+        if isinstance(attr_value, (dict, list)):
+            setattr(
+                object_with_offset,
+                attr_name,
+                _apply_text_offset(attr_value, text_offset),
+            )
+
+    return object_with_offset
 
 
 @dataclasses.dataclass
@@ -771,3 +800,21 @@ class Document:
         template = environment.get_template("hocr_document_template.xml.j2")
         content = template.render(pages=self.pages, title=title)
         return content
+
+    def to_documentai_document(self) -> documentai.Document:
+        if len(self.shards) == 1:
+            return self.shards[0]
+
+        merged_document = documentai.Document(text=self.text, pages=[], entities=[])
+        for shard in self.shards:
+            shard_with_offset: documentai.Document = cast(
+                documentai.Document,
+                _apply_text_offset(
+                    documentai_object=shard,
+                    text_offset=int(shard.shard_info.text_offset),
+                ),
+            )
+            merged_document.pages.extend(shard_with_offset.pages)
+            merged_document.entities.extend(shard_with_offset.entities)
+
+        return merged_document
