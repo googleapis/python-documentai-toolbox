@@ -18,7 +18,7 @@
 import dataclasses
 import os
 import re
-from typing import cast, Dict, List, Optional, Type, Union
+from typing import Dict, List, Optional, Type, Union
 
 from google.api_core.client_options import ClientOptions
 from google.cloud.vision import AnnotateFileResponse
@@ -284,33 +284,35 @@ def _dict_to_bigquery(
     )
 
 
-def _apply_text_offset(documentai_object: object, text_offset: int) -> object:
-    if not hasattr(documentai_object, "text_segments"):
-        return documentai_object
+def _apply_text_offset(documentai_object: object, text_offset: int) -> None:
+    r"""Applies a text offset to all text_segments in `documentai_object`.
 
-    object_with_offset = documentai_object
+    Args:
+        documentai_object (object):
+            Required. Document AI object to apply `text_offset` to.
+        text_offset (int):
+            Required. Text offset to apply. From `Document.shard_info.text_offset`.
+    Returns:
+        None
 
-    object_with_offset.text_segments = [
-        documentai.Document.TextSegment(
-            start_index=str(int(text_segment.start_index) + text_offset)
-            if hasattr(text_segment, "start_index")
-            else None,
-            end_index=str(int(text_segment.end_index) + text_offset)
-            if hasattr(text_segment, "end_index")
-            else None,
-        )
-        for text_segment in documentai_object.text_segments
-    ]
-
-    for attr_name, attr_value in vars(documentai_object).items():
-        if isinstance(attr_value, (dict, list)):
-            setattr(
-                object_with_offset,
-                attr_name,
-                _apply_text_offset(attr_value, text_offset),
-            )
-
-    return object_with_offset
+    """
+    if isinstance(documentai_object, dict):
+        for key, value in documentai_object.items():
+            if key == "text_segments":
+                documentai_object[key] = [
+                    {
+                        "start_index": int(text_segment.get("start_index", 0))
+                        + text_offset,
+                        "end_index": int(text_segment.get("end_index", 0))
+                        + text_offset,
+                    }
+                    for text_segment in value
+                ]
+            else:
+                _apply_text_offset(value, text_offset)
+    elif isinstance(documentai_object, list):
+        for item in documentai_object:
+            _apply_text_offset(item, text_offset)
 
 
 @dataclasses.dataclass
@@ -802,19 +804,24 @@ class Document:
         return content
 
     def to_documentai_document(self) -> documentai.Document:
+        r"""Exports a documentai.Document from the wrapped document with shards merged.
+
+        Args:
+            None.
+        Returns:
+            documentai.Document:
+                Document with all shards merged and text offsets applied.
+        """
         if len(self.shards) == 1:
             return self.shards[0]
 
         merged_document = documentai.Document(text=self.text, pages=[], entities=[])
         for shard in self.shards:
-            shard_with_offset: documentai.Document = cast(
-                documentai.Document,
-                _apply_text_offset(
-                    documentai_object=shard,
-                    text_offset=int(shard.shard_info.text_offset),
-                ),
+            _apply_text_offset(
+                documentai_object=shard,
+                text_offset=int(shard.shard_info.text_offset),
             )
-            merged_document.pages.extend(shard_with_offset.pages)
-            merged_document.entities.extend(shard_with_offset.entities)
+            merged_document.pages.extend(shard.pages)
+            merged_document.entities.extend(shard.entities)
 
         return merged_document

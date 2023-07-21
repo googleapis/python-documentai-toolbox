@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import shutil
 
@@ -666,8 +667,50 @@ def test_document_to_documentai_document(get_bytes_multiple_files_mock):
     )
     get_bytes_multiple_files_mock.assert_called_once()
 
-    actual = wrapped_document.to_documentai_document()
+    actual = documentai.Document.to_json(
+        wrapped_document.to_documentai_document(), indent=None
+    )
     with open("tests/unit/resources/merged_document/merged_shards.json", "r") as f:
-        expected = documentai.Document.from_json(f.read())
+        merged_document = documentai.Document.from_json(f.read())
+        expected = documentai.Document.to_json(merged_document, indent=None)
 
     assert actual == expected
+
+
+def test_document_to_documentai_document_one_shard():
+    path = "tests/unit/resources/0/toolbox_invoice_test-0.json"
+
+    with open(path, "r", encoding="utf-8") as f:
+        documentai_document = documentai.Document.from_json(f.read())
+
+    wrapped_document = document.Document.from_documentai_document(documentai_document)
+    actual = wrapped_document.to_documentai_document()
+
+    assert actual == documentai_document
+
+
+def test_apply_text_offset():
+    path = "tests/unit/resources/1/toolbox_large_document_test-1.json"
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+        documentai_document = documentai.Document.from_json(content)
+
+    assert documentai_document.shard_info.text_offset == 4350
+
+    doc_dict = documentai.Document.to_dict(documentai_document)
+    document._apply_text_offset(
+        doc_dict, int(documentai_document.shard_info.text_offset)
+    )
+
+    actual = documentai.Document.from_json(json.dumps(doc_dict))
+    assert actual.entities[0].text_anchor.text_segments[0].start_index == 4616
+    assert actual.entities[0].text_anchor.text_segments[0].end_index == 4622
+    assert actual.entities[0].text_anchor.text_segments[3].start_index == 4634
+    assert actual.entities[0].text_anchor.text_segments[3].end_index == 4640
+
+    assert (
+        actual.pages[0].blocks[0].layout.text_anchor.text_segments[0].start_index
+    ) == 4350
+    assert (
+        actual.pages[0].blocks[0].layout.text_anchor.text_segments[0].end_index == 4358
+    )
