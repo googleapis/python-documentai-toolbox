@@ -1,15 +1,12 @@
 {
-    "entity_object":"pages.1.Entities",
-    "entity": {
-        "mention_text":"Text",
-        "type_":"Type",
-        "page_number": "page",
-        "normalized_vertices":{
-            "type":"1",
-            "unit":"inch",
-            "base":"bBox",
-            "x":"x",
-            "y":"y"
-        }
-    }
+  "entities": "pages[1:].Entities",
+  "mention_text": "pages[1:].Entities.Text",
+  "type_": "pages[1:].Entities.Type",
+  "page_number": "pages[1:].Entities.page",
+  "confidence": "pages[1:].Entities.page.confidence",
+  "bbox_type": 1,
+  "unit": "inch",
+  "normalized_vertices" : "pages[1:].Entities.bBox",
+  "x": "pages[1:].Entities.bBox[*].x",
+  "y": "pages[1:].Entities.bBox[*].y"
 }

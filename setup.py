@@ -61,6 +61,8 @@ setuptools.setup(
         "immutabledict >= 2.0.0, < 3.0.0dev",
         "Pillow >= 9.5.0, < 10.0.0",
         "Jinja2 >= 3.1.0, <= 3.1.2",
+        "dataclasses-json >= 0.5.13, < 1.0.0",
+        "jmespath >= 1.0.1, < 2.0.0",
     ),
     python_requires=">=3.7",
     classifiers=[

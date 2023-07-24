@@ -15,9 +15,12 @@
 #
 
 import dataclasses
+
 import json
 from types import SimpleNamespace
 from typing import List, Optional, Type
+
+import jmespath
 
 from google.cloud import documentai
 
@@ -59,9 +62,7 @@ class Block:
     Attributes:
         bounding_box (str):
             Required.
-        block_references:
-            Optional.
-        block_id:
+        id_:
             Optional.
         confidence:
             Optional.
@@ -72,15 +73,15 @@ class Block:
         page_number:
             Optional.
     """
-    type_: SimpleNamespace = dataclasses.field(init=True, repr=False)
-    text: SimpleNamespace = dataclasses.field(init=True, repr=False)
+    type_: str = dataclasses.field(init=True, repr=False)
+    text: str = dataclasses.field(init=True, repr=False)
+    docproto_width: float = dataclasses.field(init=False, repr=False)
+    docproto_height: float = dataclasses.field(init=False, repr=False)
+
     bounding_box: Optional[SimpleNamespace] = dataclasses.field(
         init=True, repr=False, default=None
     )
-    block_references: Optional[SimpleNamespace] = dataclasses.field(
-        init=True, repr=False, default=None
-    )
-    block_id: Optional[SimpleNamespace] = dataclasses.field(
+    id_: Optional[SimpleNamespace] = dataclasses.field(
         init=False, repr=False, default=None
     )
     confidence: Optional[SimpleNamespace] = dataclasses.field(
@@ -101,22 +102,16 @@ class Block:
     bounding_height: Optional[SimpleNamespace] = dataclasses.field(
         init=False, repr=False, default=None
     )
-    bounding_type: Optional[SimpleNamespace] = dataclasses.field(
+    bounding_type: Optional[int] = dataclasses.field(
         init=False, repr=False, default=None
     )
-    bounding_unit: Optional[SimpleNamespace] = dataclasses.field(
+    bounding_unit: Optional[str] = dataclasses.field(
         init=False, repr=False, default=None
     )
     bounding_x: Optional[SimpleNamespace] = dataclasses.field(
         init=False, repr=False, default=None
     )
     bounding_y: Optional[SimpleNamespace] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    docproto_width: Optional[float] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    docproto_height: Optional[float] = dataclasses.field(
         init=False, repr=False, default=None
     )
 
@@ -142,98 +137,104 @@ class Block:
                 From original annotation data and provided config.
 
         """
-        objects = json.loads(input_data)
-        schema_json = json.loads(
-            input_config, object_hook=lambda d: SimpleNamespace(**d)
-        )
+        annotations = json.loads(input_data)
+        schema = json.loads(input_config)
 
-        entities = schema_json.entity_object
-        type_ = schema_json.entity.type_
+        data_class_fields = {
+            field_name: jmespath.search(jmespath_expr, annotations)
+            for field_name, jmespath_expr in schema.items()
+        }
+        b = Block(**data_class_fields)
 
-        mention_text = schema_json.entity.mention_text
+        print(b)
 
-        id_ = getattr(schema_json.entity, "id", None)
-        document_height = (
-            getattr(schema_json.page, "height", None)
-            if hasattr(schema_json, "page")
-            else None
-        )
-        document_width = (
-            getattr(schema_json.page, "width", None)
-            if hasattr(schema_json, "page")
-            else None
-        )
+        # entities = schema_json.entity_object
+        # type_ = schema_json.entity.type_
 
-        confidence = getattr(schema_json.entity, "confidence", None)
-        page_number = getattr(schema_json.entity, "page_number", None)
-        normalized_vertices = getattr(
-            schema_json.entity.normalized_vertices, "base", None
-        )
-        bounding_width = getattr(schema_json.entity.normalized_vertices, "width", None)
-        bounding_height = getattr(
-            schema_json.entity.normalized_vertices, "height", None
-        )
-        bounding_type = getattr(schema_json.entity.normalized_vertices, "type", None)
-        bounding_unit = getattr(schema_json.entity.normalized_vertices, "unit", None)
-        bounding_x = getattr(schema_json.entity.normalized_vertices, "x", None)
-        bounding_y = getattr(schema_json.entity.normalized_vertices, "y", None)
+        # mention_text = schema_json.entity.mention_text
 
-        blocks: List[Block] = []
-        ens = _get_target_object(objects, entities)
-        for i in ens:
-            entity = i
+        # id_ = getattr(schema_json.entity, "id", None)
+        # document_height = (
+        #     getattr(schema_json.page, "height", None)
+        #     if hasattr(schema_json, "page")
+        #     else None
+        # )
+        # document_width = (
+        #     getattr(schema_json.page, "width", None)
+        #     if hasattr(schema_json, "page")
+        #     else None
+        # )
 
-            block_text = ""
+        # confidence = getattr(schema_json.entity, "confidence", None)
+        # page_number = getattr(schema_json.entity, "page_number", None)
+        # normalized_vertices = getattr(
+        #     schema_json.entity.normalized_vertices, "base", None
+        # )
+        # bounding_width = getattr(schema_json.entity.normalized_vertices, "width", None)
+        # bounding_height = getattr(
+        #     schema_json.entity.normalized_vertices, "height", None
+        # )
+        # bounding_type = getattr(schema_json.entity.normalized_vertices, "type", None)
+        # bounding_unit = getattr(schema_json.entity.normalized_vertices, "unit", None)
+        # bounding_x = getattr(schema_json.entity.normalized_vertices, "x", None)
+        # bounding_y = getattr(schema_json.entity.normalized_vertices, "y", None)
 
-            if type_ == f"{entities}:self":
-                block_type = i
-                entity = _get_target_object(objects, f"{entities}.{i}")
-            else:
-                block_type = _get_target_object(entity, type_)
+        # blocks: List[Block] = []
+        # ens = _get_target_object(objects, entities)
+        # for i in ens:
+        #     entity = i
 
-            if "||" in mention_text:
-                text_commands = mention_text.split("||")
-                for command in text_commands:
-                    if command in entity:
-                        block_text = _get_target_object(entity, command)
-                        continue
-            else:
-                block_text = _get_target_object(entity, mention_text)
+        #     block_text = ""
 
-            b = Block(
-                type_=block_type,
-                text=block_text,
-                bounding_box=_get_target_object(entity, normalized_vertices),
-            )
+        #     if type_ == f"{entities}:self":
+        #         block_type = i
+        #         entity = _get_target_object(objects, f"{entities}.{i}")
+        #     else:
+        #         block_type = _get_target_object(entity, type_)
 
-            if id_:
-                b.id_ = _get_target_object(entity, id_)
-            if confidence:
-                b.confidence = _get_target_object(entity, confidence)
-            if page_number and page_number in entity:
-                b.page_number = _get_target_object(entity, page_number)
-            if bounding_width:
-                b.bounding_width = _get_target_object(b.bounding_box, bounding_width)
-            if bounding_height:
-                b.bounding_height = _get_target_object(b.bounding_box, bounding_height)
-            if document_height:
-                b.page_height = _get_target_object(objects, document_height)
-            if document_width:
-                b.page_width = _get_target_object(objects, document_width)
-            if bounding_type:
-                b.bounding_type = bounding_type
-            if bounding_unit:
-                b.bounding_unit = bounding_unit
-            if bounding_x:
-                b.bounding_x = bounding_x
-            if bounding_y:
-                b.bounding_y = bounding_y
+        #     if "||" in mention_text:
+        #         text_commands = mention_text.split("||")
+        #         for command in text_commands:
+        #             if command in entity:
+        #                 block_text = _get_target_object(entity, command)
+        #                 continue
+        #     else:
+        #         block_text = _get_target_object(entity, mention_text)
 
-            if b.page_number is None:
-                b.page_number = 0
+        #     b = Block(
+        #         type_=block_type,
+        #         text=block_text,
+        #         bounding_box=_get_target_object(entity, normalized_vertices),
+        #     )
 
-            b.docproto_width = base_docproto.pages[int(b.page_number)].dimension.width
-            b.docproto_height = base_docproto.pages[int(b.page_number)].dimension.height
+        #     if id_:
+        #         b.id_ = _get_target_object(entity, id_)
+        #     if confidence:
+        #         b.confidence = _get_target_object(entity, confidence)
+        #     if page_number and page_number in entity:
+        #         b.page_number = _get_target_object(entity, page_number)
+        #     if bounding_width:
+        #         b.bounding_width = _get_target_object(b.bounding_box, bounding_width)
+        #     if bounding_height:
+        #         b.bounding_height = _get_target_object(b.bounding_box, bounding_height)
+        #     if document_height:
+        #         b.page_height = _get_target_object(objects, document_height)
+        #     if document_width:
+        #         b.page_width = _get_target_object(objects, document_width)
+        #     if bounding_type:
+        #         b.bounding_type = bounding_type
+        #     if bounding_unit:
+        #         b.bounding_unit = bounding_unit
+        #     if bounding_x:
+        #         b.bounding_x = bounding_x
+        #     if bounding_y:
+        #         b.bounding_y = bounding_y
 
-            blocks.append(b)
-        return blocks
+        #     if b.page_number is None:
+        #         b.page_number = 0
+
+        #     b.docproto_width = base_docproto.pages[int(b.page_number)].dimension.width
+        #     b.docproto_height = base_docproto.pages[int(b.page_number)].dimension.height
+
+        #     blocks.append(b)
+        # return blocks

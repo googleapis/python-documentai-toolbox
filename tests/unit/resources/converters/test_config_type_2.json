@@ -1,16 +1,13 @@
 {
-    "entity_object":"document.entities",
-    "entity": {
-        "type_":"type",
-        "mention_text":"mentionText",
-        "normalized_vertices":{
-            "type":"2",
-            "unit":"normalized",
-            "base":"pageAnchor.pageRefs.0.boundingPoly.normalizedVertices",
-            "x":"left",
-            "y":"top",
-            "width":"width",
-            "height":"height"
-        }
-    }
+  "entities":"document.entities",
+  "mention_text": "document.entities[*].mentionText",
+  "type_": "document.entities[*].type",
+  "confidence": "document.entities[*].confidence",
+  "bbox_type": 2,
+  "unit": "normalized",
+  "normalized_vertices" : "document.entities[*].pageAnchor.pageRefs[*].boundingPoly.normalizedVertices",
+  "x": "document.entities[*].pageAnchor.pageRefs[*].boundingPoly.normalizedVertices.left",
+  "y": "document.entities[*].pageAnchor.pageRefs[*].boundingPoly.normalizedVertices.top",
+  "width": "document.entities[*].pageAnchor.pageRefs[*].boundingPoly.normalizedVertices.width",
+  "height": "document.entities[*].pageAnchor.pageRefs[*].boundingPoly.normalizedVertices.height"
 }
