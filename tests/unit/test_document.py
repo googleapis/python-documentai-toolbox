@@ -667,12 +667,10 @@ def test_document_to_documentai_document(get_bytes_multiple_files_mock):
     )
     get_bytes_multiple_files_mock.assert_called_once()
 
-    actual = documentai.Document.to_json(
-        wrapped_document.to_documentai_document(), indent=None
-    )
+    actual = documentai.Document.to_json(wrapped_document.to_documentai_document())
     with open("tests/unit/resources/merged_document/merged_shards.json", "r") as f:
         merged_document = documentai.Document.from_json(f.read())
-        expected = documentai.Document.to_json(merged_document, indent=None)
+        expected = documentai.Document.to_json(merged_document)
 
     assert actual == expected
 
