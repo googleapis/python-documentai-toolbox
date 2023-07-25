@@ -19,18 +19,17 @@ import shutil
 import pytest
 from samples.snippets import merge_document_shards_sample
 
-location = "us"
-project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
 gcs_bucket_name = "documentai_toolbox_samples"
 gcs_prefix = "output/987654321/1"
-output_path = "resources/output/merged_document.json"
+output_dir = "resources/output/"
+output_path = f"{output_dir}merged_document.json"
 
 
 def test_merge_document_shards_sample(capsys: pytest.CaptureFixture) -> None:
-    if os.path.exists(output_path):
-        shutil.rmtree(output_path)
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
 
-    os.makedirs(output_path)
+    os.makedirs(output_dir)
 
     merge_document_shards_sample.merge_document_shards_sample(
         gcs_bucket_name=gcs_bucket_name,
@@ -42,5 +41,5 @@ def test_merge_document_shards_sample(capsys: pytest.CaptureFixture) -> None:
 
     assert "Document with 5 shards successfully merged." in out
 
-    assert os.path.exists(output_path)
-    shutil.rmtree(output_path)
+    assert os.path.exists(output_dir)
+    shutil.rmtree(output_dir)

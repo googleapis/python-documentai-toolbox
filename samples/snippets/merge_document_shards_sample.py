@@ -23,6 +23,7 @@ from google.cloud.documentai_toolbox import document
 # Given a document.proto or sharded document.proto in path gs://bucket/path/to/folder
 # gcs_bucket_name = "bucket"
 # gcs_prefix = "path/to/folder"
+# output_file_name = "path/to/folder/file.json"
 
 
 def merge_document_shards_sample(
