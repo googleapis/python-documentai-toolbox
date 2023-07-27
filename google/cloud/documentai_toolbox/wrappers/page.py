@@ -80,7 +80,6 @@ class Table:
         return pd.DataFrame(self.body_rows, columns=columns)
 
 
-
 @dataclasses.dataclass
 class FormField:
     """Represents a wrapped documentai.Document.Page.FormField.
