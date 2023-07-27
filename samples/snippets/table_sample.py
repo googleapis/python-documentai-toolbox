@@ -30,11 +30,22 @@ def table_sample(document_path: str, output_file_prefix: str) -> None:
     print("Tables in Document")
     for page in wrapped_document.pages:
         for table_index, table in enumerate(page.tables):
-            print(table.to_dataframe())
-            # Write table to CSV file
-            output_file = f"{output_file_prefix}-{page.page_number}-{table_index}.csv"
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write(table.to_csv())
+            # Convert table to Pandas Dataframe
+            # Refer to https://pandas.pydata.org/docs/reference/frame.html for all supported methods
+            df = table.to_dataframe()
+            output_filename = f"{output_file_prefix}-{page.page_number}-{table_index}"
+
+            # Write Dataframe to CSV file
+            with open(f"{output_filename}.csv", "w", encoding="utf-8") as f:
+                f.write(df.to_csv(index=False))
+
+            # Write Dataframe to HTML file
+            with open(f"{output_filename}.html", "w", encoding="utf-8") as f:
+                f.write(df.to_html())
+
+            # Write Dataframe to Markdown file
+            with open(f"{output_filename}.md", "w", encoding="utf-8") as f:
+                f.write(df.to_markdown())
 
 
 # [END documentai_toolbox_table]
