@@ -33,6 +33,8 @@ def table_sample(document_path: str, output_file_prefix: str) -> None:
             # Convert table to Pandas Dataframe
             # Refer to https://pandas.pydata.org/docs/reference/frame.html for all supported methods
             df = table.to_dataframe()
+            print(df)
+
             output_filename = f"{output_file_prefix}-{page.page_number}-{table_index}"
 
             # Write Dataframe to CSV file
