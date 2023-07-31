@@ -38,16 +38,13 @@ def table_sample(document_path: str, output_file_prefix: str) -> None:
             output_filename = f"{output_file_prefix}-{page.page_number}-{table_index}"
 
             # Write Dataframe to CSV file
-            with open(f"{output_filename}.csv", "w", encoding="utf-8") as f:
-                f.write(df.to_csv(index=False))
+            df.to_csv(f"{output_filename}.csv", index=False)
 
             # Write Dataframe to HTML file
-            with open(f"{output_filename}.html", "w", encoding="utf-8") as f:
-                f.write(df.to_html())
+            df.to_html(f"{output_filename}.html", index=False)
 
             # Write Dataframe to Markdown file
-            with open(f"{output_filename}.md", "w", encoding="utf-8") as f:
-                f.write(df.to_markdown())
+            df.to_markdown(f"{output_filename}.md", index=False)
 
 
 # [END documentai_toolbox_table]
