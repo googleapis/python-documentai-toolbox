@@ -15,6 +15,7 @@
 #
 """Wrappers for Document AI Document type."""
 
+import copy
 import dataclasses
 import os
 import re
@@ -23,6 +24,7 @@ from typing import Dict, List, Optional, Type, Union
 from google.api_core.client_options import ClientOptions
 from google.cloud.vision import AnnotateFileResponse
 from google.longrunning.operations_pb2 import GetOperationRequest, Operation
+
 from jinja2 import Environment, PackageLoader
 from pikepdf import Pdf
 
@@ -809,11 +811,13 @@ class Document:
 
         merged_document = documentai.Document(text=self.text, pages=[], entities=[])
         for shard in self.shards:
+            modified_shard = copy.deepcopy(shard)
+
             _apply_text_offset(
-                documentai_object=shard,
-                text_offset=int(shard.shard_info.text_offset),
+                documentai_object=modified_shard,
+                text_offset=int(modified_shard.shard_info.text_offset),
             )
-            merged_document.pages.extend(shard.pages)
-            merged_document.entities.extend(shard.entities)
+            merged_document.pages.extend(modified_shard.pages)
+            merged_document.entities.extend(modified_shard.entities)
 
         return merged_document
