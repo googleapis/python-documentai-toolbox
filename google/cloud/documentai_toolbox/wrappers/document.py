@@ -453,7 +453,7 @@ class Document:
     @classmethod
     def from_batch_process_metadata(
         cls: Type["Document"], metadata: documentai.BatchProcessMetadata
-    ) -> "Document":
+    ) -> List["Document"]:
         r"""Loads Documents from Cloud Storage, using the output from `BatchProcessMetadata`.
 
             .. code-block:: python
@@ -475,26 +475,18 @@ class Document:
         if metadata.state != documentai.BatchProcessMetadata.State.SUCCEEDED:
             raise ValueError(f"Batch Process Failed: {metadata.state_message}")
 
-        documents: List[Document] = []
-        # Each process corresponds to one input document
-        for process in list(metadata.individual_process_statuses):
-            # output_gcs_destination format: gs://BUCKET/PREFIX/OPERATION_NUMBER/INPUT_FILE_NUMBER/
-            gcs_bucket_name, gcs_prefix = gcs_utilities.split_gcs_uri(
-                process.output_gcs_destination
+        return [
+            Document.from_gcs(
+                *gcs_utilities.split_gcs_uri(process.output_gcs_destination),
+                gcs_input_uri=process.input_gcs_source,
             )
-
-            documents.append(
-                Document.from_gcs(
-                    gcs_bucket_name, gcs_prefix, gcs_input_uri=process.input_gcs_source
-                )
-            )
-
-        return documents
+            for process in list(metadata.individual_process_statuses)
+        ]
 
     @classmethod
     def from_batch_process_operation(
         cls: Type["Document"], location: str, operation_name: str
-    ) -> "Document":
+    ) -> List["Document"]:
         r"""Loads Documents from Cloud Storage, using the operation name returned from `batch_process_documents()`.
 
             .. code-block:: python
