@@ -795,7 +795,7 @@ class Document:
         content = template.render(pages=self.pages, title=title)
         return content
 
-    def to_documentai_document(self) -> documentai.Document:
+    def to_merged_documentai_document(self) -> documentai.Document:
         r"""Exports a documentai.Document from the wrapped document with shards merged.
 
         Args:

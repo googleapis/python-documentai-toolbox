@@ -33,7 +33,7 @@ def merge_document_shards_sample(
         gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix
     )
 
-    merged_document = wrapped_document.to_documentai_document()
+    merged_document = wrapped_document.to_merged_documentai_document()
 
     with open(output_file_name, "w") as f:
         f.write(documentai.Document.to_json(merged_document))

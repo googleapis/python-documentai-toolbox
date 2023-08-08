@@ -661,13 +661,15 @@ def test_export_hocr_str():
     assert actual_hocr == expected
 
 
-def test_document_to_documentai_document(get_bytes_multiple_files_mock):
+def test_document_to_merged_documentai_document(get_bytes_multiple_files_mock):
     wrapped_document = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/1/"
     )
     get_bytes_multiple_files_mock.assert_called_once()
 
-    actual = documentai.Document.to_json(wrapped_document.to_documentai_document())
+    actual = documentai.Document.to_json(
+        wrapped_document.to_merged_documentai_document()
+    )
     with open("tests/unit/resources/merged_document/merged_shards.json", "r") as f:
         merged_document = documentai.Document.from_json(f.read())
         expected = documentai.Document.to_json(merged_document)
@@ -675,14 +677,14 @@ def test_document_to_documentai_document(get_bytes_multiple_files_mock):
     assert actual == expected
 
 
-def test_document_to_documentai_document_one_shard():
+def test_document_to_merged_documentai_document_one_shard():
     path = "tests/unit/resources/0/toolbox_invoice_test-0.json"
 
     with open(path, "r", encoding="utf-8") as f:
         documentai_document = documentai.Document.from_json(f.read())
 
     wrapped_document = document.Document.from_documentai_document(documentai_document)
-    actual = wrapped_document.to_documentai_document()
+    actual = wrapped_document.to_merged_documentai_document()
 
     assert actual == documentai_document
 
