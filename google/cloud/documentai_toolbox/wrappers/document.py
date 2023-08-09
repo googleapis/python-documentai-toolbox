@@ -17,6 +17,7 @@
 
 import copy
 import dataclasses
+import glob
 import os
 import re
 from typing import Dict, List, Optional, Type, Union
@@ -286,7 +287,9 @@ def _dict_to_bigquery(
     )
 
 
-def _apply_text_offset(documentai_object: object, text_offset: int) -> None:
+def _apply_text_offset(
+    documentai_object: Union[dict[str, dict], list], text_offset: int
+) -> None:
     r"""Applies a text offset to all text_segments in `documentai_object`.
 
     Args:
