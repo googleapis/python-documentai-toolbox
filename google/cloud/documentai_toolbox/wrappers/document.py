@@ -380,21 +380,31 @@ class Document:
 
                 from google.cloud.documentai_toolbox import document
 
-                document_path = "/path/to/local/file.json
+                document_path = "/path/to/local/file.json"
                 wrapped_document = document.Document.from_document_path(document_path)
 
         Args:
             document_path (str):
-                Required. The path to the `document.json` file.
+                Required. The path to the `document.json` file or directory containing sharded `document.json` files.
         Returns:
             Document:
                 A document from local `document_path`.
         """
+        document_paths = [document_path]
 
-        with open(document_path, "r", encoding="utf-8") as f:
-            doc = documentai.Document.from_json(f.read(), ignore_unknown_fields=True)
+        if os.path.isdir(document_path):
+            document_paths = glob.glob(
+                os.path.join(document_path, f"*{constants.JSON_EXTENSION}")
+            )
 
-        return cls(shards=[doc])
+        documents = []
+        for file_path in document_paths:
+            with open(file_path, "r", encoding="utf-8") as f:
+                documents.append(
+                    documentai.Document.from_json(f.read(), ignore_unknown_fields=True)
+                )
+
+        return cls(shards=documents)
 
     @classmethod
     def from_documentai_document(
