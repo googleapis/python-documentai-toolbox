@@ -288,7 +288,7 @@ def _dict_to_bigquery(
 
 
 def _apply_text_offset(
-    documentai_object: Union[dict[str, dict], list], text_offset: int
+    documentai_object: Union[Dict[str, Dict], List], text_offset: int
 ) -> None:
     r"""Applies a text offset to all text_segments in `documentai_object`.
 
