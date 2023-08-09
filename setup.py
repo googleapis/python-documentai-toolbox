@@ -43,6 +43,9 @@ setuptools.setup(
     namespace_packages=("google", "google.cloud"),
     platforms="Posix; MacOS X; Windows",
     include_package_data=True,
+    package_data={
+        "google.cloud.documentai_toolbox": ["templates/*.xml.j2"],
+    },
     install_requires=(
         "google-api-core >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
         "pandas >= 1.0.0, <3.0.0",
