@@ -43,6 +43,9 @@ def get_bounding_box(
         )
         for vertex in bounding_poly.normalized_vertices
     ]
+    if not vertices:
+        return 0, 0, 0, 0
+
     top, left = vertices[0]
     bottom, right = vertices[2]
     return top, left, bottom, right
