@@ -16,20 +16,13 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
-from typing import List, Optional, Union, cast
+from typing import List, Optional, cast
 
 import pandas as pd
 
 from google.cloud import documentai
 from google.cloud.documentai_toolbox.constants import ElementWithLayout
 from google.cloud.documentai_toolbox.utilities import docai_utilities
-
-ChildrenElements = Union[
-    List["Paragraph"],
-    List["Block"],
-    List["Token"],
-    List["Line"],
-]
 
 
 @dataclasses.dataclass
@@ -111,18 +104,10 @@ class FormField:
 
 
 @dataclasses.dataclass
-class Token:
-    """Represents a wrapped documentai.Document.Page.
-    .
+class PageElement:
+    """Base class for representing a wrapped Document AI Page element (Symbol, Token, Line, Paragraph, Block)."""
 
-    Attributes:
-        documentai_object (google.cloud.documentai.Document.Page.Token):
-            Required. The original google.cloud.documentai.Document.Page.Token object.
-        _page (Page):
-                    Required. The Page object.
-    """
-
-    documentai_object: documentai.Document.Page.Token = dataclasses.field(repr=False)
+    documentai_object: ElementWithLayout = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
     _text: Optional[str] = dataclasses.field(init=False, default=None)
@@ -130,6 +115,9 @@ class Token:
 
     @property
     def text(self):
+        """
+        Text of the page element.
+        """
         if self._text is None:
             self._text = _text_from_layout(
                 layout=self.documentai_object.layout, text=self._page.text
@@ -138,6 +126,9 @@ class Token:
 
     @property
     def hocr_bounding_box(self):
+        """
+        hOCR bounding box of the page element.
+        """
         if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
@@ -147,24 +138,33 @@ class Token:
 
 
 @dataclasses.dataclass
-class Line:
-    """Represents a wrapped documentai.Document.Page.Line.
+class Symbol(PageElement):
+    """Represents a wrapped documentai.Document.Page.Symbol.
+    https://cloud.google.com/document-ai/docs/process-documents-ocr#enable_symbols"""
 
-    Attributes:
-        documentai_object (google.cloud.documentai.Document.Page.Line):
-            Required. The original google.cloud.documentai.Document.Page.Line object.
-        _page (Page):
-            Required. The Page object.
-    """
+    @property
+    def hocr_bounding_box(self):
+        return None
 
-    documentai_object: documentai.Document.Page.Line = dataclasses.field(repr=False)
-    _page: "Page" = dataclasses.field(repr=False)
 
-    tokens: List[Token] = dataclasses.field(
-        init=False, repr=False, default_factory=list
-    )
-    _text: Optional[str] = dataclasses.field(init=False, default=None)
-    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
+@dataclasses.dataclass
+class Token(PageElement):
+    """Represents a wrapped documentai.Document.Page.Token."""
+
+    symbols: List[Symbol] = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.symbols = cast(
+            List[Symbol],
+            _get_children_of_element(self.documentai_object, self._page.symbols),
+        )
+
+
+@dataclasses.dataclass
+class Line(PageElement):
+    """Represents a wrapped documentai.Document.Page.Line."""
+
+    tokens: List[Token] = dataclasses.field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.tokens = cast(
@@ -172,43 +172,12 @@ class Line:
             _get_children_of_element(self.documentai_object, self._page.tokens),
         )
 
-    @property
-    def text(self):
-        if self._text is None:
-            self._text = _text_from_layout(
-                layout=self.documentai_object.layout, text=self._page.text
-            )
-        return self._text
-
-    @property
-    def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
-            self._hocr_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=self.documentai_object,
-                page_dimension=self._page.documentai_object.dimension,
-            )
-        return self._hocr_bounding_box
-
 
 @dataclasses.dataclass
-class Paragraph:
-    """Represents a wrapped documentai.Document.Page.Paragraph.
-
-    Attributes:
-        documentai_object (google.cloud.documentai.Document.Page.Paragraph):
-            Required. The original google.cloud.documentai.Document.Page.Paragraph object.
-        _page (Page):
-            Required. The Page object.
-    """
-
-    documentai_object: documentai.Document.Page.Paragraph = dataclasses.field(
-        repr=False
-    )
-    _page: "Page" = dataclasses.field(repr=False)
+class Paragraph(PageElement):
+    """Represents a wrapped documentai.Document.Page.Paragraph."""
 
     lines: List[Line] = dataclasses.field(init=False, repr=False)
-    _text: Optional[str] = dataclasses.field(init=False, default=None)
-    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self) -> None:
         self.lines = cast(
@@ -216,64 +185,18 @@ class Paragraph:
             _get_children_of_element(self.documentai_object, self._page.lines),
         )
 
-    @property
-    def text(self):
-        if self._text is None:
-            self._text = _text_from_layout(
-                layout=self.documentai_object.layout, text=self._page.text
-            )
-        return self._text
-
-    @property
-    def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
-            self._hocr_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=self.documentai_object,
-                page_dimension=self._page.documentai_object.dimension,
-            )
-        return self._hocr_bounding_box
-
 
 @dataclasses.dataclass
-class Block:
-    """Represents a wrapped documentai.Document.Page.Block.
-
-    Attributes:
-        documentai_object (google.cloud.documentai.Document.Page.Block):
-            Required. The original google.cloud.documentai.Document.Page.Block object.
-        _page (Page):
-            Required. The Page object.
-    """
-
-    documentai_object: documentai.Document.Page.Block = dataclasses.field(repr=False)
-    _page: "Page" = dataclasses.field(repr=False)
+class Block(PageElement):
+    """Represents a wrapped documentai.Document.Page.Block."""
 
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
-    _text: Optional[str] = dataclasses.field(init=False, default=None)
-    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self) -> None:
         self.paragraphs = cast(
             List[Paragraph],
             _get_children_of_element(self.documentai_object, self._page.paragraphs),
         )
-
-    @property
-    def text(self):
-        if self._text is None:
-            self._text = _text_from_layout(
-                layout=self.documentai_object.layout, text=self._page.text
-            )
-        return self._text
-
-    @property
-    def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
-            self._hocr_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=self.documentai_object,
-                page_dimension=self._page.documentai_object.dimension,
-            )
-        return self._hocr_bounding_box
 
 
 def _table_rows_from_documentai_table_rows(
@@ -343,18 +266,18 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
 
 
 def _get_children_of_element(
-    element: ElementWithLayout, children: ChildrenElements
-) -> List[Union[Block, Paragraph, Line, Token]]:
+    element: ElementWithLayout, children: List[ElementWithLayout]
+) -> List[ElementWithLayout]:
     r"""Returns a list of children inside element.
 
     Args:
         element (ElementWithLayout):
             Required. A element in a page.
-        children (ChildrenElements):
+        children (List[ElementWithLayout]):
             Required. List of wrapped children.
 
     Returns:
-        List[Union[Block, Paragraph, Line, Token]]:
+        List[ElementWithLayout]:
             A list of wrapped children that are inside a element.
     """
     start_index = element.layout.text_anchor.text_segments[0].start_index
@@ -400,6 +323,12 @@ class Page:
         form_fields (List[FormField]):
             Required. A list of visually detected form fields on the
             page.
+        symbols (List[Symbol]):
+            Required. A list of visually detected text symbols (letters) on the
+            page.
+        tokens (List[Token]):
+            Required. A list of visually detected text tokens (words) on the
+            page.
         lines (List[Line]):
             Required. A list of visually detected text lines on the
             page. A collection of tokens that a human would
@@ -423,6 +352,8 @@ class Page:
     text: str = dataclasses.field(init=False, repr=False)
     page_number: int = dataclasses.field(init=False, repr=False)
     form_fields: List[FormField] = dataclasses.field(init=False, repr=False)
+    symbols: List[Symbol] = dataclasses.field(init=False, repr=False)
+    tokens: List[Token] = dataclasses.field(init=False, repr=False)
     lines: List[Line] = dataclasses.field(init=False, repr=False)
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
@@ -432,6 +363,7 @@ class Page:
     def __post_init__(self) -> None:
         """
         Order of Init
+        Symbol
         Token
         Line
         Paragraph,
@@ -453,11 +385,13 @@ class Page:
             for form_field in self.documentai_object.form_fields
         ]
 
+        self.symbols = [
+            Symbol(documentai_object=symbol, _page=self)
+            for symbol in self.documentai_object.symbols
+        ]
+
         self.tokens = [
-            Token(
-                documentai_object=token,
-                _page=self,
-            )
+            Token(documentai_object=token, _page=self)
             for token in self.documentai_object.tokens
         ]
 
@@ -478,6 +412,9 @@ class Page:
 
     @property
     def hocr_bounding_box(self):
+        """
+        hOCR bounding box of the page element.
+        """
         if self._hocr_bounding_box is None:
             self._hocr_bounding_box = _get_hocr_bounding_box(
                 element_with_layout=self.documentai_object,
