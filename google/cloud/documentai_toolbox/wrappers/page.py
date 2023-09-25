@@ -199,6 +199,16 @@ class Block(PageElement):
         )
 
 
+@dataclasses.dataclass
+class MathFormula(PageElement):
+    """Represents a wrapped documentai.Document.Page.VisualElement with type `math_formula`.
+    https://cloud.google.com/document-ai/docs/process-documents-ocr#math_ocr"""
+
+    @property
+    def hocr_bounding_box(self):
+        return None
+
+
 def _table_rows_from_documentai_table_rows(
     table_rows: List[documentai.Document.Page.Table.TableRow], text: str
 ) -> List[List[str]]:
@@ -344,6 +354,9 @@ class Page:
         tables (List[Table]):
             Required. A list of visually detected tables on the
             page.
+        math_formulas (List[MathFormula]):
+            Optional. A list of visually detected math formulas
+            on the page.
     """
 
     documentai_object: documentai.Document.Page = dataclasses.field(repr=False)
@@ -358,6 +371,7 @@ class Page:
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
     blocks: List[Block] = dataclasses.field(init=False, repr=False)
     tables: List[Table] = dataclasses.field(init=False, repr=False)
+    math_formulas: List[MathFormula] = dataclasses.field(init=False, repr=False)
     _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -383,6 +397,12 @@ class Page:
         self.form_fields = [
             FormField(documentai_object=form_field, document_text=self.document_text)
             for form_field in self.documentai_object.form_fields
+        ]
+
+        self.math_formulas = [
+            MathFormula(documentai_object=visual_element, _page=self)
+            for visual_element in self.documentai_object.visual_elements
+            if visual_element.type_ == "math_formula"
         ]
 
         self.symbols = [
