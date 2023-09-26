@@ -474,10 +474,12 @@ class Document:
             .. code-block:: python
 
                 from google.cloud import documentai
+                from google.cloud.documentai_toolbox import document
 
                 operation = client.batch_process_documents(request)
                 operation.result(timeout=timeout)
                 metadata = documentai.BatchProcessMetadata(operation.metadata)
+                wrapped_document = document.Document.from_batch_process_metadata(metadata)
 
         Args:
             metadata (documentai.BatchProcessMetadata):
@@ -507,9 +509,11 @@ class Document:
             .. code-block:: python
 
                 from google.cloud import documentai
+                from google.cloud.documentai_toolbox import document
 
                 operation = client.batch_process_documents(request)
                 operation_name = operation.operation.name
+                wrapped_document = document.Document.from_batch_process_operation(operation_name)
 
         Args:
             location (str):
