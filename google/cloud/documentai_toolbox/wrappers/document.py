@@ -390,19 +390,19 @@ class Document:
             Document:
                 A document from local `document_path`.
         """
-        document_paths = [document_path]
+        document_paths = (
+            glob.glob(os.path.join(document_path, f"*{constants.JSON_EXTENSION}"))
+            if os.path.isdir(document_path)
+            else [document_path]
+        )
 
-        if os.path.isdir(document_path):
-            document_paths = glob.glob(
-                os.path.join(document_path, f"*{constants.JSON_EXTENSION}")
+        documents = [
+            documentai.Document.from_json(
+                open(file_path, "r", encoding="utf-8").read(),
+                ignore_unknown_fields=True,
             )
-
-        documents = []
-        for file_path in document_paths:
-            with open(file_path, "r", encoding="utf-8") as f:
-                documents.append(
-                    documentai.Document.from_json(f.read(), ignore_unknown_fields=True)
-                )
+            for file_path in document_paths
+        ]
 
         return cls(shards=documents)
 
