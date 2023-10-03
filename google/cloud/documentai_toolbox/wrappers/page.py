@@ -16,7 +16,7 @@
 """Wrappers for Document AI Page type."""
 
 import dataclasses
-from typing import List, Optional, cast
+from typing import cast, List, Optional
 
 import pandas as pd
 
