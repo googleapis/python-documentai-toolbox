@@ -15,7 +15,7 @@
 #
 """Utilities for Document AI"""
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 from google.cloud import documentai
 
@@ -23,7 +23,7 @@ from google.cloud import documentai
 def get_bounding_box(
     bounding_poly: documentai.BoundingPoly,
     page_dimension: documentai.Document.Page.Dimension,
-) -> Tuple[int, int, int, int]:
+) -> Optional[Tuple[int, int, int, int]]:
     r"""Returns the bounding box of an element from the element bounding_poly and page dimensions.
 
     Args:
@@ -37,8 +37,8 @@ def get_bounding_box(
             Bounding box coordinates in order (top, left, bottom, right).
             Returns `0, 0, 0, 0` if `bounding_poly.normalized_vertices` is empty.
     """
-    if not bounding_poly.normalized_vertices:
-        return 0, 0, 0, 0
+    if not bounding_poly or not bounding_poly.normalized_vertices:
+        return None
 
     vertices = [
         (
