@@ -60,7 +60,7 @@ setuptools.setup(
         "google-cloud-vision >= 2.7.0, < 4.0.0dev",
         "numpy >= 1.18.1, < 2.0.0",
         "intervaltree >= 3.0.0",
-        "pikepdf >= 6.2.9, < 8.0.0",
+        "pikepdf >= 6.2.9, < 9.0.0",
         "pikepdf >= 6.2.9, < 7.0.0; python_version<'3.8'",
         "immutabledict >= 2.0.0, < 4.0.0",
         "immutabledict >= 2.0.0, < 3.0.0dev; python_version<'3.8'",
