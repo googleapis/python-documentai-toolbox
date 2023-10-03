@@ -99,7 +99,7 @@ class Entity:
             bounding_poly=self.documentai_object.page_anchor.page_refs[0].bounding_poly,
             page_dimension=documentai_page.dimension,
         )
-        if not bbox:
+        if bbox is None:
             return None
         doc_image = Image.open(BytesIO(documentai_page.image.content))
         return doc_image.crop(bbox)

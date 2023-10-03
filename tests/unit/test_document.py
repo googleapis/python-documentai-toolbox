@@ -105,6 +105,19 @@ def get_bytes_missing_shard_mock():
         yield byte_factory
 
 
+def create_document_with_images_without_bbox(get_bytes_images_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+
+    del (
+        doc.entities[0]
+        .documentai_object.page_anchor.page_refs[0]
+        .bounding_poly.normalized_vertices
+    )
+    return doc
+
+
 def test_get_shards_with_gcs_uri_contains_file_type():
     with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
         document._get_shards(
@@ -659,16 +672,7 @@ def test_export_images(get_bytes_images_mock):
 def test_export_images_empty_bounding_box(get_bytes_images_mock):
     output_path = "resources/output/"
 
-    doc = document.Document.from_gcs(
-        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
-    )
-
-    del (
-        doc.entities[0]
-        .documentai_object.page_anchor.page_refs[0]
-        .bounding_poly.normalized_vertices
-    )
-
+    doc = create_document_with_images_without_bbox(get_bytes_images_mock)
     actual = doc.export_images(
         output_path=output_path,
         output_file_prefix="exported_photo",

@@ -35,7 +35,7 @@ def get_bounding_box(
     Returns:
         Tuple[int, int, int, int]:
             Bounding box coordinates in order (top, left, bottom, right).
-            Returns `0, 0, 0, 0` if `bounding_poly.normalized_vertices` is empty.
+            Returns `None` if `bounding_poly` or `bounding_poly.normalized_vertices` is empty.
     """
     if not bounding_poly or not bounding_poly.normalized_vertices:
         return None
