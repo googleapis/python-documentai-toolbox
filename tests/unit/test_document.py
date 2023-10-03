@@ -299,6 +299,13 @@ def test_document_from_document_path_with_single_shard():
     assert len(actual.pages) == 1
 
 
+def test_document_from_document_path_with_directory():
+    actual = document.Document.from_document_path(
+        document_path="tests/unit/resources/0/"
+    )
+    assert len(actual.pages) == 1
+
+
 def test_document_from_documentai_document_with_single_shard():
     with open(
         "tests/unit/resources/0/toolbox_invoice_test-0.json", "r", encoding="utf-8"
@@ -626,6 +633,7 @@ def test_export_images(get_bytes_images_mock):
     output_path = "resources/output/"
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
+        assert not os.path.exists(output_path)
 
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
@@ -646,6 +654,29 @@ def test_export_images(get_bytes_images_mock):
 
     assert os.path.exists(output_path)
     shutil.rmtree(output_path)
+
+
+def test_export_images_empty_bounding_box(get_bytes_images_mock):
+    output_path = "resources/output/"
+
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+
+    del (
+        doc.entities[0]
+        .documentai_object.page_anchor.page_refs[0]
+        .bounding_poly.normalized_vertices
+    )
+
+    actual = doc.export_images(
+        output_path=output_path,
+        output_file_prefix="exported_photo",
+        output_file_extension="png",
+    )
+    get_bytes_images_mock.assert_called_once()
+
+    assert not actual
 
 
 def test_export_hocr_str():
