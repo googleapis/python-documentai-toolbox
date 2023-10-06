@@ -234,7 +234,7 @@ def _table_rows_from_documentai_table_rows(
 def _get_hocr_bounding_box(
     element_with_layout: ElementWithLayout,
     page_dimension: documentai.Document.Page.Dimension,
-) -> str:
+) -> Optional[str]:
     r"""Returns a hOCR bounding box string.
 
     Args:
@@ -244,13 +244,21 @@ def _get_hocr_bounding_box(
             Required. Page dimension.
 
     Returns:
-        str:
+        Optional[str]:
             hOCR bounding box sring.
     """
-    min_x, min_y, max_x, max_y = docai_utilities.get_bounding_box(
+    if not element_with_layout.layout.bounding_poly:
+        return None
+
+    bbox = docai_utilities.get_bounding_box(
         bounding_poly=element_with_layout.layout.bounding_poly,
         page_dimension=page_dimension,
     )
+
+    if not bbox:
+        return None
+
+    min_x, min_y, max_x, max_y = bbox
     return f"bbox {min_x} {min_y} {max_x} {max_y}"
 
 
