@@ -15,6 +15,8 @@
 #
 """Wrappers for Document AI Page type."""
 
+from abc import ABC
+
 import dataclasses
 from typing import cast, List, Optional
 
@@ -104,7 +106,7 @@ class FormField:
 
 
 @dataclasses.dataclass
-class PageElement:
+class BasePageElement(ABC):
     """Base class for representing a wrapped Document AI Page element (Symbol, Token, Line, Paragraph, Block)."""
 
     documentai_object: ElementWithLayout = dataclasses.field(repr=False)
@@ -138,17 +140,18 @@ class PageElement:
 
 
 @dataclasses.dataclass
-class Symbol(PageElement):
+class Symbol(BasePageElement):
     """Represents a wrapped documentai.Document.Page.Symbol.
     https://cloud.google.com/document-ai/docs/process-documents-ocr#enable_symbols"""
 
     @property
     def hocr_bounding_box(self):
+        # Symbols are not represented in hOCR
         return None
 
 
 @dataclasses.dataclass
-class Token(PageElement):
+class Token(BasePageElement):
     """Represents a wrapped documentai.Document.Page.Token."""
 
     symbols: List[Symbol] = dataclasses.field(init=False, repr=False)
@@ -161,7 +164,7 @@ class Token(PageElement):
 
 
 @dataclasses.dataclass
-class Line(PageElement):
+class Line(BasePageElement):
     """Represents a wrapped documentai.Document.Page.Line."""
 
     tokens: List[Token] = dataclasses.field(init=False, repr=False)
@@ -174,7 +177,7 @@ class Line(PageElement):
 
 
 @dataclasses.dataclass
-class Paragraph(PageElement):
+class Paragraph(BasePageElement):
     """Represents a wrapped documentai.Document.Page.Paragraph."""
 
     lines: List[Line] = dataclasses.field(init=False, repr=False)
@@ -187,7 +190,7 @@ class Paragraph(PageElement):
 
 
 @dataclasses.dataclass
-class Block(PageElement):
+class Block(BasePageElement):
     """Represents a wrapped documentai.Document.Page.Block."""
 
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
@@ -200,12 +203,13 @@ class Block(PageElement):
 
 
 @dataclasses.dataclass
-class MathFormula(PageElement):
+class MathFormula(BasePageElement):
     """Represents a wrapped documentai.Document.Page.VisualElement with type `math_formula`.
     https://cloud.google.com/document-ai/docs/process-documents-ocr#math_ocr"""
 
     @property
     def hocr_bounding_box(self):
+        # Math Formulas are not represented in hOCR
         return None
 
 
