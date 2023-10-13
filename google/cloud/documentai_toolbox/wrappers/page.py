@@ -142,7 +142,14 @@ class BasePageElement(ABC):
 @dataclasses.dataclass
 class Symbol(BasePageElement):
     """Represents a wrapped documentai.Document.Page.Symbol.
-    https://cloud.google.com/document-ai/docs/process-documents-ocr#enable_symbols"""
+    https://cloud.google.com/document-ai/docs/process-documents-ocr#enable_symbols
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.Symbol):
+            Required. The original object.
+        _page (Page):
+            Required. The Page object containing the Symbol.
+    """
 
     @property
     def hocr_bounding_box(self):
@@ -152,7 +159,16 @@ class Symbol(BasePageElement):
 
 @dataclasses.dataclass
 class Token(BasePageElement):
-    """Represents a wrapped documentai.Document.Page.Token."""
+    """Represents a wrapped documentai.Document.Page.Token.
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.Token):
+            Required. The original object.
+        _page (Page):
+            Required. The Page object containing the Token.
+        symbols (List[Symbol]):
+            Required. The Symbols contained within the Token.
+    """
 
     symbols: List[Symbol] = dataclasses.field(init=False, repr=False)
 
@@ -165,7 +181,16 @@ class Token(BasePageElement):
 
 @dataclasses.dataclass
 class Line(BasePageElement):
-    """Represents a wrapped documentai.Document.Page.Line."""
+    """Represents a wrapped documentai.Document.Page.Line.
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.Line):
+            Required. The original object.
+        _page (Page):
+            Required. The Page object containing the Line.
+        tokens (List[Token]):
+            Required. The Tokens contained within the Line.
+    """
 
     tokens: List[Token] = dataclasses.field(init=False, repr=False)
 
@@ -178,7 +203,16 @@ class Line(BasePageElement):
 
 @dataclasses.dataclass
 class Paragraph(BasePageElement):
-    """Represents a wrapped documentai.Document.Page.Paragraph."""
+    """Represents a wrapped documentai.Document.Page.Paragraph.
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.Paragraph):
+            Required. The original object.
+        _page (Page):
+            Required. The Page object containing the Paragraph.
+        lines (List[Line]):
+            Required. The Lines contained within the Paragraph.
+    """
 
     lines: List[Line] = dataclasses.field(init=False, repr=False)
 
@@ -191,7 +225,16 @@ class Paragraph(BasePageElement):
 
 @dataclasses.dataclass
 class Block(BasePageElement):
-    """Represents a wrapped documentai.Document.Page.Block."""
+    """Represents a wrapped documentai.Document.Page.Block.
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.Block):
+            Required. The original object.
+        _page (Page):
+            Required. The Page object containing the Block.
+        paragraphs (List[Paragraph]):
+            Required. The Paragraphs contained within the Block.
+    """
 
     paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
 
@@ -205,7 +248,14 @@ class Block(BasePageElement):
 @dataclasses.dataclass
 class MathFormula(BasePageElement):
     """Represents a wrapped documentai.Document.Page.VisualElement with type `math_formula`.
-    https://cloud.google.com/document-ai/docs/process-documents-ocr#math_ocr"""
+    https://cloud.google.com/document-ai/docs/process-documents-ocr#math_ocr
+
+    Attributes:
+        documentai_object (google.cloud.documentai.Document.Page.VisualElement):
+            Required. The original object.
+        _page (Page):
+            Required. The Page object containing the VisualElement.
+    """
 
     @property
     def hocr_bounding_box(self):
