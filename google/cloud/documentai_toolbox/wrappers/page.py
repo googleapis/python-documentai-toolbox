@@ -396,8 +396,8 @@ class Page:
             Required. A list of visually detected form fields on the
             page.
         symbols (List[Symbol]):
-            Required. A list of visually detected text symbols (letters) on the
-            page.
+            Required. A list of visually detected text symbols
+            (characters/letters) on the page.
         tokens (List[Token]):
             Required. A list of visually detected text tokens (words) on the
             page.
