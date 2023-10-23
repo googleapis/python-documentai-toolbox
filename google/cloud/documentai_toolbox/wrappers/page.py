@@ -122,7 +122,7 @@ class BasePageElement(ABC):
         """
         if self._text is None:
             self._text = _text_from_layout(
-                layout=self.documentai_object.layout, text=self._page.text
+                layout=self.documentai_object.layout, text=self._page.document_text
             )
         return self._text
 
