@@ -688,9 +688,13 @@ def test_export_hocr_str():
         document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
     )
 
-    actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
+    actual_hocr = wrapped_document.export_hocr_str(
+        title="toolbox_invoice_test-0", inline_words=False
+    )
 
-    with open("tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r") as f:
+    with open(
+        "tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r", encoding="utf-8"
+    ) as f:
         expected = f.read()
 
     assert actual_hocr == expected
@@ -701,9 +705,30 @@ def test_export_hocr_str_with_blank_document():
         document_path="tests/unit/resources/blank_document.json"
     )
 
-    actual_hocr = wrapped_document.export_hocr_str(title="hocr_blank")
+    actual_hocr = wrapped_document.export_hocr_str(
+        title="hocr_blank", inline_words=False
+    )
 
     assert actual_hocr
+
+
+def test_export_hocr_str_with_inline_words():
+    wrapped_document = document.Document.from_document_path(
+        document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
+    )
+
+    actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
+
+    assert actual_hocr
+
+    with open(
+        "tests/unit/resources/toolbox_invoice_test_0_hocr_inline_words.xml",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected = f.read()
+
+    assert actual_hocr == expected
 
 
 def test_document_to_merged_documentai_document(get_bytes_multiple_files_mock):

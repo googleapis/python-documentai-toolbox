@@ -790,7 +790,7 @@ class Document:
 
         return output_filenames
 
-    def export_hocr_str(self, title: str) -> str:
+    def export_hocr_str(self, title: str, inline_words: bool = True) -> str:
         r"""Exports a string hOCR version of the Document.
 
             The format for the id of the object follows as such:
@@ -802,6 +802,10 @@ class Document:
         Args:
             title (str):
                 Required. The title for hocr_page and head.
+            inline_words (str):
+                Optional. Include `ocrx_word` elements inline.
+                Default: True - For backwards compatibility only, set to `False` for all new implementations.
+                See https://github.com/googleapis/python-documentai-toolbox/issues/193
 
         Returns:
             str:
@@ -810,7 +814,12 @@ class Document:
         environment = Environment(
             loader=PackageLoader("google.cloud.documentai_toolbox", "templates")
         )
-        template = environment.get_template("hocr_document_template.xml.j2")
+        template_name = (
+            "hocr_document_template_inline_words.xml.j2"
+            if inline_words
+            else "hocr_document_template.xml.j2"
+        )
+        template = environment.get_template(template_name)
         content = template.render(pages=self.pages, title=title)
         return content
 
