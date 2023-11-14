@@ -67,7 +67,7 @@ def _entities_from_shards(
         page_offset += len(shard.pages)
 
     if len(result) > 1 and result[0].documentai_object.id:
-        result.sort(key=lambda x: int(x.documentai_object.id))
+        result.sort(key=lambda x: x.documentai_object.id)
     return result
 
 
