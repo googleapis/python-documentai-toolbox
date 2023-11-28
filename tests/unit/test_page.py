@@ -232,6 +232,9 @@ def test_FormField(docproto_form_parser):
 
     assert form_field.field_name == "Occupation:"
     assert form_field.field_value == "Software Engineer"
+    # checking cached value
+    assert form_field.field_name == "Occupation:"
+    assert form_field.field_value == "Software Engineer"
 
 
 def test_Block(docproto):
@@ -312,6 +315,8 @@ def test_Symbol(docproto_with_symbols):
     assert symbol.text == "n"
     assert symbol.hocr_bounding_box is None
 
+    assert wrapped_page.tokens[0].symbols
+
 
 def test_MathFormula(docproto_with_math):
     wrapped_page = page.Page(
@@ -331,6 +336,8 @@ def test_MathFormula(docproto_with_math):
     assert math_formula.text == "\\int_{-\\infty}^{\\infty}e^{-x^{2}}dx=\\sqrt{x}.\n"
     assert math_formula.hocr_bounding_box is None
 
+    assert len(wrapped_page.math_formulas) == 1
+
 
 def test_Page(docproto):
     docproto_page = docproto.pages[0]
@@ -340,6 +347,8 @@ def test_Page(docproto):
     )
 
     assert "Invoice" in wrapped_page._document_text
+    assert "Invoice" in wrapped_page.text
+
     assert wrapped_page.page_number == 1
 
     assert len(wrapped_page.lines) == 37
@@ -347,6 +356,7 @@ def test_Page(docproto):
     assert len(wrapped_page.blocks) == 31
     assert len(wrapped_page.tokens) == 86
     assert len(wrapped_page.form_fields) == 13
+    assert len(wrapped_page.tables) == 1
 
     assert wrapped_page.lines[0].text == "Invoice\n"
     assert wrapped_page.lines[0].tokens[0].text == "Invoice\n"
@@ -368,6 +378,8 @@ def test_Page(docproto):
     )
     assert wrapped_page.blocks[30].paragraphs[0].lines[0].tokens[0].text == "Supplies "
     assert wrapped_page.tokens[85].text == "Q.\n"
+
+    assert wrapped_page.symbols == []
 
     assert wrapped_page.hocr_bounding_box == "bbox 0 0 1758 2275"
     # checking cached value
