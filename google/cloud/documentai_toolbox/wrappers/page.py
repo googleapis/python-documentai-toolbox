@@ -478,7 +478,7 @@ class Page:
     _page_number: Optional[int] = dataclasses.field(
         init=False, repr=False, default=None
     )
-    _hocr_bounding_box: Optional[str] = dataclasses.field(
+    _form_fields: Optional[List[FormField]] = dataclasses.field(
         init=False, repr=False, default=None
     )
     _symbols: Optional[List[Symbol]] = dataclasses.field(
@@ -496,13 +496,13 @@ class Page:
     _blocks: Optional[List[Block]] = dataclasses.field(
         init=False, repr=False, default=None
     )
-    _form_fields: Optional[List[FormField]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
     _tables: Optional[List[Table]] = dataclasses.field(
         init=False, repr=False, default=None
     )
     _math_formulas: Optional[List[MathFormula]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    _hocr_bounding_box: Optional[str] = dataclasses.field(
         init=False, repr=False, default=None
     )
 
@@ -530,13 +530,26 @@ class Page:
         return self._page_number
 
     @property
-    def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
-            self._hocr_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=self.documentai_object,
-                page_dimension=self.documentai_object.dimension,
-            )
-        return self._hocr_bounding_box
+    def tables(self):
+        if self._tables is None:
+            self._tables = self._get_elements(Table, "tables")
+        return self._tables
+
+    @property
+    def form_fields(self):
+        if self._form_fields is None:
+            self._form_fields = self._get_elements(FormField, "form_fields")
+        return self._form_fields
+
+    @property
+    def math_formulas(self):
+        if self._math_formulas is None:
+            self._math_formulas = [
+                MathFormula(documentai_object=visual_element, _page=self)
+                for visual_element in self.documentai_object.visual_elements
+                if visual_element.type_ == "math_formula"
+            ]
+        return self._math_formulas
 
     @property
     def symbols(self):
@@ -569,23 +582,10 @@ class Page:
         return self._blocks
 
     @property
-    def form_fields(self):
-        if self._form_fields is None:
-            self._form_fields = self._get_elements(FormField, "form_fields")
-        return self._form_fields
-
-    @property
-    def tables(self):
-        if self._tables is None:
-            self._tables = self._get_elements(Table, "tables")
-        return self._tables
-
-    @property
-    def math_formulas(self):
-        if self._math_formulas is None:
-            self._math_formulas = [
-                MathFormula(documentai_object=visual_element, _page=self)
-                for visual_element in self.documentai_object.visual_elements
-                if visual_element.type_ == "math_formula"
-            ]
-        return self._math_formulas
+    def hocr_bounding_box(self):
+        if self._hocr_bounding_box is None:
+            self._hocr_bounding_box = _get_hocr_bounding_box(
+                element_with_layout=self.documentai_object,
+                page_dimension=self.documentai_object.dimension,
+            )
+        return self._hocr_bounding_box
