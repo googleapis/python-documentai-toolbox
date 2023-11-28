@@ -315,7 +315,8 @@ def test_Symbol(docproto_with_symbols):
     assert symbol.text == "n"
     assert symbol.hocr_bounding_box is None
 
-    assert wrapped_page.tokens[0].symbols
+    assert len(wrapped_page.symbols) > 0
+    assert len(wrapped_page.tokens[0].symbols) > 0
 
 
 def test_MathFormula(docproto_with_math):
@@ -337,6 +338,10 @@ def test_MathFormula(docproto_with_math):
     assert math_formula.hocr_bounding_box is None
 
     assert len(wrapped_page.math_formulas) == 1
+    assert (
+        wrapped_page.math_formulas[0].text
+        == "\\int_{-\\infty}^{\\infty}e^{-x^{2}}dx=\\sqrt{x}.\n"
+    )
 
 
 def test_Page(docproto):
@@ -348,6 +353,7 @@ def test_Page(docproto):
 
     assert "Invoice" in wrapped_page._document_text
     assert "Invoice" in wrapped_page.text
+    assert len(wrapped_page.text) > 0
 
     assert wrapped_page.page_number == 1
 
@@ -387,6 +393,9 @@ def test_Page(docproto):
 
     assert wrapped_page.form_fields[0].field_name == "BALANCE DUE"
     assert wrapped_page.form_fields[0].field_value == "$2140.00"
+
+    assert wrapped_page.tables[0].header_rows[0][0] == "Item Description"
+    assert wrapped_page.tables[0].body_rows[0][0] == "Tool A"
 
 
 def test_page_elements_large_document(large_docproto):
