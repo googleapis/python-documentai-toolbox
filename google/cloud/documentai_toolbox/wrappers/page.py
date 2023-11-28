@@ -43,8 +43,12 @@ class Table:
     documentai_object: documentai.Document.Page.Table = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
-    _body_rows: List[List[str]] = dataclasses.field(init=False, repr=False)
-    _header_rows: List[List[str]] = dataclasses.field(init=False, repr=False)
+    _body_rows: Optional[List[List[str]]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
+    _header_rows: Optional[List[List[str]]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def body_rows(self):
@@ -101,8 +105,10 @@ class FormField:
     )
     _page: "Page" = dataclasses.field(repr=False)
 
-    _field_name: Optional[str] = dataclasses.field(init=False, default=None)
-    _field_value: Optional[str] = dataclasses.field(init=False, default=None)
+    _field_name: Optional[str] = dataclasses.field(init=False, repr=False, default=None)
+    _field_value: Optional[str] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def field_name(self):
@@ -132,8 +138,10 @@ class _BasePageElement(ABC):
     documentai_object: ElementWithLayout = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
-    _text: Optional[str] = dataclasses.field(init=False, default=None)
-    _hocr_bounding_box: Optional[str] = dataclasses.field(init=False, default=None)
+    _text: Optional[str] = dataclasses.field(init=False, repr=False, default=None)
+    _hocr_bounding_box: Optional[str] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def text(self):
@@ -190,7 +198,9 @@ class Token(_BasePageElement):
             Optional. The Symbols contained within the Token.
     """
 
-    _symbols: List[Symbol] = dataclasses.field(init=False, repr=False)
+    _symbols: Optional[List[Symbol]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def symbols(self):
@@ -215,7 +225,9 @@ class Line(_BasePageElement):
             Optional. The Tokens contained within the Line.
     """
 
-    _tokens: List[Token] = dataclasses.field(init=False, repr=False)
+    _tokens: Optional[List[Token]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def tokens(self):
@@ -240,7 +252,9 @@ class Paragraph(_BasePageElement):
             Optional. The Lines contained within the Paragraph.
     """
 
-    _lines: List[Line] = dataclasses.field(init=False, repr=False)
+    _lines: Optional[List[Line]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def lines(self):
@@ -265,7 +279,9 @@ class Block(_BasePageElement):
             Optional. The Paragraphs contained within the Block.
     """
 
-    _paragraphs: List[Paragraph] = dataclasses.field(init=False, repr=False)
+    _paragraphs: Optional[List[Paragraph]] = dataclasses.field(
+        init=False, repr=False, default=None
+    )
 
     @property
     def paragraphs(self):

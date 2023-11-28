@@ -80,9 +80,7 @@ def test_table_to_csv(docproto):
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], _document_text=docproto.text
     )
-    table = page.Table(
-        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
-    )
+    table = wrapped_page.tables[0]
 
     contents = table.to_dataframe().to_csv(index=False)
 
@@ -100,13 +98,11 @@ Resource C,50,$12.00,$600.00
 
 
 def test_table_to_csv_with_empty_body_rows(docproto):
+    docproto.pages[0].tables[0].body_rows = None
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], _document_text=docproto.text
     )
-    table = page.Table(
-        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
-    )
-    table.body_rows = None
+    table = wrapped_page.tables[0]
 
     contents = table.to_dataframe().to_csv(index=False)
 
@@ -118,13 +114,11 @@ def test_table_to_csv_with_empty_body_rows(docproto):
 
 
 def test_table_to_csv_with_empty_header_rows(docproto):
+    docproto.pages[0].tables[0].header_rows = None
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], _document_text=docproto.text
     )
-    table = page.Table(
-        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
-    )
-    table.header_rows = None
+    table = wrapped_page.tables[0]
 
     contents = table.to_dataframe().to_csv(index=False)
 
@@ -142,14 +136,15 @@ Resource C,50,$12.00,$600.00
 
 
 def test_table_to_csv_with_empty_header_rows_and_single_body(docproto):
+    docproto.pages[0].tables[0].header_rows = None
+    docproto.pages[0].tables[0].body_rows[0].cells = [
+        docproto.pages[0].tables[0].body_rows[0].cells[0]
+    ]
+    docproto.pages[0].tables[0].body_rows = [docproto.pages[0].tables[0].body_rows[0]]
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], _document_text=docproto.text
     )
-    table = page.Table(
-        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
-    )
-    table.header_rows = []
-    table.body_rows = [[table.body_rows[0][0]]]
+    table = wrapped_page.tables[0]
 
     contents = table.to_dataframe().to_csv(index=False)
     assert (
@@ -164,9 +159,7 @@ def test_table_to_dataframe(docproto):
     wrapped_page = page.Page(
         documentai_object=docproto.pages[0], _document_text=docproto.text
     )
-    table = page.Table(
-        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
-    )
+    table = wrapped_page.tables[0]
     contents = table.to_dataframe()
 
     assert len(contents.columns) == 4
@@ -254,6 +247,8 @@ def test_Block(docproto):
     assert block.text == "Invoice\n"
     assert block.hocr_bounding_box == "bbox 1310 220 1534 282"
 
+    assert block.paragraphs
+
 
 def test_Paragraph(docproto):
     wrapped_page = page.Page(
@@ -267,6 +262,8 @@ def test_Paragraph(docproto):
     # checking cached value
     assert paragraph.text == "Invoice\n"
     assert paragraph.hocr_bounding_box == "bbox 1310 220 1534 282"
+
+    assert paragraph.lines
 
 
 def test_Line(docproto):
@@ -282,6 +279,8 @@ def test_Line(docproto):
     assert line.text == "Supplies used for Project Q.\n"
     assert line.hocr_bounding_box == "bbox 223 1781 620 1818"
 
+    assert line.tokens
+
 
 def test_Token(docproto):
     wrapped_page = page.Page(
@@ -295,6 +294,8 @@ def test_Token(docproto):
     # checking cached value
     assert token.text == "Q.\n"
     assert token.hocr_bounding_box == "bbox 585 1781 620 1818"
+
+    assert token.symbols == []
 
 
 def test_Symbol(docproto_with_symbols):
