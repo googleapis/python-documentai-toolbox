@@ -107,7 +107,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
             Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/` where gcs_prefix=`{optional_folder}/{target_folder}`.
     Returns:
         List[google.cloud.documentai.Document]:
-            A list of `documentai.Document`s.
+            A list of documentai.Documents.
 
     """
     file_check = re.match(constants.FILE_CHECK_REGEX, gcs_prefix)
