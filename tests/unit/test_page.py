@@ -77,9 +77,11 @@ def docproto_blank_document():
 
 
 def test_table_to_csv(docproto):
-    docproto_page = docproto.pages[0]
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], _document_text=docproto.text
+    )
     table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
     )
 
     contents = table.to_dataframe().to_csv(index=False)
@@ -98,9 +100,11 @@ Resource C,50,$12.00,$600.00
 
 
 def test_table_to_csv_with_empty_body_rows(docproto):
-    docproto_page = docproto.pages[0]
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], _document_text=docproto.text
+    )
     table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
     )
     table.body_rows = None
 
@@ -114,9 +118,11 @@ def test_table_to_csv_with_empty_body_rows(docproto):
 
 
 def test_table_to_csv_with_empty_header_rows(docproto):
-    docproto_page = docproto.pages[0]
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], _document_text=docproto.text
+    )
     table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
     )
     table.header_rows = None
 
@@ -136,9 +142,11 @@ Resource C,50,$12.00,$600.00
 
 
 def test_table_to_csv_with_empty_header_rows_and_single_body(docproto):
-    docproto_page = docproto.pages[0]
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], _document_text=docproto.text
+    )
     table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
     )
     table.header_rows = []
     table.body_rows = [[table.body_rows[0][0]]]
@@ -153,9 +161,11 @@ Tool A
 
 
 def test_table_to_dataframe(docproto):
-    docproto_page = docproto.pages[0]
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], _document_text=docproto.text
+    )
     table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+        documentai_object=docproto.pages[0].tables[0], _page=wrapped_page
     )
     contents = table.to_dataframe()
 
@@ -209,21 +219,23 @@ def test_get_hocr_bounding_box_with_blank_document(docproto_blank_document):
 
 
 def test_Table(docproto):
-    docproto_page = docproto.pages[0]
-    table = page.Table(
-        documentai_object=docproto_page.tables[0], document_text=docproto.text
+    wrapped_page = page.Page(
+        documentai_object=docproto.pages[0], _document_text=docproto.text
     )
+    docai_table = docproto.pages[0].tables[0]
+    table = page.Table(documentai_object=docai_table, _page=wrapped_page)
 
     assert len(table.body_rows) == 6
     assert len(table.header_rows[0]) == 4
 
 
 def test_FormField(docproto_form_parser):
-    documentai_formfield = docproto_form_parser.pages[0].form_fields[4]
-    form_field = page.FormField(
-        documentai_object=documentai_formfield,
-        document_text=docproto_form_parser.text,
+    wrapped_page = page.Page(
+        documentai_object=docproto_form_parser.pages[0],
+        _document_text=docproto_form_parser.text,
     )
+    docai_formfield = docproto_form_parser.pages[0].form_fields[4]
+    form_field = page.FormField(documentai_object=docai_formfield, _page=wrapped_page)
 
     assert form_field.field_name == "Occupation:"
     assert form_field.field_value == "Software Engineer"
@@ -231,7 +243,7 @@ def test_FormField(docproto_form_parser):
 
 def test_Block(docproto):
     wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
+        documentai_object=docproto.pages[0], _document_text=docproto.text
     )
     docai_block = docproto.pages[0].blocks[0]
     block = page.Block(documentai_object=docai_block, _page=wrapped_page)
@@ -245,7 +257,7 @@ def test_Block(docproto):
 
 def test_Paragraph(docproto):
     wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
+        documentai_object=docproto.pages[0], _document_text=docproto.text
     )
     docai_paragraph = docproto.pages[0].paragraphs[0]
     paragraph = page.Paragraph(documentai_object=docai_paragraph, _page=wrapped_page)
@@ -257,24 +269,9 @@ def test_Paragraph(docproto):
     assert paragraph.hocr_bounding_box == "bbox 1310 220 1534 282"
 
 
-def test_page_elements_large_document(large_docproto):
-    for pg in large_docproto.pages:
-        wrapped_page = page.Page(
-            documentai_object=pg, document_text=large_docproto.text
-        )
-        for block in wrapped_page.blocks:
-            assert block.text != ""
-        for paragraph in wrapped_page.paragraphs:
-            assert paragraph.text != ""
-        for line in wrapped_page.lines:
-            assert line.text != ""
-        for token in wrapped_page.tokens:
-            assert token.text != ""
-
-
 def test_Line(docproto):
     wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
+        documentai_object=docproto.pages[0], _document_text=docproto.text
     )
     docai_line = docproto.pages[0].lines[36]
     line = page.Line(documentai_object=docai_line, _page=wrapped_page)
@@ -288,7 +285,7 @@ def test_Line(docproto):
 
 def test_Token(docproto):
     wrapped_page = page.Page(
-        documentai_object=docproto.pages[0], document_text=docproto.text
+        documentai_object=docproto.pages[0], _document_text=docproto.text
     )
     docai_token = docproto.pages[0].tokens[85]
     token = page.Token(documentai_object=docai_token, _page=wrapped_page)
@@ -303,7 +300,7 @@ def test_Token(docproto):
 def test_Symbol(docproto_with_symbols):
     wrapped_page = page.Page(
         documentai_object=docproto_with_symbols.pages[0],
-        document_text=docproto_with_symbols.text,
+        _document_text=docproto_with_symbols.text,
     )
     docai_symbol = docproto_with_symbols.pages[0].symbols[1]
     symbol = page.Symbol(documentai_object=docai_symbol, _page=wrapped_page)
@@ -318,7 +315,7 @@ def test_Symbol(docproto_with_symbols):
 def test_MathFormula(docproto_with_math):
     wrapped_page = page.Page(
         documentai_object=docproto_with_math.pages[0],
-        document_text=docproto_with_math.text,
+        _document_text=docproto_with_math.text,
     )
 
     docai_visual_element = docproto_with_math.pages[0].visual_elements[0]
@@ -338,10 +335,10 @@ def test_Page(docproto):
     docproto_page = docproto.pages[0]
 
     wrapped_page = page.Page(
-        documentai_object=docproto_page, document_text=docproto.text
+        documentai_object=docproto_page, _document_text=docproto.text
     )
 
-    assert "Invoice" in wrapped_page.document_text
+    assert "Invoice" in wrapped_page._document_text
     assert wrapped_page.page_number == 1
 
     assert len(wrapped_page.lines) == 37
@@ -377,3 +374,18 @@ def test_Page(docproto):
 
     assert wrapped_page.form_fields[0].field_name == "BALANCE DUE"
     assert wrapped_page.form_fields[0].field_value == "$2140.00"
+
+
+def test_page_elements_large_document(large_docproto):
+    for pg in large_docproto.pages:
+        wrapped_page = page.Page(
+            documentai_object=pg, _document_text=large_docproto.text
+        )
+        for block in wrapped_page.blocks:
+            assert block.text != ""
+        for paragraph in wrapped_page.paragraphs:
+            assert paragraph.text != ""
+        for line in wrapped_page.lines:
+            assert line.text != ""
+        for token in wrapped_page.tokens:
+            assert token.text != ""
