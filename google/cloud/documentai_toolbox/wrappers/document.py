@@ -61,6 +61,10 @@ def _entities_from_shards(
         for item in (entity, *entity.properties)
     ]
 
+    # https://github.com/googleapis/python-documentai-toolbox/issues/199
+    # Only sort entities if the ids are all numeric.
+    # Document AI Workbench labeling outputs hexadecimal ids which should not be sorted.
+    # Sorting numeric ids is needed for backwards-compatible behavior.
     if len(result) > 1 and all(item.documentai_object.id.isdigit() for item in result):
         result.sort(key=lambda x: int(x.documentai_object.id))
     return result
