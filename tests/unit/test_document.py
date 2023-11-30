@@ -344,6 +344,11 @@ def test_document_from_documentai_document_with_single_shard():
 
     actual = document.Document.from_documentai_document(documentai_document=doc)
     assert len(actual.pages) == 1
+    # checking cached value
+    assert len(actual.pages) == 1
+
+    assert len(actual.text) > 0
+    assert len(actual.text) > 0
 
 
 def test_document_from_gcs_with_single_shard(get_bytes_single_file_mock):
@@ -353,6 +358,11 @@ def test_document_from_gcs_with_single_shard(get_bytes_single_file_mock):
 
     get_bytes_single_file_mock.assert_called_once()
     assert len(actual.pages) == 1
+    # checking cached value
+    assert len(actual.pages) == 1
+
+    assert len(actual.text) > 0
+    assert len(actual.text) > 0
 
 
 def test_document_from_gcs_with_multiple_shards(get_bytes_multiple_files_mock):
@@ -362,6 +372,11 @@ def test_document_from_gcs_with_multiple_shards(get_bytes_multiple_files_mock):
     get_bytes_multiple_files_mock.assert_called_once()
 
     assert len(actual.pages) == 48
+    # checking cached value
+    assert len(actual.pages) == 48
+
+    assert len(actual.text) > 0
+    assert len(actual.text) > 0
 
 
 def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock):
