@@ -26,12 +26,12 @@ except ImportError:  # pragma: NO COVER
 
 import glob
 
-from google.cloud.vision import AnnotateFileResponse
 import pytest
 
 from google.cloud import documentai
-from google.cloud.storage import Blob, Bucket
+from google.cloud.storage import Blob
 from google.cloud.documentai_toolbox import document, gcs_utilities
+from google.cloud.vision import AnnotateFileResponse
 
 
 def get_bytes(file_name):

@@ -92,16 +92,16 @@ def test_list_gcs_document_tree_with_one_folder(mock_storage):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/1/test_shard1.json",
-            bucket="gs://test-directory/1",
+            name="1/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/1/test_shard2.json",
-            bucket="gs://test-directory/1",
+            name="1/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/1/test_shard3.json",
-            bucket="gs://test-directory/1",
+            name="1/test_shard3.json",
+            bucket=mock_bucket,
         ),
     ]
 
@@ -113,11 +113,13 @@ def test_list_gcs_document_tree_with_one_folder(mock_storage):
 
     mock_storage.Client.assert_called_once()
 
-    assert "gs://test-directory/1" in list(doc_list.keys())
+    assert doc_list == {
+        "1": ["test_shard1.json", "test_shard2.json", "test_shard3.json"]
+    }
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
-def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
+def test_list_gcs_document_tree_with_3_documents(mock_storage):
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -126,16 +128,16 @@ def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard3.json",
+            bucket=mock_bucket,
         ),
     ]
 
@@ -147,13 +149,17 @@ def test_list_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     mock_storage.Client.assert_called_once()
 
-    out, err = capfd.readouterr()
-
-    assert "gs://test-directory/documentai/output/123456789/1" in list(doc_list.keys())
+    assert doc_list == {
+        "documentai/output/123456789/1": [
+            "test_shard1.json",
+            "test_shard2.json",
+            "test_shard3.json",
+        ]
+    }
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
-def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
+def test_list_gcs_document_tree_with_more_than_5_document(mock_storage):
     client = mock_storage.Client.return_value
 
     mock_bucket = mock.Mock()
@@ -162,28 +168,28 @@ def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard3.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard4.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard5.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard6.json",
+            bucket=mock_bucket,
         ),
     ]
     client.list_blobs.return_value = blobs
@@ -194,9 +200,16 @@ def test_list_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
     mock_storage.Client.assert_called_once()
 
-    out, err = capfd.readouterr()
-
-    assert "gs://test-directory/documentai/output/123456789/1" in list(doc_list.keys())
+    assert doc_list == {
+        "documentai/output/123456789/1": [
+            "test_shard1.json",
+            "test_shard2.json",
+            "test_shard3.json",
+            "test_shard4.json",
+            "test_shard5.json",
+            "test_shard6.json",
+        ]
+    }
 
 
 def test_list_gcs_document_tree_with_gcs_uri_contains_file_type():
@@ -217,16 +230,16 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/1/test_shard1.json",
-            bucket="gs://test-directory/1",
+            name="1/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/1/test_shard2.json",
-            bucket="gs://test-directory/1",
+            name="1/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/1/test_shard3.json",
-            bucket="gs://test-directory/1",
+            name="1/test_shard3.json",
+            bucket=mock_bucket,
         ),
     ]
 
@@ -239,6 +252,7 @@ def test_print_gcs_document_tree_with_one_folder(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert (
         out
         == """gs://test-directory/1
@@ -258,16 +272,16 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard3.json",
+            bucket=mock_bucket,
         ),
     ]
 
@@ -280,6 +294,7 @@ def test_print_gcs_document_tree_with_3_documents(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert (
         out
         == """gs://test-directory/documentai/output/123456789/1
@@ -299,28 +314,28 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard1.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard2.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard3.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard4.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard5.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard6.json",
+            bucket=mock_bucket,
         ),
     ]
     client.list_blobs.return_value = blobs
@@ -332,6 +347,7 @@ def test_print_gcs_document_tree_with_more_than_5_document(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert (
         out
         == """gs://test-directory/documentai/output/123456789/1
@@ -355,28 +371,28 @@ def test_print_gcs_document_tree_with_multiple_directories(mock_storage, capfd):
 
     blobs = [
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/0/test_shard1.json",
-            bucket="gs://test-directory/documentai/output/123456789/0",
+            name="documentai/output/123456789/0/test_shard1.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/0/test_shard2.json",
-            bucket="gs://test-directory/documentai/output/123456789/0",
+            name="documentai/output/123456789/0/test_shard2.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard3.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard3.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard4.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard4.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard5.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard5.json",
+            bucket=mock_bucket,
         ),
         storage.Blob(
-            name="gs://test-directory/documentai/output/123456789/1/test_shard6.json",
-            bucket="gs://test-directory/documentai/output/123456789/1",
+            name="documentai/output/123456789/1/test_shard6.json",
+            bucket=mock_bucket,
         ),
     ]
     client.list_blobs.return_value = blobs
@@ -388,6 +404,7 @@ def test_print_gcs_document_tree_with_multiple_directories(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert (
         out
         == """gs://test-directory/documentai/output/123456789/0
@@ -428,6 +445,7 @@ def test_create_batches_with_empty_directory(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert out == ""
     assert len(actual) == 0
 
@@ -454,6 +472,7 @@ def test_create_batches_with_3_documents(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert out == ""
     assert len(actual) == 1
     assert len(actual[0].gcs_documents.documents) == 3
@@ -491,6 +510,7 @@ def test_create_batches_with_large_folder(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert out == ""
     assert len(actual) == 2
     assert len(actual[0].gcs_documents.documents) == 50
@@ -516,6 +536,7 @@ def test_create_batches_with_invalid_file_type(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert "Invalid Mime Type" in out
     assert not actual
 
@@ -539,6 +560,7 @@ def test_create_batches_with_large_file(mock_storage, capfd):
     mock_storage.Client.assert_called_once()
 
     out, err = capfd.readouterr()
+    assert not err
     assert "File size must be less than" in out
     assert not actual
 

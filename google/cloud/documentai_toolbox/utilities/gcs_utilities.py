@@ -257,7 +257,7 @@ def print_gcs_document_tree(
     )
 
     for directory, files in path_list.items():
-        print(directory)
+        print(create_gcs_uri(gcs_bucket_name, directory))
         dir_size = len(files)
         for idx, file_name in enumerate(files):
             if idx == dir_size - 1:
