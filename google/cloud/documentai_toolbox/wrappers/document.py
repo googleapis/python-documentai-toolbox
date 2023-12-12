@@ -482,7 +482,7 @@ class Document:
         )
 
     @classmethod
-    def list_from_gcs(
+    def from_gcs_multi(
         cls: Type["Document"],
         gcs_bucket_name: str,
         gcs_prefix: str,
@@ -493,7 +493,7 @@ class Document:
             gcs_bucket_name (str):
                 Required. The gcs bucket.
 
-                Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
+                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_bucket_name={bucket_name}`.
             gcs_prefix (str):
                 Required. The prefix to the location of the target folder.
 

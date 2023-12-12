@@ -414,7 +414,7 @@ def test_document_list_from_gcs_with_multiple_input_files(
         Blob(name="documentai/output/123456789/1/test_shard2.json", bucket=None),
         Blob(name="documentai/output/123456789/2/test_shard3.json", bucket=None),
     ]
-    documents = document.Document.list_from_gcs(
+    documents = document.Document.from_gcs_multi(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/"
     )
     get_bytes_multiple_directories_mock.assert_called()
