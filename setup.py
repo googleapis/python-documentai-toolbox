@@ -67,7 +67,7 @@ setuptools.setup(
         "google-cloud-documentai >= 2.20.0, < 3.0.0dev",
         "google-cloud-documentai >= 2.21.0, < 3.0.0dev; python_version>='3.12'",
         "google-cloud-storage >= 1.31.0, < 3.0.0dev",
-        "google-cloud-storage >= 2.14.0rc, < 3.0.0dev; python_version>='3.12'",
+        "google-cloud-storage >= 2.14.0, < 3.0.0dev; python_version>='3.12'",
         "google-cloud-vision >= 2.7.0, < 4.0.0dev",
         "google-cloud-vision >= 3.5.0, < 4.0.0dev; python_version>='3.12'",
         "numpy >= 1.18.1, < 2.0.0",
