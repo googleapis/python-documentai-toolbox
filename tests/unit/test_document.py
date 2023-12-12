@@ -30,6 +30,7 @@ from google.cloud.vision import AnnotateFileResponse
 import pytest
 
 from google.cloud import documentai
+from google.cloud.storage import Blob, Bucket
 from google.cloud.documentai_toolbox import document, gcs_utilities
 
 
@@ -395,6 +396,37 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
 
     for page_index, page in enumerate(actual.pages):
         assert page.page_number == page_index + 1
+
+
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
+def test_document_list_from_gcs_with_multiple_input_files(
+    mock_storage,
+    get_bytes_multiple_directories_mock,
+):
+    client = mock_storage.Client.return_value
+
+    mock_bucket = mock.Mock()
+
+    client.Bucket.return_value = mock_bucket
+
+    client.list_blobs.return_value = [
+        Blob(name="documentai/output/123456789/1/test_shard1.json", bucket=None),
+        Blob(name="documentai/output/123456789/1/test_shard2.json", bucket=None),
+        Blob(name="documentai/output/123456789/2/test_shard3.json", bucket=None),
+    ]
+    documents = document.Document.list_from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/"
+    )
+    get_bytes_multiple_directories_mock.assert_called()
+    assert get_bytes_multiple_directories_mock.call_count == 2
+
+    assert len(documents) == 2
+
+    assert documents[0].gcs_bucket_name == "test-directory"
+    assert documents[0].gcs_prefix == "documentai/output/123456789/1"
+
+    assert documents[1].gcs_bucket_name == "test-directory"
+    assert documents[1].gcs_prefix == "documentai/output/123456789/2"
 
 
 def test_document_from_batch_process_metadata_with_multiple_input_files(

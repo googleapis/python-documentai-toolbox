@@ -482,6 +482,35 @@ class Document:
         )
 
     @classmethod
+    def list_from_gcs(
+        cls: Type["Document"],
+        gcs_bucket_name: str,
+        gcs_prefix: str,
+    ) -> List["Document"]:
+        r"""Loads a list of Documents from Cloud Storage.
+
+        Args:
+            gcs_bucket_name (str):
+                Required. The gcs bucket.
+
+                Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
+            gcs_prefix (str):
+                Required. The prefix to the location of the target folder.
+
+                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
+        Returns:
+            List[Document]:
+                A List of documents from gcs.
+        """
+        return [
+            Document.from_gcs(gcs_bucket_name=gcs_bucket_name, gcs_prefix=directory)
+            for directory, files in gcs_utilities.list_gcs_document_tree(
+                gcs_bucket_name, gcs_prefix
+            ).items()
+            if files != [""]
+        ]
+
+    @classmethod
     def from_batch_process_metadata(
         cls: Type["Document"], metadata: documentai.BatchProcessMetadata
     ) -> List["Document"]:
