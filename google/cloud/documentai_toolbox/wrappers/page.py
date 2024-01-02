@@ -312,7 +312,9 @@ class MathFormula(_BasePageElement):
 
 
 def _table_rows_from_documentai_table_rows(
-    table_rows: List[documentai.Document.Page.Table.TableRow], text: str
+    table_rows: List[documentai.Document.Page.Table.TableRow],
+    text: str,
+    remove_newlines: bool = True,
 ) -> List[List[str]]:
     r"""Returns a list of rows from table_rows.
 
@@ -322,13 +324,20 @@ def _table_rows_from_documentai_table_rows(
         text (str):
             Required. UTF-8 encoded text in reading order
             from the document.
+        remove_newlines (bool):
+            Optional. Default True. Remove `\n` characters from table text.
 
     Returns:
         List[List[str]]:
             A list of table rows.
     """
     return [
-        [_text_from_layout(cell.layout, text) for cell in row.cells]
+        [
+            _text_from_layout(cell.layout, text).replace("\n", "")
+            if remove_newlines
+            else _text_from_layout(cell.layout, text)
+            for cell in row.cells
+        ]
         for row in table_rows
     ]
 
