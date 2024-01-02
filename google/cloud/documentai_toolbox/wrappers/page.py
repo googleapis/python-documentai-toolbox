@@ -328,7 +328,7 @@ def _table_rows_from_documentai_table_rows(
             A list of table rows.
     """
     return [
-        [_text_from_layout(cell.layout, text).replace("\n", "") for cell in row.cells]
+        [_text_from_layout(cell.layout, text) for cell in row.cells]
         for row in table_rows
     ]
 
