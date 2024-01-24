@@ -5,8 +5,7 @@ API Reference
 .. toctree::
   :maxdepth: 2
 
-  documentai_toolbox/wrappers
-  documentai_toolbox/utilities
+  documentai_toolbox/index
 
 Changelog
 ---------
