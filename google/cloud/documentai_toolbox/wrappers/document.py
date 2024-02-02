@@ -20,6 +20,7 @@ import dataclasses
 import glob
 import os
 import re
+import time
 from typing import Dict, List, Optional, Type, Union
 
 from google.api_core.client_options import ClientOptions
@@ -137,7 +138,10 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
 
 
 def _get_batch_process_metadata(
-    location: str, operation_name: str
+    location: str,
+    operation_name: str,
+    polling_interval: int = 10,
+    timeout: Optional[float] = None,
 ) -> documentai.BatchProcessMetadata:
     r"""Get `BatchProcessMetadata` from a `batch_process_documents()` long-running operation.
 
@@ -147,6 +151,14 @@ def _get_batch_process_metadata(
 
         operation_name (str):
             Required. The fully qualified operation name for a `batch_process_documents()` operation.
+
+        polling_interval (int):
+            Optional. Default 10. Time in seconds to wait between polls for operation status.
+            Needed to avoid hitting quotas.
+
+        timeout (float):
+            Optional. Default None. Time in seconds to wait for operation to complete.
+            If None, will wait indefinitely.
     Returns:
         documentai.BatchProcessMetadata:
             Metadata from batch process.
@@ -154,16 +166,21 @@ def _get_batch_process_metadata(
     client = documentai.DocumentProcessorServiceClient(
         client_options=ClientOptions(
             api_endpoint=f"{location}-documentai.googleapis.com"
-        )
+        ),
+        client_info=gcs_utilities._get_client_info(),
     )
 
+    # Poll Operation until complete.
     while True:
         operation: Operation = client.get_operation(
-            request=GetOperationRequest(name=operation_name)
+            request=GetOperationRequest(name=operation_name),
+            timeout=timeout,
         )
 
         if operation.done:
             break
+
+        time.sleep(polling_interval)
 
     if not operation.metadata:
         raise ValueError(f"Operation does not contain metadata: {operation}")
@@ -518,7 +535,11 @@ class Document:
 
     @classmethod
     def from_batch_process_operation(
-        cls: Type["Document"], location: str, operation_name: str
+        cls: Type["Document"],
+        location: str,
+        operation_name: str,
+        polling_interval: int = 10,
+        timeout: Optional[int] = None,
     ) -> List["Document"]:
         r"""Loads Documents from Cloud Storage, using the operation name returned from `batch_process_documents()`.
 
@@ -539,13 +560,24 @@ class Document:
                 Required. The fully qualified operation name for a `batch_process_documents()` operation.
 
                 Format: `projects/{project}/locations/{location}/operations/{operation}`
+
+        polling_interval (int):
+            Optional. Default 10. Time in seconds to wait between polls for operation status.
+            Needed to avoid hitting quotas.
+
+        timeout (float):
+            Optional. Default None. Time in seconds to wait for operation to complete.
+            If None, will wait indefinitely.
         Returns:
             List[Document]:
                 A list of wrapped documents from gcs. Each document corresponds to an input file.
         """
         return cls.from_batch_process_metadata(
             metadata=_get_batch_process_metadata(
-                location=location, operation_name=operation_name
+                location=location,
+                operation_name=operation_name,
+                polling_interval=polling_interval,
+                timeout=timeout,
             )
         )
 
