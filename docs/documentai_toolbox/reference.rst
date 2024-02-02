@@ -1,10 +1,8 @@
-All Classes and Methods
-----------------
-.. toctree::
-  :maxdepth: 2
+Document AI Toolbox API Reference
+=================================
 
-  documentai_toolbox/wrappers
-  documentai_toolbox/utilities
+.. toctree::
+  :maxdepth: 3
 
 Document Wrapper
 ~~~~~~~~~~~~~~~~
@@ -12,6 +10,7 @@ Document Wrapper
    :members:
    :undoc-members:
    :show-inheritance:
+   :noindex:
 
 Entity Wrapper
 ~~~~~~~~~~~~~~
@@ -19,6 +18,7 @@ Entity Wrapper
    :members:
    :undoc-members:
    :show-inheritance:
+   :noindex:
 
 Page Wrapper
 ~~~~~~~~~~~~
@@ -26,10 +26,12 @@ Page Wrapper
    :members:
    :undoc-members:
    :show-inheritance:
+   :noindex:
 
 Google Cloud Storage Utilities
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: google.cloud.documentai_toolbox.utilities.gcs_utilities
-   :members:
-   :undoc-members:
-   :show-inheritance:
+  :members:
+  :noindex:
+  :undoc-members:
+  :show-inheritance:

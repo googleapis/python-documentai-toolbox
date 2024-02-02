@@ -3,9 +3,9 @@
 API Reference
 -------------
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 3
 
-  documentai_toolbox/index
+  documentai_toolbox/reference
 
 Changelog
 ---------
