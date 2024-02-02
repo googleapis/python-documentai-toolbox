@@ -140,7 +140,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
 def _get_batch_process_metadata(
     location: str,
     operation_name: str,
-    polling_interval: int = 10,
+    polling_interval: int = 0,
     timeout: Optional[float] = None,
 ) -> documentai.BatchProcessMetadata:
     r"""Get `BatchProcessMetadata` from a `batch_process_documents()` long-running operation.
@@ -153,7 +153,7 @@ def _get_batch_process_metadata(
             Required. The fully qualified operation name for a `batch_process_documents()` operation.
 
         polling_interval (int):
-            Optional. Default 10. Time in seconds to wait between polls for operation status.
+            Optional. Default is 0. Time in seconds to wait between polls for operation status.
             Needed to avoid hitting quotas.
 
         timeout (float):
@@ -538,7 +538,7 @@ class Document:
         cls: Type["Document"],
         location: str,
         operation_name: str,
-        polling_interval: int = 10,
+        polling_interval: int = 0,
         timeout: Optional[int] = None,
     ) -> List["Document"]:
         r"""Loads Documents from Cloud Storage, using the operation name returned from `batch_process_documents()`.
@@ -562,7 +562,7 @@ class Document:
                 Format: `projects/{project}/locations/{location}/operations/{operation}`
 
         polling_interval (int):
-            Optional. Default 10. Time in seconds to wait between polls for operation status.
+            Optional. Default 0. Time in seconds to wait between polls for operation status.
             Needed to avoid hitting quotas.
 
         timeout (float):
