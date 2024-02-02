@@ -561,13 +561,14 @@ class Document:
 
                 Format: `projects/{project}/locations/{location}/operations/{operation}`
 
-        polling_interval (int):
-            Optional. Default 0. Time in seconds to wait between polls for operation status.
-            Needed to avoid hitting quotas.
+            polling_interval (int):
+                Optional. Default 0. Time in seconds to wait between polls for operation status.
+                Needed to avoid hitting quotas.
 
-        timeout (float):
-            Optional. Default None. Time in seconds to wait for operation to complete.
-            If None, will wait indefinitely.
+            timeout (float):
+                Optional. Default None. Time in seconds to wait for operation to complete.
+                If None, will wait indefinitely.
+
         Returns:
             List[Document]:
                 A list of wrapped documents from gcs. Each document corresponds to an input file.
