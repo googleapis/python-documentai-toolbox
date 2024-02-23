@@ -20,6 +20,7 @@ import dataclasses
 import glob
 import os
 import re
+import fitz
 from typing import Dict, List, Optional, Type, Union
 
 from google.api_core.operation import from_gapic as operation_from_gapic
@@ -751,6 +752,91 @@ class Document:
                 )
 
                 output_files.append(output_filename)
+        return output_files
+
+    def split_pdf_mupdf(self, pdf_path: str, output_path: str) -> List[str]:
+        """
+        Splits local PDF file into multiple PDF files based on output from a Splitter/Classifier processor.
+
+        Args:
+            pdf_path (str):
+                Required. The path to the PDF file.
+            output_path (str):
+                Required. The path to the output directory.
+        Returns:
+            List[str]:
+                A list of output pdf files.
+        """
+        output_files: List[str] = []
+        input_filename, input_extension = os.path.splitext(os.path.basename(pdf_path))
+
+        pdf_document = fitz.open(pdf_path)
+
+        for entity in self.entities:
+            subdoc_type = entity.type_ or "subdoc"
+            page_range = (
+                f"pg{entity.start_page + 1}"
+                if entity.start_page == entity.end_page
+                else f"pg{entity.start_page + 1}-{entity.end_page + 1}"
+            )
+            output_filename = (
+                f"{input_filename}_{page_range}_{subdoc_type}{input_extension}"
+            )
+
+            subdoc = fitz.open()
+            subdoc.insert_pdf(
+                pdf_document, from_page=entity.start_page, to_page=entity.end_page
+            )
+            subdoc.save(
+                os.path.join(output_path, output_filename), garbage=3, deflate=True
+            )
+
+            output_files.append(output_filename)
+
+        pdf_document.close()
+
+        return output_files
+
+    def split_pdf_mupdf_optimized(self, pdf_path: str, output_path: str) -> List[str]:
+        """
+        Splits local PDF file into multiple PDF files based on output from a Splitter/Classifier processor.
+
+        Args:
+            pdf_path (str):
+                Required. The path to the PDF file.
+            output_path (str):
+                Required. The path to the output directory.
+        Returns:
+            List[str]:
+                A list of output pdf files.
+        """
+        output_files: List[str] = []
+        input_filename, input_extension = os.path.splitext(os.path.basename(pdf_path))
+
+        with fitz.open(pdf_path) as pdf_document:
+            for entity in self.entities:
+                subdoc_type = entity.type_ or "subdoc"
+                page_range = (
+                    f"pg{entity.start_page + 1}"
+                    if entity.start_page == entity.end_page
+                    else f"pg{entity.start_page + 1}-{entity.end_page + 1}"
+                )
+                output_filename = (
+                    f"{input_filename}_{page_range}_{subdoc_type}{input_extension}"
+                )
+
+                subdoc = fitz.open()
+                subdoc.insert_pdf(
+                    pdf_document,
+                    from_page=entity.start_page,
+                    to_page=entity.end_page,
+                )
+                subdoc.save(
+                    os.path.join(output_path, output_filename), garbage=3, deflate=True
+                )
+
+                output_files.append(output_filename)
+
         return output_files
 
     def convert_document_to_annotate_file_response(self) -> AnnotateFileResponse:
