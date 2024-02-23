@@ -136,8 +136,8 @@ def get_blob(
         module (Optional[str]):
             Optional. The module for a custom user agent header.
     Returns:
-        List[storage.blob.Blob]:
-            A list of the blobs in the Cloud Storage path.
+        storage.blob.Blob:
+            The blob in the Cloud Storage path.
     """
     gcs_bucket_name, gcs_file_name = split_gcs_uri(gcs_uri)
 

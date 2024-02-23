@@ -105,6 +105,17 @@ def get_bytes_missing_shard_mock():
         yield byte_factory
 
 
+@pytest.fixture
+def get_blob_mock():
+    with mock.patch.object(gcs_utilities, "get_blob") as blob_factory:
+        mock_blob = mock.Mock()
+        mock_blob.download_as_bytes.return_value = get_bytes("tests/unit/resources/0")[
+            0
+        ]
+        blob_factory.return_value = mock_blob
+        yield blob_factory
+
+
 def create_document_with_images_without_bbox(get_bytes_images_mock):
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
@@ -392,6 +403,50 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
 
     for page_index, page in enumerate(actual.pages):
         assert page.page_number == page_index + 1
+
+
+def test_document_from_gcs_with_uri(get_blob_mock):
+    actual = document.Document.from_gcs(
+        gcs_uri="gs://test-directory/documentai/output/123456789/0/"
+    )
+
+    get_blob_mock.assert_called_once()
+    assert len(actual.pages) == 1
+    # checking cached value
+    assert len(actual.pages) == 1
+
+    assert len(actual.text) > 0
+    assert len(actual.text) > 0
+
+
+def test_document_from_gcs_with_no_parameters():
+    with pytest.raises(
+        ValueError,
+        match="Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.",
+    ):
+        document.Document.from_gcs()
+
+
+def test_document_from_gcs_with_uri_and_bucket_name():
+    with pytest.raises(
+        ValueError,
+        match="Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.",
+    ):
+        document.Document.from_gcs(
+            gcs_bucket_name="test-directory",
+            gcs_uri="gs://test-directory/documentai/output/123456789/0/",
+        )
+
+
+def test_document_from_gcs_with_uri_and_prefix():
+    with pytest.raises(
+        ValueError,
+        match="Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.",
+    ):
+        document.Document.from_gcs(
+            gcs_prefix="documentai/output/123456789/2/",
+            gcs_uri="gs://test-directory/documentai/output/123456789/0/",
+        )
 
 
 def test_document_from_batch_process_metadata_with_multiple_input_files(
