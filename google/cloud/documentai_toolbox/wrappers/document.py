@@ -465,19 +465,19 @@ class Document:
         gcs_input_uri: Optional[str] = None,
     ) -> "Document":
         r"""Loads a Document from a Cloud Storage directory.
-            Args:
-                gcs_bucket_name (str):
-                    Required. The gcs bucket.
+        Args:
+            gcs_bucket_name (str):
+                Required. The gcs bucket.
 
-                    Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
-                gcs_prefix (str):
-                    Required. The prefix to the location of the target folder.
+                Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
+            gcs_prefix (str):
+                Required. The prefix to the location of the target folder.
 
-                    Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
-                gcs_input_uri (str):
-                    Optional. The gcs uri to the original input file.
+                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
+            gcs_input_uri (str):
+                Optional. The gcs uri to the original input file.
 
-                    Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
+                Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
         Returns:
             Document:
                 A document from gcs.
