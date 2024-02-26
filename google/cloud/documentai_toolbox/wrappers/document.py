@@ -465,6 +465,7 @@ class Document:
         gcs_input_uri: Optional[str] = None,
     ) -> "Document":
         r"""Loads a Document from a Cloud Storage directory.
+
         Args:
             gcs_bucket_name (str):
                 Required. The gcs bucket.
