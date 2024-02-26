@@ -366,6 +366,7 @@ class Document:
     shards: List[documentai.Document] = dataclasses.field(repr=False)
     gcs_bucket_name: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_prefix: Optional[str] = dataclasses.field(default=None, repr=False)
+    gcs_uri: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_input_uri: Optional[str] = dataclasses.field(default=None, repr=False)
 
     _pages: Optional[List[Page]] = dataclasses.field(
@@ -459,24 +460,47 @@ class Document:
     @classmethod
     def from_gcs(
         cls: Type["Document"],
-        gcs_bucket_name: Optional[str] = None,
-        gcs_prefix: Optional[str] = None,
-        gcs_uri: Optional[str] = None,
+        gcs_bucket_name: str,
+        gcs_prefix: str,
         gcs_input_uri: Optional[str] = None,
     ) -> "Document":
-        r"""Loads Document from Cloud Storage.
+        r"""Loads a Document from a Cloud Storage directory.
+            Args:
+                gcs_bucket_name (str):
+                    Required. The gcs bucket.
+
+                    Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
+                gcs_prefix (str):
+                    Required. The prefix to the location of the target folder.
+
+                    Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
+                gcs_input_uri (str):
+                    Optional. The gcs uri to the original input file.
+
+                    Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
+        Returns:
+            Document:
+                A document from gcs.
+        """
+        shards = _get_shards(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
+        return cls(
+            shards=shards,
+            gcs_bucket_name=gcs_bucket_name,
+            gcs_prefix=gcs_prefix,
+            gcs_input_uri=gcs_input_uri,
+        )
+
+    @classmethod
+    def from_gcs_uri(
+        cls: Type["Document"],
+        gcs_uri: str,
+        gcs_input_uri: Optional[str] = None,
+    ) -> "Document":
+        r"""Loads a Document from a Cloud Storage uri.
 
         Args:
-            gcs_bucket_name (str):
-                Optional. The gcs bucket. Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.
-
-                Format: Given `gs://{bucket_name}/{optional_folder}/{operation_id}/` where `gcs_bucket_name={bucket_name}`.
-            gcs_prefix (str):
-                Optional. The prefix to the location of the target folder. Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.
-
-                Format: Given `gs://{bucket_name}/{optional_folder}/{target_folder}` where `gcs_prefix={optional_folder}/{target_folder}`.
             gcs_uri (str):
-                Optional. The full GCS uri to a specific Document JSON file. Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.
+                Required. The full GCS uri to a Document JSON file.
 
                 Example: `gs://{bucket_name}/{optional_folder}/{target_file}.json`.
             gcs_input_uri (str):
@@ -487,31 +511,16 @@ class Document:
             Document:
                 A document from gcs.
         """
-
-        if bool(gcs_bucket_name) == bool(gcs_uri) or bool(gcs_prefix) == bool(gcs_uri):
-            raise ValueError(
-                "Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set."
+        blob = gcs_utilities.get_blob(gcs_uri=gcs_uri, module="get-document")
+        shards = [
+            documentai.Document.from_json(
+                blob.download_as_bytes(),
+                ignore_unknown_fields=True,
             )
-
-        if gcs_uri:
-            blob = gcs_utilities.get_blob(gcs_uri=gcs_uri, module="get-document")
-            shards = [
-                documentai.Document.from_json(
-                    blob.download_as_bytes(),
-                    ignore_unknown_fields=True,
-                )
-            ]
-        elif gcs_bucket_name and gcs_prefix:
-            shards = _get_shards(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
-        else:
-            raise ValueError(
-                "Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set."
-            )
-
+        ]
         return cls(
             shards=shards,
-            gcs_bucket_name=gcs_bucket_name,
-            gcs_prefix=gcs_prefix,
+            gcs_uri=gcs_uri,
             gcs_input_uri=gcs_input_uri,
         )
 

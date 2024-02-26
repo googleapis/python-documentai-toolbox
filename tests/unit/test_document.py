@@ -405,48 +405,23 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
         assert page.page_number == page_index + 1
 
 
-def test_document_from_gcs_with_uri(get_blob_mock):
-    actual = document.Document.from_gcs(
-        gcs_uri="gs://test-directory/documentai/output/123456789/0/"
+def test_document_from_gcs_uri(get_blob_mock):
+    actual = document.Document.from_gcs_uri(
+        gcs_uri="gs://test-directory/documentai/output/123456789/0/document.json"
     )
 
     get_blob_mock.assert_called_once()
+
+    assert (
+        actual.gcs_uri
+        == "gs://test-directory/documentai/output/123456789/0/document.json"
+    )
     assert len(actual.pages) == 1
     # checking cached value
     assert len(actual.pages) == 1
 
     assert len(actual.text) > 0
     assert len(actual.text) > 0
-
-
-def test_document_from_gcs_with_no_parameters():
-    with pytest.raises(
-        ValueError,
-        match="Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.",
-    ):
-        document.Document.from_gcs()
-
-
-def test_document_from_gcs_with_uri_and_bucket_name():
-    with pytest.raises(
-        ValueError,
-        match="Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.",
-    ):
-        document.Document.from_gcs(
-            gcs_bucket_name="test-directory",
-            gcs_uri="gs://test-directory/documentai/output/123456789/0/",
-        )
-
-
-def test_document_from_gcs_with_uri_and_prefix():
-    with pytest.raises(
-        ValueError,
-        match="Either `gcs_uri` or `gcs_bucket_name` and `gcs_prefix` must be set.",
-    ):
-        document.Document.from_gcs(
-            gcs_prefix="documentai/output/123456789/2/",
-            gcs_uri="gs://test-directory/documentai/output/123456789/0/",
-        )
 
 
 def test_document_from_batch_process_metadata_with_multiple_input_files(
