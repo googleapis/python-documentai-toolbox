@@ -54,8 +54,7 @@ setuptools.setup(
     install_requires=(
         "google-api-core >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
         "pandas >= 1.0.0, <3.0.0",
-        "pandas >= 1.0.0, <2.0.0; python_version<'3.8'",
-        "pyarrow >= 15.0.0, <16.0.0; python_version>='3.8'",  # Required by Pandas #237
+        "pyarrow >= 15.0.0, <16.0.0",  # Required by Pandas #237
         "tabulate >= 0.9.0, <1.0.0",
         "proto-plus >= 1.22.0, <2.0.0dev",
         "proto-plus >= 1.22.2, <2.0.0dev; python_version>='3.11'",
@@ -67,18 +66,15 @@ setuptools.setup(
         "numpy >= 1.18.1, < 2.0.0",
         "intervaltree >= 3.0.0",
         "pikepdf >= 6.2.9, < 9.0.0",
-        "pikepdf >= 6.2.9, < 7.0.0; python_version<'3.8'",
         "immutabledict >= 2.0.0, < 4.0.0",
-        "immutabledict >= 2.0.0, < 3.0.0dev; python_version<'3.8'",
         "Pillow >= 9.5.0, < 11.0.0",
         "Jinja2 >= 3.1.0, <= 4.0.0",
     ),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
