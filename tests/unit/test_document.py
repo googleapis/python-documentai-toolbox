@@ -106,6 +106,17 @@ def get_bytes_missing_shard_mock():
         yield byte_factory
 
 
+@pytest.fixture
+def get_blob_mock():
+    with mock.patch.object(gcs_utilities, "get_blob") as blob_factory:
+        mock_blob = mock.Mock()
+        mock_blob.download_as_bytes.return_value = get_bytes("tests/unit/resources/0")[
+            0
+        ]
+        blob_factory.return_value = mock_blob
+        yield blob_factory
+
+
 def create_document_with_images_without_bbox(get_bytes_images_mock):
     doc = document.Document.from_gcs(
         gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
@@ -227,9 +238,9 @@ def test_get_batch_process_metadata_with_valid_operation(
 
     mock_client.get_operation.return_value = mock_operation
 
-    location = "us"
     operation_name = "projects/123456/locations/us/operations/7890123"
-    document._get_batch_process_metadata(location, operation_name)
+    timeout = 1
+    document._get_batch_process_metadata(operation_name, timeout=timeout)
 
     mock_client.get_operation.assert_called()
     mock_docai.BatchProcessMetadata.deserialize.assert_called()
@@ -265,9 +276,8 @@ def test_get_batch_process_metadata_with_running_operation(
         mock_operation_finished,
     ]
 
-    location = "us"
     operation_name = "projects/123456/locations/us/operations/7890123"
-    document._get_batch_process_metadata(location, operation_name)
+    document._get_batch_process_metadata(operation_name)
 
     mock_client.get_operation.assert_called()
     mock_docai.BatchProcessMetadata.deserialize.assert_called()
@@ -281,12 +291,11 @@ def test_get_batch_process_metadata_with_no_metadata(mock_docai):
     ):
         mock_client = mock_docai.DocumentProcessorServiceClient.return_value
 
-        location = "us"
         operation_name = "projects/123456/locations/us/operations/7890123"
         mock_operation = mock.Mock(done=True, metadata=None)
         mock_client.get_operation.return_value = mock_operation
 
-        document._get_batch_process_metadata(location, operation_name)
+        document._get_batch_process_metadata(operation_name)
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
@@ -297,7 +306,6 @@ def test_get_batch_process_metadata_with_invalid_metadata_type(mock_docai):
     ):
         mock_client = mock_docai.DocumentProcessorServiceClient.return_value
 
-        location = "us"
         operation_name = "projects/123456/locations/us/operations/7890123"
         mock_operation = mock.Mock(
             done=True,
@@ -307,7 +315,17 @@ def test_get_batch_process_metadata_with_invalid_metadata_type(mock_docai):
         )
         mock_client.get_operation.return_value = mock_operation
 
-        document._get_batch_process_metadata(location, operation_name)
+        document._get_batch_process_metadata(operation_name)
+
+
+def test_get_batch_process_metadata_with_invalid_operation_name():
+    with pytest.raises(
+        ValueError,
+        match="Invalid Operation Name",
+    ):
+        document._get_batch_process_metadata(
+            "projects//locations/us/operations/7890123"
+        )
 
 
 def test_bigquery_column_name():
@@ -396,6 +414,25 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
 
     for page_index, page in enumerate(actual.pages):
         assert page.page_number == page_index + 1
+
+
+def test_document_from_gcs_uri(get_blob_mock):
+    actual = document.Document.from_gcs_uri(
+        gcs_uri="gs://test-directory/documentai/output/123456789/0/document.json"
+    )
+
+    get_blob_mock.assert_called_once()
+
+    assert (
+        actual.gcs_uri
+        == "gs://test-directory/documentai/output/123456789/0/document.json"
+    )
+    assert len(actual.pages) == 1
+    # checking cached value
+    assert len(actual.pages) == 1
+
+    assert len(actual.text) > 0
+    assert len(actual.text) > 0
 
 
 @mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
