@@ -53,7 +53,7 @@ setuptools.setup(
     },
     install_requires=(
         "google-api-core >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
-        "pandas >= 1.0.0, <3.0.0",
+        "pandas[performance,gcp] >= 2.0.0, <3.0.0",
         "pyarrow >= 15.0.0, <16.0.0",  # Required by Pandas #237
         "tabulate >= 0.9.0, <1.0.0",
         "proto-plus >= 1.22.0, <2.0.0dev",
@@ -63,11 +63,11 @@ setuptools.setup(
         "google-cloud-documentai >= 2.20.0, < 3.0.0dev",
         "google-cloud-storage >= 1.31.0, < 3.0.0dev",
         "google-cloud-vision >= 2.7.0, < 4.0.0dev",
-        "numpy >= 1.18.1, < 2.0.0",
+        "numpy >= 1.23.5, < 2.0.0",
         "intervaltree >= 3.0.0",
-        "pikepdf >= 6.2.9, < 9.0.0",
+        "pikepdf >= 8.0.0, < 9.0.0",
         "immutabledict >= 2.0.0, < 4.0.0",
-        "Pillow >= 9.5.0, < 11.0.0",
+        "Pillow >= 10.0.0, < 11.0.0",
         "Jinja2 >= 3.1.0, <= 4.0.0",
     ),
     python_requires=">=3.8",
