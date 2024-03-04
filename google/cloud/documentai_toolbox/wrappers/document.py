@@ -165,7 +165,10 @@ def _get_batch_process_metadata(
     )
 
     if not match:
-        raise ValueError(f"Invalid Operation Name: {operation_name}")
+        raise ValueError(
+            f"Invalid Operation Name: {operation_name}\n"
+            "Expected operation name in the format `projects/<project>/locations/<location>/operations/<operation>`"
+        )
 
     location = location or match.group(1)
 
