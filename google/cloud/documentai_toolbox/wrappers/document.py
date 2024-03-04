@@ -541,6 +541,7 @@ class Document:
             if files != [""]
         ]
 
+    @classmethod
     def from_gcs_uri(
         cls: Type["Document"],
         gcs_uri: str,
