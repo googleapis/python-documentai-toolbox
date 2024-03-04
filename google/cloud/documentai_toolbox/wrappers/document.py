@@ -161,7 +161,7 @@ def _get_batch_process_metadata(
     """
     # Validate Operation Name
     match = re.search(
-        r"\/projects\/\w+\/locations\/(\w+)\/operations\/\w+\/", operation_name
+        r"projects\/\w+\/locations\/(\w+)\/operations\/\w+", operation_name
     )
 
     if not match:
@@ -180,7 +180,6 @@ def _get_batch_process_metadata(
     operation = operation_from_gapic(
         operation=client.get_operation(
             request=GetOperationRequest(name=operation_name),
-            metadata=documentai.BatchProcessMetadata(),
         ),
         operations_client=client,
         result_type=documentai.BatchProcessResponse,
