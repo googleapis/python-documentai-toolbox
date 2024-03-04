@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.1-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.13.0-alpha...v0.13.1-alpha) (2024-03-04)
+
+
+### Bug Fixes
+
+* Changed `client_info` import and added new quickstart samples ([#268](https://github.com/googleapis/python-documentai-toolbox/issues/268)) ([c4b1d58](https://github.com/googleapis/python-documentai-toolbox/commit/c4b1d58aaf4cedd2a08b9445220e44b906151e6a)), closes [#266](https://github.com/googleapis/python-documentai-toolbox/issues/266)
+
+## [0.13.0-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.12.2-alpha...v0.13.0-alpha) (2024-02-26)
+
+
+### Features
+
+* Added `gcs_uri` parameter to `Document.from_gcs()` to allow importing of a single Document JSON ([#261](https://github.com/googleapis/python-documentai-toolbox/issues/261)) ([f654a5d](https://github.com/googleapis/python-documentai-toolbox/commit/f654a5dc13247ae4c5cd4505440c3ce3a8bbf71a))
+
 ## [0.12.2-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.12.1-alpha...v0.12.2-alpha) (2024-02-02)
 
 

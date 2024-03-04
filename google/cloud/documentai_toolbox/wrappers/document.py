@@ -22,6 +22,7 @@ import os
 import re
 from typing import Dict, List, Optional, Type, Union
 
+from google.api_core.client_options import ClientOptions
 from google.api_core.operation import from_gapic as operation_from_gapic
 from google.cloud.vision import AnnotateFileResponse
 from google.longrunning.operations_pb2 import GetOperationRequest
@@ -138,6 +139,7 @@ def _get_shards(gcs_bucket_name: str, gcs_prefix: str) -> List[documentai.Docume
 
 def _get_batch_process_metadata(
     operation_name: str,
+    location: Optional[str] = None,
     timeout: Optional[float] = None,
 ) -> documentai.BatchProcessMetadata:
     r"""Get `BatchProcessMetadata` from a `batch_process_documents()` long-running operation.
@@ -146,6 +148,10 @@ def _get_batch_process_metadata(
         operation_name (str):
             Required. The fully qualified operation name for a `batch_process_documents()` operation.
 
+        location (str):
+                Optional. The location of the processor used for `batch_process_documents()`.
+                Deprecated. Maintained for backwards compatibility.
+
         timeout (float):
             Optional. Default None. Time in seconds to wait for operation to complete.
             If None, will wait indefinitely.
@@ -153,15 +159,30 @@ def _get_batch_process_metadata(
         documentai.BatchProcessMetadata:
             Metadata from batch process.
     """
+    # Validate Operation Name
+    match = re.search(
+        r"projects\/\w+\/locations\/(\w+)\/operations\/\w+", operation_name
+    )
+
+    if not match:
+        raise ValueError(
+            f"Invalid Operation Name: {operation_name}\n"
+            "Expected operation name in the format `projects/<project>/locations/<location>/operations/<operation>`"
+        )
+
+    location = location or match.group(1)
+
     client = documentai.DocumentProcessorServiceClient(
         client_info=gcs_utilities._get_client_info(module="get_batch_process_metadata"),
+        client_options=ClientOptions(
+            api_endpoint=f"{location}-documentai.googleapis.com"
+        ),
     )
 
     # Poll Operation until complete.
     operation = operation_from_gapic(
         operation=client.get_operation(
             request=GetOperationRequest(name=operation_name),
-            metadata=documentai.BatchProcessMetadata(),
         ),
         operations_client=client,
         result_type=documentai.BatchProcessResponse,
@@ -366,6 +387,7 @@ class Document:
     shards: List[documentai.Document] = dataclasses.field(repr=False)
     gcs_bucket_name: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_prefix: Optional[str] = dataclasses.field(default=None, repr=False)
+    gcs_uri: Optional[str] = dataclasses.field(default=None, repr=False)
     gcs_input_uri: Optional[str] = dataclasses.field(default=None, repr=False)
 
     _pages: Optional[List[Page]] = dataclasses.field(
@@ -463,7 +485,7 @@ class Document:
         gcs_prefix: str,
         gcs_input_uri: Optional[str] = None,
     ) -> "Document":
-        r"""Loads Document from Cloud Storage.
+        r"""Loads a Document from a Cloud Storage directory.
 
         Args:
             gcs_bucket_name (str):
@@ -487,6 +509,40 @@ class Document:
             shards=shards,
             gcs_bucket_name=gcs_bucket_name,
             gcs_prefix=gcs_prefix,
+            gcs_input_uri=gcs_input_uri,
+        )
+
+    @classmethod
+    def from_gcs_uri(
+        cls: Type["Document"],
+        gcs_uri: str,
+        gcs_input_uri: Optional[str] = None,
+    ) -> "Document":
+        r"""Loads a Document from a Cloud Storage uri.
+
+        Args:
+            gcs_uri (str):
+                Required. The full GCS uri to a Document JSON file.
+
+                Example: `gs://{bucket_name}/{optional_folder}/{target_file}.json`.
+            gcs_input_uri (str):
+                Optional. The gcs uri to the original input file.
+
+                Format: `gs://{bucket_name}/{optional_folder}/{target_folder}/{file_name}.pdf`
+        Returns:
+            Document:
+                A document from gcs.
+        """
+        blob = gcs_utilities.get_blob(gcs_uri=gcs_uri, module="get-document")
+        shards = [
+            documentai.Document.from_json(
+                blob.download_as_bytes(),
+                ignore_unknown_fields=True,
+            )
+        ]
+        return cls(
+            shards=shards,
+            gcs_uri=gcs_uri,
             gcs_input_uri=gcs_input_uri,
         )
 
@@ -564,6 +620,7 @@ class Document:
         return cls.from_batch_process_metadata(
             metadata=_get_batch_process_metadata(
                 operation_name=operation_name,
+                location=location,
                 timeout=timeout,
             )
         )

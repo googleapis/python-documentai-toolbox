@@ -18,7 +18,7 @@ import os
 import re
 from typing import Dict, List, Optional, Tuple
 
-from google.api_core import client_info
+from google.api_core.gapic_v1 import client_info
 
 from google.cloud import documentai, documentai_toolbox, storage
 from google.cloud.documentai_toolbox import constants
@@ -136,17 +136,13 @@ def get_blob(
         module (Optional[str]):
             Optional. The module for a custom user agent header.
     Returns:
-        List[storage.blob.Blob]:
-            A list of the blobs in the Cloud Storage path.
+        storage.blob.Blob:
+            The blob in the Cloud Storage path.
     """
-    gcs_bucket_name, gcs_file_name = split_gcs_uri(gcs_uri)
-
-    if not re.match(constants.FILE_CHECK_REGEX, gcs_file_name):
+    if not re.match(constants.FILE_CHECK_REGEX, gcs_uri):
         raise ValueError("gcs_uri must link to a single file.")
 
-    storage_client = _get_storage_client(module=module)
-    bucket = storage_client.bucket(bucket_name=gcs_bucket_name)
-    return bucket.get_blob(gcs_file_name)
+    return storage.Blob.from_string(gcs_uri, _get_storage_client(module=module))
 
 
 def split_gcs_uri(gcs_uri: str) -> Tuple[str, str]:
