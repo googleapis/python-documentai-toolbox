@@ -52,12 +52,11 @@ setuptools.setup(
         "google.cloud.documentai_toolbox": ["templates/*.xml.j2"],
     },
     install_requires=(
-        "google-api-core >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
+        "google-api-core >= 1.34.1, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
         "pandas[performance,gcp] >= 2.0.0, <3.0.0",
         "pyarrow >= 15.0.0, <16.0.0",  # Required by Pandas #237
         "tabulate >= 0.9.0, <1.0.0",
-        "proto-plus >= 1.22.0, <2.0.0dev",
-        "proto-plus >= 1.22.2, <2.0.0dev; python_version>='3.11'",
+        "proto-plus >= 1.22.3, <2.0.0dev",
         "grpc-google-iam-v1 >= 0.12.6, < 0.13dev",
         "google-cloud-bigquery >= 3.5.0, < 4.0.0dev",
         "google-cloud-documentai >= 2.20.0, < 3.0.0dev",
