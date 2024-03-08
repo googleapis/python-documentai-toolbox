@@ -116,10 +116,7 @@ def test_quickstart_sample_batch_process_metadata_matching_prefixes(
         batch_process_metadata=batch_process_metadata
     )
 
-    assert (
-        wrapped_document.gcs_prefix
-        == "gs://documentai_toolbox_samples/output/matching-prefixes/1/"
-    )
+    assert wrapped_document.gcs_prefix == "output/matching-prefixes/1/"
     out, _ = capsys.readouterr()
 
     assert "Document Successfully Loaded!" in out
