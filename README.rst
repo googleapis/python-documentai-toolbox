@@ -11,8 +11,8 @@ The Document AI Toolbox is in an experimental state. This library is a work-in-p
 
 .. |experimental| image:: https://img.shields.io/badge/support-experimental-red.svg
    :target: https://github.com/googleapis/google-cloud-python/blob/main/README.rst#stability-levels
-.. |versions| image:: https://img.shields.io/pypi/pyversions/google-analytics-admin.svg
-   :target: https://pypi.org/project/google-analytics-admin/
+.. |versions| image:: https://img.shields.io/pypi/pyversions/google-cloud-documentai-toolbox.svg
+   :target: https://pypi.org/project/google-cloud-documentai-toolbox/
 
 
 Quick Start
