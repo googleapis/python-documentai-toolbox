@@ -11,8 +11,8 @@ The Document AI Toolbox is in an experimental state. This library is a work-in-p
 
 .. |experimental| image:: https://img.shields.io/badge/support-experimental-red.svg
    :target: https://github.com/googleapis/google-cloud-python/blob/main/README.rst#stability-levels
-.. |versions| image:: https://img.shields.io/pypi/pyversions/google-analytics-admin.svg
-   :target: https://pypi.org/project/google-analytics-admin/
+.. |versions| image:: https://img.shields.io/pypi/pyversions/google-cloud-documentai-toolbox.svg
+   :target: https://pypi.org/project/google-cloud-documentai-toolbox/
 
 
 Quick Start
@@ -63,10 +63,20 @@ Supported Python Versions
 Our client libraries are compatible with all current `active`_ and `maintenance`_ versions of
 Python.
 
-Python >= 3.7
+Python >= 3.8
 
 .. _active: https://devguide.python.org/devcycle/#in-development-main-branch
 .. _maintenance: https://devguide.python.org/devcycle/#maintenance-branches
+
+**NOTE**:
+Python 3.7 was marked as `unsupported`_ by the python community in June 2023.
+We recommend that all developers upgrade to Python 3.8 and newer as soon as
+they can. Support for Python 3.7 will be removed from all client libraries after
+January 1 2024. Client libraries that support Python 3.7 will continue to be available
+for download, but releases after January 1 2024 will only target Python 3.8 and
+newer.
+
+.. _unsupported: https://devguide.python.org/versions/#unsupported-versions
 
 Unsupported Python Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
