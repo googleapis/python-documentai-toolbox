@@ -485,7 +485,7 @@ class Document:
         gcs_prefix: str,
         gcs_input_uri: Optional[str] = None,
     ) -> "Document":
-        r"""Loads a Document from a Cloud Storage directory.
+        r"""Loads a single Document from a Cloud Storage directory.
 
         Args:
             gcs_bucket_name (str):
@@ -520,7 +520,7 @@ class Document:
         gcs_bucket_name: str,
         gcs_prefix: str,
     ) -> List["Document"]:
-        r"""Loads a list of Documents from Cloud Storage.
+        r"""Loads a list of Documents from a Cloud Storage directory.
 
         Args:
             gcs_bucket_name (str):
