@@ -17,6 +17,7 @@
 import json
 import os
 import shutil
+from xml.etree import ElementTree
 
 # try/except added for compatibility with python < 3.8
 try:
@@ -103,6 +104,17 @@ def get_bytes_missing_shard_mock():
     with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/missing_shard")
         yield byte_factory
+
+
+@pytest.fixture
+def get_blob_mock():
+    with mock.patch.object(gcs_utilities, "get_blob") as blob_factory:
+        mock_blob = mock.Mock()
+        mock_blob.download_as_bytes.return_value = get_bytes("tests/unit/resources/0")[
+            0
+        ]
+        blob_factory.return_value = mock_blob
+        yield blob_factory
 
 
 def create_document_with_images_without_bbox(get_bytes_images_mock):
@@ -211,7 +223,7 @@ def test_get_batch_process_metadata_with_valid_operation(
         individual_process_statuses=[
             documentai.BatchProcessMetadata.IndividualProcessStatus(
                 input_gcs_source="gs://test-directory/documentai/input.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
             )
         ],
     )
@@ -226,9 +238,9 @@ def test_get_batch_process_metadata_with_valid_operation(
 
     mock_client.get_operation.return_value = mock_operation
 
-    location = "us"
     operation_name = "projects/123456/locations/us/operations/7890123"
-    document._get_batch_process_metadata(location, operation_name)
+    timeout = 1
+    document._get_batch_process_metadata(operation_name, timeout=timeout)
 
     mock_client.get_operation.assert_called()
     mock_docai.BatchProcessMetadata.deserialize.assert_called()
@@ -245,7 +257,7 @@ def test_get_batch_process_metadata_with_running_operation(
         individual_process_statuses=[
             documentai.BatchProcessMetadata.IndividualProcessStatus(
                 input_gcs_source="gs://test-directory/documentai/input.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
             )
         ],
     )
@@ -264,9 +276,8 @@ def test_get_batch_process_metadata_with_running_operation(
         mock_operation_finished,
     ]
 
-    location = "us"
     operation_name = "projects/123456/locations/us/operations/7890123"
-    document._get_batch_process_metadata(location, operation_name)
+    document._get_batch_process_metadata(operation_name)
 
     mock_client.get_operation.assert_called()
     mock_docai.BatchProcessMetadata.deserialize.assert_called()
@@ -280,12 +291,11 @@ def test_get_batch_process_metadata_with_no_metadata(mock_docai):
     ):
         mock_client = mock_docai.DocumentProcessorServiceClient.return_value
 
-        location = "us"
         operation_name = "projects/123456/locations/us/operations/7890123"
         mock_operation = mock.Mock(done=True, metadata=None)
         mock_client.get_operation.return_value = mock_operation
 
-        document._get_batch_process_metadata(location, operation_name)
+        document._get_batch_process_metadata(operation_name)
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
@@ -296,7 +306,6 @@ def test_get_batch_process_metadata_with_invalid_metadata_type(mock_docai):
     ):
         mock_client = mock_docai.DocumentProcessorServiceClient.return_value
 
-        location = "us"
         operation_name = "projects/123456/locations/us/operations/7890123"
         mock_operation = mock.Mock(
             done=True,
@@ -306,7 +315,17 @@ def test_get_batch_process_metadata_with_invalid_metadata_type(mock_docai):
         )
         mock_client.get_operation.return_value = mock_operation
 
-        document._get_batch_process_metadata(location, operation_name)
+        document._get_batch_process_metadata(operation_name)
+
+
+def test_get_batch_process_metadata_with_invalid_operation_name():
+    with pytest.raises(
+        ValueError,
+        match="Invalid Operation Name",
+    ):
+        document._get_batch_process_metadata(
+            "projects//locations/us/operations/7890123"
+        )
 
 
 def test_bigquery_column_name():
@@ -397,6 +416,25 @@ def test_document_from_gcs_with_unordered_shards(get_bytes_unordered_files_mock)
         assert page.page_number == page_index + 1
 
 
+def test_document_from_gcs_uri(get_blob_mock):
+    actual = document.Document.from_gcs_uri(
+        gcs_uri="gs://test-directory/documentai/output/123456789/0/document.json"
+    )
+
+    get_blob_mock.assert_called_once()
+
+    assert (
+        actual.gcs_uri
+        == "gs://test-directory/documentai/output/123456789/0/document.json"
+    )
+    assert len(actual.pages) == 1
+    # checking cached value
+    assert len(actual.pages) == 1
+
+    assert len(actual.text) > 0
+    assert len(actual.text) > 0
+
+
 def test_document_from_batch_process_metadata_with_multiple_input_files(
     get_bytes_multiple_directories_mock,
 ):
@@ -405,11 +443,11 @@ def test_document_from_batch_process_metadata_with_multiple_input_files(
         individual_process_statuses=[
             mock.Mock(
                 input_gcs_source="gs://test-directory/documentai/input.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
             ),
             mock.Mock(
                 input_gcs_source="gs://test-directory/documentai/input2.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/2/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/2",
             ),
         ],
     )
@@ -425,6 +463,37 @@ def test_document_from_batch_process_metadata_with_multiple_input_files(
 
     assert documents[1].gcs_bucket_name == "test-directory"
     assert documents[1].gcs_prefix == "documentai/output/123456789/2/"
+    assert documents[1].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
+
+
+def test_document_from_batch_process_metadata_with_multiple_input_files_matching_prefix(
+    get_bytes_multiple_directories_mock,
+):
+    mock_metadata = mock.Mock(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            mock.Mock(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
+            ),
+            mock.Mock(
+                input_gcs_source="gs://test-directory/documentai/input2.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/11",
+            ),
+        ],
+    )
+    documents = document.Document.from_batch_process_metadata(mock_metadata)
+
+    get_bytes_multiple_directories_mock.assert_called()
+    assert get_bytes_multiple_directories_mock.call_count == 2
+    assert len(documents) == 2
+
+    assert documents[0].gcs_bucket_name == "test-directory"
+    assert documents[0].gcs_prefix == "documentai/output/123456789/1/"
+    assert documents[0].gcs_input_uri == "gs://test-directory/documentai/input.pdf"
+
+    assert documents[1].gcs_bucket_name == "test-directory"
+    assert documents[1].gcs_prefix == "documentai/output/123456789/11/"
     assert documents[1].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
 
 
@@ -723,6 +792,9 @@ def test_export_hocr_str():
     actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
     assert actual_hocr
 
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
     with open(
         "tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r", encoding="utf-8"
     ) as f:
@@ -739,6 +811,30 @@ def test_export_hocr_str_with_blank_document():
     actual_hocr = wrapped_document.export_hocr_str(title="hocr_blank")
 
     assert actual_hocr
+
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
+
+def test_export_hocr_str_with_escape_characters():
+    wrapped_document = document.Document.from_document_path(
+        document_path="tests/unit/resources/toolbox_invoice_test-0-hocr-escape.json"
+    )
+
+    actual_hocr = wrapped_document.export_hocr_str(title="hocr-escape")
+    assert actual_hocr
+
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
+    with open(
+        "tests/unit/resources/toolbox_invoice_test-0-hocr-escape.xml",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected = f.read()
+
+    assert actual_hocr == expected
 
 
 def test_document_to_merged_documentai_document(get_bytes_multiple_files_mock):
