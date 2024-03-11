@@ -821,11 +821,20 @@ def test_export_hocr_str_with_escape_characters():
         document_path="tests/unit/resources/toolbox_invoice_test-0-hocr-escape.json"
     )
 
-    actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
+    actual_hocr = wrapped_document.export_hocr_str(title="hocr-escape")
     assert actual_hocr
 
     element = ElementTree.fromstring(actual_hocr)
     assert element is not None
+
+    with open(
+        "tests/unit/resources/toolbox_invoice_test-0-hocr-escape.xml",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected = f.read()
+
+    assert actual_hocr == expected
 
 
 def test_document_to_merged_documentai_document(get_bytes_multiple_files_mock):
