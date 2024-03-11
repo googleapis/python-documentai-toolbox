@@ -17,6 +17,7 @@
 import json
 import os
 import shutil
+from xml.etree import ElementTree
 
 from unittest import mock
 
@@ -787,6 +788,9 @@ def test_export_hocr_str():
     actual_hocr = wrapped_document.export_hocr_str(title="toolbox_invoice_test-0")
     assert actual_hocr
 
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
     with open(
         "tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r", encoding="utf-8"
     ) as f:
@@ -803,6 +807,30 @@ def test_export_hocr_str_with_blank_document():
     actual_hocr = wrapped_document.export_hocr_str(title="hocr_blank")
 
     assert actual_hocr
+
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
+
+def test_export_hocr_str_with_escape_characters():
+    wrapped_document = document.Document.from_document_path(
+        document_path="tests/unit/resources/toolbox_invoice_test-0-hocr-escape.json"
+    )
+
+    actual_hocr = wrapped_document.export_hocr_str(title="hocr-escape")
+    assert actual_hocr
+
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
+    with open(
+        "tests/unit/resources/toolbox_invoice_test-0-hocr-escape.xml",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected = f.read()
+
+    assert actual_hocr == expected
 
 
 def test_document_to_merged_documentai_document(get_bytes_multiple_files_mock):
