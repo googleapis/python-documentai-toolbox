@@ -19,11 +19,7 @@ import os
 import shutil
 from xml.etree import ElementTree
 
-# try/except added for compatibility with python < 3.8
-try:
-    from unittest import mock
-except ImportError:  # pragma: NO COVER
-    import mock
+from unittest import mock
 
 import glob
 

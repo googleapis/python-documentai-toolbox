@@ -18,11 +18,7 @@ import pytest
 from google.cloud import storage
 from google.cloud.documentai_toolbox import gcs_utilities
 
-# try/except added for compatibility with python < 3.8
-try:
-    from unittest import mock
-except ImportError:  # pragma: NO COVER
-    import mock
+from unittest import mock
 
 
 test_bucket = "test-directory"
