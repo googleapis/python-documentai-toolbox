@@ -28,7 +28,9 @@ def convert_document_to_hocr_sample(document_path: str, document_title: str) -> 
     wrapped_document = document.Document.from_document_path(document_path=document_path)
 
     # Converting wrapped_document to hOCR format
-    hocr_string = wrapped_document.export_hocr_str(title=document_title)
+    hocr_string = wrapped_document.export_hocr_str(
+        title=document_title, inline_words=False
+    )
 
     print("Document converted to hOCR!")
     return hocr_string
