@@ -30,7 +30,7 @@ import nox
 FLAKE8_VERSION = "flake8==6.1.0"
 BLACK_VERSION = "black[jupyter]==23.7.0"
 ISORT_VERSION = "isort==5.11.0"
-LINT_PATHS = ["docs", "google", "tests", "samples", "noxfile.py", "setup.py"]
+LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
 DEFAULT_PYTHON_VERSION = "3.8"
 
