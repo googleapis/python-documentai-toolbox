@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import json
 import os
 import shutil
-from xml.etree import ElementTree
-
 from unittest import mock
-
-import glob
+from xml.etree import ElementTree
 
 from google.cloud.vision import AnnotateFileResponse
 import pytest

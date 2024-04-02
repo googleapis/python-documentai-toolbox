@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import mock
+
 import pytest
 
 from google.cloud import storage
 from google.cloud.documentai_toolbox import gcs_utilities
-
-from unittest import mock
-
 
 test_bucket = "test-directory"
 test_prefix = "documentai/input"
