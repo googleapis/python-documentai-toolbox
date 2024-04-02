@@ -15,10 +15,11 @@
 
 import os
 
-from google.longrunning.operations_pb2 import ListOperationsRequest  # type: ignore
+from google.cloud import documentai
+from google.longrunning.operations_pb2 import \
+    ListOperationsRequest  # type: ignore
 import pytest
 
-from google.cloud import documentai
 from samples.snippets import quickstart_sample
 
 location = "us"

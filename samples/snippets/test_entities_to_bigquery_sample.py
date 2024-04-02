@@ -16,9 +16,9 @@
 import os
 import uuid
 
+from google.cloud import bigquery
 import pytest
 
-from google.cloud import bigquery
 from samples.snippets import entities_to_bigquery_sample
 
 location = "us"
