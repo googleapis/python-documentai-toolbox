@@ -15,11 +15,11 @@
 
 import os
 
+from google.longrunning.operations_pb2 import ListOperationsRequest  # type: ignore
 import pytest
-from samples.snippets import quickstart_sample
 
 from google.cloud import documentai
-from google.longrunning.operations_pb2 import ListOperationsRequest  # type: ignore
+from samples.snippets import quickstart_sample
 
 location = "us"
 project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
