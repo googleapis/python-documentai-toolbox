@@ -16,10 +16,9 @@
 """Wrappers for Document AI Page type."""
 
 from abc import ABC
-
 import dataclasses
 from functools import cached_property
-from typing import cast, List, Optional, Type
+from typing import List, Optional, Type, cast
 
 import pandas as pd
 
