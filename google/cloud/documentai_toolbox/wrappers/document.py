@@ -26,7 +26,6 @@ from google.api_core.client_options import ClientOptions
 from google.api_core.operation import from_gapic as operation_from_gapic
 from google.cloud.vision import AnnotateFileResponse
 from google.longrunning.operations_pb2 import GetOperationRequest
-
 from jinja2 import Environment, PackageLoader
 from pikepdf import Pdf
 
@@ -504,6 +503,8 @@ class Document:
             Document:
                 A document from gcs.
         """
+        # Add trailing slash if not present.
+        gcs_prefix = gcs_prefix.rstrip("/") + "/"
         shards = _get_shards(gcs_bucket_name=gcs_bucket_name, gcs_prefix=gcs_prefix)
         return cls(
             shards=shards,

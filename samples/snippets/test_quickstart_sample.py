@@ -15,11 +15,12 @@
 
 import os
 
-import pytest
-from samples.snippets import quickstart_sample
-
 from google.cloud import documentai
-from google.longrunning.operations_pb2 import ListOperationsRequest  # type: ignore
+from google.longrunning.operations_pb2 import \
+    ListOperationsRequest  # type: ignore
+import pytest
+
+from samples.snippets import quickstart_sample
 
 location = "us"
 project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
@@ -91,6 +92,32 @@ def test_quickstart_sample_batch_process_metadata(
 
     quickstart_sample.quickstart_sample(batch_process_metadata=batch_process_metadata)
 
+    out, _ = capsys.readouterr()
+
+    assert "Document Successfully Loaded!" in out
+
+
+def test_quickstart_sample_batch_process_metadata_matching_prefixes(
+    capsys: pytest.CaptureFixture,
+) -> None:
+    batch_process_metadata = documentai.BatchProcessMetadata(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            documentai.BatchProcessMetadata.IndividualProcessStatus(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://documentai_toolbox_samples/output/matching-prefixes/1",
+            ),
+            documentai.BatchProcessMetadata.IndividualProcessStatus(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://documentai_toolbox_samples/output/matching-prefixes/11",
+            ),
+        ],
+    )
+    wrapped_document = quickstart_sample.quickstart_sample(
+        batch_process_metadata=batch_process_metadata
+    )
+
+    assert wrapped_document.gcs_prefix == "output/matching-prefixes/1/"
     out, _ = capsys.readouterr()
 
     assert "Document Successfully Loaded!" in out

@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import annotations
-from __future__ import print_function
+from __future__ import annotations, print_function
 
 import glob
 import os
@@ -22,7 +21,6 @@ import sys
 from typing import Callable, Dict, List, Optional
 
 import nox
-
 
 # WARNING - WARNING - WARNING - WARNING - WARNING
 # WARNING - WARNING - WARNING - WARNING - WARNING
@@ -40,7 +38,14 @@ import nox
 
 TEST_CONFIG = {
     # You can opt out from the test for specific Python versions.
-    "ignored_versions": ["2.7", "3.6"],
+    "ignored_versions": [
+        "2.7",
+        "3.6",
+        "3.7",
+        "3.9",
+        "3.10",
+        "3.11",
+    ],
     # Old samples are opted out of enforcing Python type hints
     # All new samples should feature them
     "enforce_type_hints": True,

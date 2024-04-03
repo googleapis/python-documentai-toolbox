@@ -17,6 +17,7 @@
 import json
 import os
 import shutil
+from xml.etree import ElementTree
 
 # try/except added for compatibility with python < 3.8
 try:
@@ -222,7 +223,7 @@ def test_get_batch_process_metadata_with_valid_operation(
         individual_process_statuses=[
             documentai.BatchProcessMetadata.IndividualProcessStatus(
                 input_gcs_source="gs://test-directory/documentai/input.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
             )
         ],
     )
@@ -256,7 +257,7 @@ def test_get_batch_process_metadata_with_running_operation(
         individual_process_statuses=[
             documentai.BatchProcessMetadata.IndividualProcessStatus(
                 input_gcs_source="gs://test-directory/documentai/input.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
             )
         ],
     )
@@ -442,11 +443,11 @@ def test_document_from_batch_process_metadata_with_multiple_input_files(
         individual_process_statuses=[
             mock.Mock(
                 input_gcs_source="gs://test-directory/documentai/input.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/1/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
             ),
             mock.Mock(
                 input_gcs_source="gs://test-directory/documentai/input2.pdf",
-                output_gcs_destination="gs://test-directory/documentai/output/123456789/2/",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/2",
             ),
         ],
     )
@@ -462,6 +463,37 @@ def test_document_from_batch_process_metadata_with_multiple_input_files(
 
     assert documents[1].gcs_bucket_name == "test-directory"
     assert documents[1].gcs_prefix == "documentai/output/123456789/2/"
+    assert documents[1].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
+
+
+def test_document_from_batch_process_metadata_with_multiple_input_files_matching_prefix(
+    get_bytes_multiple_directories_mock,
+):
+    mock_metadata = mock.Mock(
+        state=documentai.BatchProcessMetadata.State.SUCCEEDED,
+        individual_process_statuses=[
+            mock.Mock(
+                input_gcs_source="gs://test-directory/documentai/input.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/1",
+            ),
+            mock.Mock(
+                input_gcs_source="gs://test-directory/documentai/input2.pdf",
+                output_gcs_destination="gs://test-directory/documentai/output/123456789/11",
+            ),
+        ],
+    )
+    documents = document.Document.from_batch_process_metadata(mock_metadata)
+
+    get_bytes_multiple_directories_mock.assert_called()
+    assert get_bytes_multiple_directories_mock.call_count == 2
+    assert len(documents) == 2
+
+    assert documents[0].gcs_bucket_name == "test-directory"
+    assert documents[0].gcs_prefix == "documentai/output/123456789/1/"
+    assert documents[0].gcs_input_uri == "gs://test-directory/documentai/input.pdf"
+
+    assert documents[1].gcs_bucket_name == "test-directory"
+    assert documents[1].gcs_prefix == "documentai/output/123456789/11/"
     assert documents[1].gcs_input_uri == "gs://test-directory/documentai/input2.pdf"
 
 
@@ -762,6 +794,9 @@ def test_export_hocr_str():
     )
     assert actual_hocr
 
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
     with open(
         "tests/unit/resources/toolbox_invoice_test_0_hocr.xml", "r", encoding="utf-8"
     ) as f:
@@ -780,6 +815,30 @@ def test_export_hocr_str_with_blank_document():
     )
 
     assert actual_hocr
+
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
+
+def test_export_hocr_str_with_escape_characters():
+    wrapped_document = document.Document.from_document_path(
+        document_path="tests/unit/resources/toolbox_invoice_test-0-hocr-escape.json"
+    )
+
+    actual_hocr = wrapped_document.export_hocr_str(title="hocr-escape")
+    assert actual_hocr
+
+    element = ElementTree.fromstring(actual_hocr)
+    assert element is not None
+
+    with open(
+        "tests/unit/resources/toolbox_invoice_test-0-hocr-escape.xml",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected = f.read()
+
+    assert actual_hocr == expected
 
 
 def test_export_hocr_str_with_inline_words():
