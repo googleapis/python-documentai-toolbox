@@ -363,7 +363,7 @@ def _get_children_of_element(
         <= child.documentai_object.layout.text_anchor.text_segments[0].start_index
         < end_index
         and start_index
-        < child.documentai_object.text_anchor.text_segments[0].end_index
+        < child.documentai_object.layout.text_anchor.text_segments[0].end_index
         <= end_index
     ]
 
