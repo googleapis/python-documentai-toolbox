@@ -113,7 +113,7 @@ class FormField:
 
     @cached_property
     def field_name(self) -> str:
-        return self._trim_text(
+        return _trim_text(
             _text_from_layout(
                 self.documentai_object.field_name, self._page._document_text
             )
@@ -121,26 +121,26 @@ class FormField:
 
     @cached_property
     def field_value(self) -> str:
-        return self._trim_text(
+        return _trim_text(
             _text_from_layout(
                 self.documentai_object.field_value, self._page._document_text
             )
         )
 
-    @staticmethod
-    def _trim_text(text: str) -> str:
-        """Remove extra space characters from text (blank, newline, tab, etc.)
 
-        Args:
-            text (str):
-                Required. UTF-8 encoded text in reading order
-                from the document.
+def _trim_text(text: str) -> str:
+    """Remove extra space characters from text (blank, newline, tab, etc.)
 
-        Returns:
-            str:
-                Text without trailing spaces/newlines
-        """
-        return text.strip().replace("\n", " ")
+    Args:
+        text (str):
+            Required. UTF-8 encoded text in reading order
+            from the document.
+
+    Returns:
+        str:
+            Text without trailing spaces/newlines
+    """
+    return text.strip().replace("\n", " ")
 
 
 @dataclasses.dataclass
