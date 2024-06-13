@@ -186,7 +186,7 @@ class Line(_BasePageElement):
             Required. The original object.
         text (str):
             Required. The text of the Line.
-        _tokens (List[Token]):
+        tokens (List[Token]):
             Optional. The Tokens contained within the Line.
     """
 
@@ -207,13 +207,9 @@ class Paragraph(_BasePageElement):
             Required. The original object.
         text (str):
             Required. The text of the Paragraph.
-        _lines (List[Line]):
+        lines (List[Line]):
             Optional. The Lines contained within the Paragraph.
     """
-
-    _lines: Optional[List[Line]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
 
     @cached_property
     def lines(self):
