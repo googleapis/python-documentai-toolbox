@@ -171,7 +171,7 @@ class _BasePageElement(ABC):
     @cached_property
     def _text_segment(self) -> documentai.Document.TextAnchor.TextSegment:
         """
-        Element text section
+        Page element text segment.
         """
         return self.documentai_object.layout.text_anchor.text_segments[0]
 
