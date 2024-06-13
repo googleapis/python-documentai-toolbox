@@ -115,7 +115,7 @@ class FormField:
     def field_name(self) -> str:
         return self._trim_text(
             _text_from_layout(
-                self.documentai_object.field_name.layout, self._page._document_text
+                self.documentai_object.field_name, self._page._document_text
             )
         )
 
@@ -123,7 +123,7 @@ class FormField:
     def field_value(self) -> str:
         return self._trim_text(
             _text_from_layout(
-                self.documentai_object.field_value.layout, self._page._document_text
+                self.documentai_object.field_value, self._page._document_text
             )
         )
 
