@@ -188,16 +188,22 @@ class _BasePageElement(ABC):
             List[_BasePageElement]:
                 A list of wrapped children that are inside an element.
         """
-        return [
-            child
-            for child in potential_children
-            if self._text_segment.start_index
-            <= child._text_segment.start_index
-            < self._text_segment.end_index
-            and self._text_segment.start_index
-            < child._text_segment.end_index
-            <= self._text_segment.end_index
-        ]
+        start_index = self._text_segment.start_index
+        end_index = self._text_segment.end_index
+
+        children = []
+        for child in potential_children:
+            child_start_index = child._text_segment.start_index
+            child_end_index = child._text_segment.end_index
+
+            if child_start_index >= end_index:
+                break
+            if (
+                start_index <= child_start_index < end_index
+                and start_index < child_end_index <= end_index
+            ):
+                children.append(child)
+        return children
 
 
 @dataclasses.dataclass
@@ -344,7 +350,7 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
 
     Args:
         layout (documentai.Document.Page.Layout):
-            Required. an element with layout fields.
+            Required. An element with layout fields.
         text (str):
             Required. UTF-8 encoded text in reading order
             of the `documentai.Document` containing the layout element.
@@ -353,6 +359,8 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
         str:
             Text from a single element.
     """
+    if not layout.text_anchor or not layout.text_anchor.text_segments:
+        return ""
 
     # Note: `layout.text_anchor.text_segments` are indexes into the full Document text.
     # https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#textsegment
