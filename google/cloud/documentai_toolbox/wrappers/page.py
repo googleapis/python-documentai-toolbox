@@ -168,6 +168,8 @@ class _BasePageElement(ABC):
             self.documentai_object, self._page.documentai_object.dimension
         )
 
+    # This field is a cached property to improve export times for hOCR
+    # as outlined in https://github.com/googleapis/python-documentai-toolbox/issues/312
     @cached_property
     def _text_segment(self) -> documentai.Document.TextAnchor.TextSegment:
         """
