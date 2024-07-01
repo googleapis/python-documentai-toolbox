@@ -196,21 +196,6 @@ class _BasePageElement(ABC):
             List[_BasePageElement]:
                 A new list containing only the wrapped page elements that are fully
                 contained within this element, maintaining their original order.
-
-        Raises:
-            TypeError: If `potential_children` is not a list or contains elements that are not of type `_BasePageElement`.
-
-        Example:
-        ```
-        page_element = PageElement(text_segment=TextSegment(0, 100))
-        potential_children = [
-            PageElement(text_segment=TextSegment(10, 20)),  # Inside
-            PageElement(text_segment=TextSegment(5, 105)),  # Overlapping
-            PageElement(text_segment=TextSegment(120, 150))  # Outside
-        ]
-        children = page_element._get_children_of_element(potential_children)
-        # children will contain only the first PageElement
-        ```
         """
         start_index = self._text_segment.start_index
         end_index = self._text_segment.end_index
