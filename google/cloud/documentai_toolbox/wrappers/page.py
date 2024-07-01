@@ -178,15 +178,37 @@ class _BasePageElement(ABC):
     def _get_children_of_element(
         self, potential_children: List["_BasePageElement"]
     ) -> List["_BasePageElement"]:
-        """Returns a list of children inside element.
+        """
+        Filters potential child elements to identify only those fully contained within this element.
+
+        This method iterates through a list of potential child elements, checking if their
+        start and end indices fall completely within the start and end indices of this element.
+        Elements that are only partially contained or entirely outside this element's range are excluded.
 
         Args:
             potential_children (List[_BasePageElement]):
-                Required. List of wrapped children.
+                Required. A list of wrapped page elements (e.g., words, lines, paragraphs)
+                that could potentially be children of this element.
 
         Returns:
             List[_BasePageElement]:
-                A list of wrapped children that are inside an element.
+                A new list containing only the wrapped page elements that are fully
+                contained within this element, maintaining their original order.
+
+        Raises:
+            TypeError: If `potential_children` is not a list or contains elements that are not of type `_BasePageElement`.
+
+        Example:
+            ```
+            page_element = PageElement(text_segment=TextSegment(0, 100))
+            potential_children = [
+                PageElement(text_segment=TextSegment(10, 20)),  # Inside
+                PageElement(text_segment=TextSegment(5, 105)),  # Overlapping
+                PageElement(text_segment=TextSegment(120, 150))  # Outside
+            ]
+            children = page_element._get_children_of_element(potential_children)
+            # children will contain only the first PageElement
+            ```
         """
         start_index = self._text_segment.start_index
         end_index = self._text_segment.end_index
@@ -197,7 +219,7 @@ class _BasePageElement(ABC):
             child_end_index = child._text_segment.end_index
 
             if child_start_index >= end_index:
-                break
+                break  # Optimization: stop early if child is beyond the end of this element
             if (
                 start_index <= child_start_index < end_index
                 and start_index < child_end_index <= end_index
