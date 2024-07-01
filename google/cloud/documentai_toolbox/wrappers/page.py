@@ -201,6 +201,7 @@ class _BasePageElement(ABC):
             TypeError: If `potential_children` is not a list or contains elements that are not of type `_BasePageElement`.
 
         Example:
+
             ```
             page_element = PageElement(text_segment=TextSegment(0, 100))
             potential_children = [
@@ -211,6 +212,7 @@ class _BasePageElement(ABC):
             children = page_element._get_children_of_element(potential_children)
             # children will contain only the first PageElement
             ```
+
         """
         start_index = self._text_segment.start_index
         end_index = self._text_segment.end_index
