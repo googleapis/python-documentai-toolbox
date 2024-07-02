@@ -84,6 +84,7 @@ class Table:
         """
         return [
             [
+                # Newlines removed to improve formatting for export formats.
                 _text_from_layout(cell.layout, self._page._document_text).replace(
                     "\n", ""
                 )
@@ -140,6 +141,8 @@ def _trim_text(text: str) -> str:
         str:
             Text without trailing spaces/newlines
     """
+    # Newline replacement added to correct common
+    # misshapen output from Form Parser.
     return text.strip().replace("\n", " ")
 
 
