@@ -17,7 +17,8 @@
 
 from abc import ABC
 import dataclasses
-from typing import List, Optional, Type, cast
+from functools import cached_property
+from typing import Iterable, List, Optional, Type
 
 import pandas as pd
 
@@ -42,48 +43,55 @@ class Table:
     documentai_object: documentai.Document.Page.Table = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
-    _body_rows: Optional[List[List[str]]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _header_rows: Optional[List[List[str]]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
+    @cached_property
+    def body_rows(self) -> List[List[str]]:
+        return self._extract_table_rows(self.documentai_object.body_rows)
 
-    @property
-    def body_rows(self):
-        if self._body_rows is None:
-            self._body_rows = _table_rows_from_documentai_table_rows(
-                table_rows=list(self.documentai_object.body_rows),
-                text=self._page._document_text,
-            )
-        return self._body_rows
-
-    @property
-    def header_rows(self):
-        if self._header_rows is None:
-            self._header_rows = _table_rows_from_documentai_table_rows(
-                table_rows=list(self.documentai_object.header_rows),
-                text=self._page._document_text,
-            )
-        return self._header_rows
+    @cached_property
+    def header_rows(self) -> List[List[str]]:
+        return self._extract_table_rows(self.documentai_object.header_rows)
 
     def to_dataframe(self) -> pd.DataFrame:
-        r"""Returns pd.DataFrame from documentai.table
+        """Returns pd.DataFrame from documentai.table
 
         Returns:
             pd.DataFrame:
                 The DataFrame of the table.
-
         """
         if not self.body_rows:
             return pd.DataFrame(columns=self.header_rows)
 
-        if self.header_rows:
-            columns = pd.MultiIndex.from_arrays(self.header_rows)
-        else:
-            columns = [None] * len(self.body_rows[0])
+        columns = (
+            pd.MultiIndex.from_arrays(self.header_rows)
+            if self.header_rows
+            else [None] * len(self.body_rows[0])
+        )
 
         return pd.DataFrame(self.body_rows, columns=columns)
+
+    def _extract_table_rows(
+        self, table_rows: Iterable[documentai.Document.Page.Table.TableRow]
+    ) -> List[List[str]]:
+        """Returns a list of rows from table_rows.
+
+        Args:
+            table_rows (List[documentai.Document.Page.Table.TableRow]):
+                Required. A documentai.Document.Page.Table.TableRow.
+
+        Returns:
+            List[List[str]]:
+                A list of table rows.
+        """
+        return [
+            [
+                # Newlines removed to improve formatting for export formats.
+                _text_from_layout(cell.layout, self._page._document_text).replace(
+                    "\n", ""
+                )
+                for cell in row.cells
+            ]
+            for row in table_rows
+        ]
 
 
 @dataclasses.dataclass
@@ -104,30 +112,38 @@ class FormField:
     )
     _page: "Page" = dataclasses.field(repr=False)
 
-    _field_name: Optional[str] = dataclasses.field(init=False, repr=False, default=None)
-    _field_value: Optional[str] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
-    @property
-    def field_name(self):
-        if self._field_name is None:
-            self._field_name = _trim_text(
-                _text_from_layout(
-                    self.documentai_object.field_name, self._page._document_text
-                )
+    @cached_property
+    def field_name(self) -> str:
+        return _trim_text(
+            _text_from_layout(
+                self.documentai_object.field_name, self._page._document_text
             )
-        return self._field_name
+        )
 
-    @property
-    def field_value(self):
-        if self._field_value is None:
-            self._field_value = _trim_text(
-                _text_from_layout(
-                    self.documentai_object.field_value, self._page._document_text
-                )
+    @cached_property
+    def field_value(self) -> str:
+        return _trim_text(
+            _text_from_layout(
+                self.documentai_object.field_value, self._page._document_text
             )
-        return self._field_value
+        )
+
+
+def _trim_text(text: str) -> str:
+    """Remove extra space characters from text (blank, newline, tab, etc.)
+
+    Args:
+        text (str):
+            Required. UTF-8 encoded text in reading order
+            from the document.
+
+    Returns:
+        str:
+            Text without trailing spaces/newlines
+    """
+    # Newline replacement added to correct common
+    # misshapen output from Form Parser.
+    return text.strip().replace("\n", " ")
 
 
 @dataclasses.dataclass
@@ -137,33 +153,69 @@ class _BasePageElement(ABC):
     documentai_object: ElementWithLayout = dataclasses.field(repr=False)
     _page: "Page" = dataclasses.field(repr=False)
 
-    _text: Optional[str] = dataclasses.field(init=False, repr=False, default=None)
-    _hocr_bounding_box: Optional[str] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
-    @property
-    def text(self):
+    @cached_property
+    def text(self) -> str:
         """
         Text of the page element.
         """
-        if self._text is None:
-            self._text = _text_from_layout(
-                layout=self.documentai_object.layout, text=self._page._document_text
-            )
-        return self._text
+        return _text_from_layout(
+            self.documentai_object.layout, self._page._document_text
+        )
 
-    @property
-    def hocr_bounding_box(self):
+    @cached_property
+    def hocr_bounding_box(self) -> Optional[str]:
         """
         hOCR bounding box of the page element.
         """
-        if self._hocr_bounding_box is None:
-            self._hocr_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=self.documentai_object,
-                page_dimension=self._page.documentai_object.dimension,
-            )
-        return self._hocr_bounding_box
+        return _get_hocr_bounding_box(
+            self.documentai_object, self._page.documentai_object.dimension
+        )
+
+    # This field is a cached property to improve export times for hOCR
+    # as outlined in https://github.com/googleapis/python-documentai-toolbox/issues/312
+    @cached_property
+    def _text_segment(self) -> documentai.Document.TextAnchor.TextSegment:
+        """
+        Page element text segment.
+        """
+        return self.documentai_object.layout.text_anchor.text_segments[0]
+
+    def _get_children_of_element(
+        self, potential_children: List["_BasePageElement"]
+    ) -> List["_BasePageElement"]:
+        """
+        Filters potential child elements to identify only those fully contained within this element.
+
+        This method iterates through a list of potential child elements, checking if their
+        start and end indices fall completely within the start and end indices of this element.
+        Elements that are only partially contained or entirely outside this element's range are excluded.
+
+        Args:
+            potential_children (List[_BasePageElement]):
+                Required. A list of wrapped page elements (e.g., words, lines, paragraphs)
+                that could potentially be children of this element.
+
+        Returns:
+            List[_BasePageElement]:
+                A new list containing only the wrapped page elements that are fully
+                contained within this element, maintaining their original order.
+        """
+        start_index = self._text_segment.start_index
+        end_index = self._text_segment.end_index
+
+        children = []
+        for child in potential_children:
+            child_start_index = child._text_segment.start_index
+            child_end_index = child._text_segment.end_index
+
+            if child_start_index >= end_index:
+                break  # Optimization: stop early if child is beyond the end of this element
+            if (
+                start_index <= child_start_index < end_index
+                and start_index < child_end_index <= end_index
+            ):
+                children.append(child)
+        return children
 
 
 @dataclasses.dataclass
@@ -178,8 +230,8 @@ class Symbol(_BasePageElement):
             Required. The text of the Symbol.
     """
 
-    @property
-    def hocr_bounding_box(self):
+    @cached_property
+    def hocr_bounding_box(self) -> Optional[str]:
         # Symbols are not represented in hOCR
         return None
 
@@ -197,18 +249,9 @@ class Token(_BasePageElement):
             Optional. The Symbols contained within the Token.
     """
 
-    _symbols: Optional[List[Symbol]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
-    @property
-    def symbols(self):
-        if self._symbols is None:
-            self._symbols = cast(
-                List[Symbol],
-                _get_children_of_element(self.documentai_object, self._page.symbols),
-            )
-        return self._symbols
+    @cached_property
+    def symbols(self) -> List[Symbol]:
+        return self._get_children_of_element(self._page.symbols)
 
 
 @dataclasses.dataclass
@@ -220,22 +263,13 @@ class Line(_BasePageElement):
             Required. The original object.
         text (str):
             Required. The text of the Line.
-        _tokens (List[Token]):
+        tokens (List[Token]):
             Optional. The Tokens contained within the Line.
     """
 
-    _tokens: Optional[List[Token]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
-    @property
-    def tokens(self):
-        if self._tokens is None:
-            self._tokens = cast(
-                List[Token],
-                _get_children_of_element(self.documentai_object, self._page.tokens),
-            )
-        return self._tokens
+    @cached_property
+    def tokens(self) -> List[Token]:
+        return self._get_children_of_element(self._page.tokens)
 
 
 @dataclasses.dataclass
@@ -247,22 +281,13 @@ class Paragraph(_BasePageElement):
             Required. The original object.
         text (str):
             Required. The text of the Paragraph.
-        _lines (List[Line]):
+        lines (List[Line]):
             Optional. The Lines contained within the Paragraph.
     """
 
-    _lines: Optional[List[Line]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
-    @property
-    def lines(self):
-        if self._lines is None:
-            self._lines = cast(
-                List[Line],
-                _get_children_of_element(self.documentai_object, self._page.lines),
-            )
-        return self._lines
+    @cached_property
+    def lines(self) -> List[Line]:
+        return self._get_children_of_element(self._page.lines)
 
 
 @dataclasses.dataclass
@@ -274,22 +299,13 @@ class Block(_BasePageElement):
             Required. The original object.
         text (str):
             Required. The text of the Block.
-        _paragraphs (List[Paragraph]):
+        paragraphs (List[Paragraph]):
             Optional. The Paragraphs contained within the Block.
     """
 
-    _paragraphs: Optional[List[Paragraph]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
-    @property
-    def paragraphs(self):
-        if self._paragraphs is None:
-            self._paragraphs = cast(
-                List[Paragraph],
-                _get_children_of_element(self.documentai_object, self._page.paragraphs),
-            )
-        return self._paragraphs
+    @cached_property
+    def paragraphs(self) -> List[Paragraph]:
+        return self._get_children_of_element(self._page.paragraphs)
 
 
 @dataclasses.dataclass
@@ -304,39 +320,17 @@ class MathFormula(_BasePageElement):
             Required. The text of the MathFormula.
     """
 
-    @property
+    @cached_property
     def hocr_bounding_box(self):
         # Math Formulas are not represented in hOCR
         return None
-
-
-def _table_rows_from_documentai_table_rows(
-    table_rows: List[documentai.Document.Page.Table.TableRow], text: str
-) -> List[List[str]]:
-    r"""Returns a list of rows from table_rows.
-
-    Args:
-        table_rows (List[documentai.Document.Page.Table.TableRow]):
-            Required. A documentai.Document.Page.Table.TableRow.
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-
-    Returns:
-        List[List[str]]:
-            A list of table rows.
-    """
-    return [
-        [_text_from_layout(cell.layout, text).replace("\n", "") for cell in row.cells]
-        for row in table_rows
-    ]
 
 
 def _get_hocr_bounding_box(
     element_with_layout: ElementWithLayout,
     page_dimension: documentai.Document.Page.Dimension,
 ) -> Optional[str]:
-    r"""Returns a hOCR bounding box string.
+    """Returns a hOCR bounding box string.
 
     Args:
         element_with_layout (ElementWithLayout):
@@ -346,7 +340,7 @@ def _get_hocr_bounding_box(
 
     Returns:
         Optional[str]:
-            hOCR bounding box sring.
+            hOCR bounding box string.
     """
     if not element_with_layout.layout.bounding_poly:
         return None
@@ -368,7 +362,7 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
 
     Args:
         layout (documentai.Document.Page.Layout):
-            Required. an element with layout fields.
+            Required. An element with layout fields.
         text (str):
             Required. UTF-8 encoded text in reading order
             of the `documentai.Document` containing the layout element.
@@ -377,6 +371,8 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
         str:
             Text from a single element.
     """
+    if not layout.text_anchor or not layout.text_anchor.text_segments:
+        return ""
 
     # Note: `layout.text_anchor.text_segments` are indexes into the full Document text.
     # https://cloud.google.com/document-ai/docs/reference/rest/v1/Document#textsegment
@@ -384,48 +380,6 @@ def _text_from_layout(layout: documentai.Document.Page.Layout, text: str) -> str
         text[int(segment.start_index) : int(segment.end_index)]
         for segment in layout.text_anchor.text_segments
     )
-
-
-def _get_children_of_element(
-    element: ElementWithLayout, children: List[ElementWithLayout]
-) -> List[ElementWithLayout]:
-    r"""Returns a list of children inside element.
-
-    Args:
-        element (ElementWithLayout):
-            Required. A element in a page.
-        children (List[ElementWithLayout]):
-            Required. List of wrapped children.
-
-    Returns:
-        List[ElementWithLayout]:
-            A list of wrapped children that are inside a element.
-    """
-    start_index = element.layout.text_anchor.text_segments[0].start_index
-    end_index = element.layout.text_anchor.text_segments[0].end_index
-
-    return [
-        child
-        for child in children
-        if child.documentai_object.layout.text_anchor.text_segments[0].start_index
-        >= start_index
-        if child.documentai_object.layout.text_anchor.text_segments[0].end_index
-        <= end_index
-    ]
-
-
-def _trim_text(text: str) -> str:
-    r"""Remove extra space characters from text (blank, newline, tab, etc.)
-
-    Args:
-        text (str):
-            Required. UTF-8 encoded text in reading order
-            from the document.
-    Returns:
-        str:
-            Text without trailing spaces/newlines
-    """
-    return text.strip().replace("\n", " ")
 
 
 @dataclasses.dataclass
@@ -473,38 +427,6 @@ class Page:
     documentai_object: documentai.Document.Page = dataclasses.field(repr=False)
     _document_text: str = dataclasses.field(repr=False)
 
-    _text: Optional[str] = dataclasses.field(init=False, repr=False, default=None)
-    _page_number: Optional[int] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _form_fields: Optional[List[FormField]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _symbols: Optional[List[Symbol]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _tokens: Optional[List[Token]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _lines: Optional[List[Line]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _paragraphs: Optional[List[Paragraph]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _blocks: Optional[List[Block]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _tables: Optional[List[Table]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _math_formulas: Optional[List[MathFormula]] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-    _hocr_bounding_box: Optional[str] = dataclasses.field(
-        init=False, repr=False, default=None
-    )
-
     def _get_elements(self, element_type: Type, attribute_name: str) -> List:
         """
         Helper method to create elements based on specified type.
@@ -514,77 +436,54 @@ class Page:
             element_type(documentai_object=element, _page=self) for element in elements
         ]
 
-    @property
+    @cached_property
     def text(self):
-        if self._text is None:
-            self._text = _text_from_layout(
-                self.documentai_object.layout, text=self._document_text
-            )
-        return self._text
+        return _text_from_layout(
+            self.documentai_object.layout, text=self._document_text
+        )
 
-    @property
+    @cached_property
     def page_number(self):
-        if self._page_number is None:
-            self._page_number = self.documentai_object.page_number
-        return self._page_number
+        return self.documentai_object.page_number
 
-    @property
+    @cached_property
     def tables(self):
-        if self._tables is None:
-            self._tables = self._get_elements(Table, "tables")
-        return self._tables
+        return self._get_elements(Table, "tables")
 
-    @property
+    @cached_property
     def form_fields(self):
-        if self._form_fields is None:
-            self._form_fields = self._get_elements(FormField, "form_fields")
-        return self._form_fields
+        return self._get_elements(FormField, "form_fields")
 
-    @property
+    @cached_property
     def math_formulas(self):
-        if self._math_formulas is None:
-            self._math_formulas = [
-                MathFormula(documentai_object=visual_element, _page=self)
-                for visual_element in self.documentai_object.visual_elements
-                if visual_element.type_ == "math_formula"
-            ]
-        return self._math_formulas
+        return [
+            MathFormula(documentai_object=visual_element, _page=self)
+            for visual_element in self.documentai_object.visual_elements
+            if visual_element.type_ == "math_formula"
+        ]
 
-    @property
+    @cached_property
     def symbols(self):
-        if self._symbols is None:
-            self._symbols = self._get_elements(Symbol, "symbols")
-        return self._symbols
+        return self._get_elements(Symbol, "symbols")
 
-    @property
+    @cached_property
     def tokens(self):
-        if self._tokens is None:
-            self._tokens = self._get_elements(Token, "tokens")
-        return self._tokens
+        return self._get_elements(Token, "tokens")
 
-    @property
+    @cached_property
     def lines(self):
-        if self._lines is None:
-            self._lines = self._get_elements(Line, "lines")
-        return self._lines
+        return self._get_elements(Line, "lines")
 
-    @property
+    @cached_property
     def paragraphs(self):
-        if self._paragraphs is None:
-            self._paragraphs = self._get_elements(Paragraph, "paragraphs")
-        return self._paragraphs
+        return self._get_elements(Paragraph, "paragraphs")
 
-    @property
+    @cached_property
     def blocks(self):
-        if self._blocks is None:
-            self._blocks = self._get_elements(Block, "blocks")
-        return self._blocks
+        return self._get_elements(Block, "blocks")
 
-    @property
+    @cached_property
     def hocr_bounding_box(self):
-        if self._hocr_bounding_box is None:
-            self._hocr_bounding_box = _get_hocr_bounding_box(
-                element_with_layout=self.documentai_object,
-                page_dimension=self.documentai_object.dimension,
-            )
-        return self._hocr_bounding_box
+        return _get_hocr_bounding_box(
+            self.documentai_object, self.documentai_object.dimension
+        )
