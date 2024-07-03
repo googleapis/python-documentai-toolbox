@@ -36,6 +36,22 @@ templated_files = common.py_library(
 )
 s.move(templated_files, excludes=["docs/multiprocessing.rst", "README.rst"])
 
+# Only test the latest runtime in the `prerelease_deps` session
+s.replace("noxfile.py",
+    """@nox.session\(python=SYSTEM_TEST_PYTHON_VERSIONS\)
+@nox.parametrize\(
+    "protobuf_implementation",
+    \[ "python", "upb", "cpp" \],
+\)
+def prerelease_deps\(session, protobuf_implementation\):""",
+    """@nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS[-1])
+@nox.parametrize(
+    "protobuf_implementation",
+    ["python", "upb", "cpp"],
+)
+def prerelease_deps(session, protobuf_implementation):"""
+)
+
 # ----------------------------------------------------------------------------
 # Run blacken session
 # ----------------------------------------------------------------------------
