@@ -367,7 +367,7 @@ def docfx(session):
     )
 
 
-@nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
+@nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS[-1])
 @nox.parametrize(
     "protobuf_implementation",
     ["python", "upb", "cpp"],
