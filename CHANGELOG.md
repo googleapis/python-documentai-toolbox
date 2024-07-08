@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.5-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.13.4-alpha...v0.13.5-alpha) (2024-07-02)
+
+
+### Bug Fixes
+
+* Refactor page.py to improve performance and organization ([#316](https://github.com/googleapis/python-documentai-toolbox/issues/316)) ([bee4f62](https://github.com/googleapis/python-documentai-toolbox/commit/bee4f62f82ace5342c92dddb1e9acc17f1a27fe1))
+
+## [0.13.4-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.13.3-alpha...v0.13.4-alpha) (2024-06-13)
+
+
+### Bug Fixes
+
+* Change `if` condition typo in `_get_children_of_element()` ([#313](https://github.com/googleapis/python-documentai-toolbox/issues/313)) ([7495e0e](https://github.com/googleapis/python-documentai-toolbox/commit/7495e0ed73635bebee92141529974f261bd3a8dd))
+
 ## [0.13.3-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.13.2-alpha...v0.13.3-alpha) (2024-03-11)
 
 
