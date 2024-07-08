@@ -41,6 +41,7 @@ RUN apt-get update \
     libsqlite3-dev \
     portaudio19-dev \
     python3-distutils \
+    python-distutils-extra \
     redis-server \
     software-properties-common \
     ssh \
