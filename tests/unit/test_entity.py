@@ -76,8 +76,8 @@ def test_Entity_classifier():
     )
     wrapper_entity = entity.Entity(documentai_entity)
     assert wrapper_entity.type_ == "clinical_notes"
-    assert wrapper_entity.documentai_object.id == 0
-    assert wrapper_entity.documentai_object.confidence == 0.99878639
+    assert wrapper_entity.documentai_object.id == "0"
+    assert round(wrapper_entity.documentai_object.confidence, 8) == 0.99878639
 
 
 def test_Entity_with_page_offset():
