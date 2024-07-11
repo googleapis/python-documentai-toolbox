@@ -15,6 +15,7 @@
 #
 """Wrappers for Document AI Document type."""
 
+import collections
 import copy
 import dataclasses
 from functools import cached_property
@@ -36,6 +37,38 @@ from google.cloud.documentai_toolbox.converters import vision_helpers
 from google.cloud.documentai_toolbox.utilities import gcs_utilities
 from google.cloud.documentai_toolbox.wrappers.entity import Entity
 from google.cloud.documentai_toolbox.wrappers.page import FormField, Page
+
+
+def _chunks_from_shards(
+    shards: List[documentai.Document],
+) -> List[documentai.Document.ChunkedDocument.Chunk]:
+    return [chunk for shard in shards for chunk in shard.chunked_document.chunks]
+
+
+def _document_layout_blocks_from_shards(
+    shards: List[documentai.Document],
+) -> List[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
+
+    def extract_blocks(
+        blocks: List[documentai.Document.DocumentLayout.DocumentLayoutBlock],
+    ) -> List[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
+        unnested_blocks = []
+        queue = collections.deque(blocks)
+
+        while queue:
+            block = queue.popleft()
+            unnested_blocks.append(block)
+            # Add the nested blocks to the stack in the correct order
+            if block.text_block and block.text_block.blocks:
+                queue.extendleft(reversed(block.text_block.blocks))
+
+        return unnested_blocks
+
+    return [
+        block
+        for shard in shards
+        for block in extract_blocks(shard.document_layout.blocks)
+    ]
 
 
 def _entities_from_shards(
@@ -379,7 +412,10 @@ class Document:
         pages (List[Page]):
             A list of `Pages` in the `Document`.
         entities (List[Entity]):
-            A list of `Entities` in the `Document`.
+            A list of un-nested `Entities` in the `Document`.
+        chunks (List[documentai.Document.ChunkedDocument.Chunk]):
+            A list of document chunks extracted from a Layout Parser.
+        document_layout_blocks(List[documentai.Document.ChunkedDocument.Chunk])
         text (str):
             The full text of the `Document`.
     """
@@ -399,7 +435,19 @@ class Document:
         return _entities_from_shards(shards=self.shards)
 
     @cached_property
+    def chunks(self):
+        return _chunks_from_shards(shards=self.shards)
+
+    @cached_property
+    def document_layout_blocks(self):
+        return _document_layout_blocks_from_shards(shards=self.shards)
+
+    @cached_property
     def text(self):
+        # Layout Parser text
+        if self.chunks:
+            return "".join(chunk.content for chunk in self.chunks)
+
         return "".join(shard.text for shard in self.shards)
 
     @classmethod
