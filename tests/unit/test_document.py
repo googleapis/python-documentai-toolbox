@@ -80,6 +80,13 @@ def get_bytes_splitter_mock():
 
 
 @pytest.fixture
+def get_bytes_classifier_mock():
+    with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
+        byte_factory.return_value = get_bytes("tests/unit/resources/classifier")
+        yield byte_factory
+
+
+@pytest.fixture
 def get_bytes_images_mock():
     with mock.patch.object(gcs_utilities, "get_bytes") as byte_factory:
         byte_factory.return_value = get_bytes("tests/unit/resources/images")
@@ -204,6 +211,19 @@ def test_entities_from_shards_with_hex_ids():
     assert actual[1].documentai_object.id == "ef4fd8a921c0e000"
     assert actual[1].mention_text == "G06F 1/26"
     assert actual[1].type_ == "class_international"
+
+
+def test_entities_from_shards_classifier(get_bytes_classifier_mock):
+    shards = document._get_shards(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0/"
+    )
+    get_bytes_classifier_mock.assert_called_once()
+
+    actual = document._entities_from_shards(shards=shards)
+
+    assert actual[0].type_ == "computer_vision"
+    assert round(actual[0].documentai_object.confidence, 8) == 0.47925246
+    assert actual[0].documentai_object.id == "0"
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")

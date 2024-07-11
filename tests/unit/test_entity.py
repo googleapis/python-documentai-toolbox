@@ -68,6 +68,18 @@ def test_Entity_splitter():
     assert wrapper_entity.end_page == 2
 
 
+def test_Entity_classifier():
+    documentai_entity = documentai.Document.Entity(
+        type_="clinical_notes",
+        id="0",
+        confidence=0.99878639,
+    )
+    wrapper_entity = entity.Entity(documentai_entity)
+    assert wrapper_entity.type_ == "clinical_notes"
+    assert wrapper_entity.documentai_object.id == 0
+    assert wrapper_entity.documentai_object.confidence == 0.99878639
+
+
 def test_Entity_with_page_offset():
     documentai_entity = documentai.Document.Entity(
         type_="invoice_statement",
