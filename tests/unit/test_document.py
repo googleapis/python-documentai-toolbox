@@ -221,6 +221,8 @@ def test_entities_from_shards_classifier(get_bytes_classifier_mock):
 
     actual = document._entities_from_shards(shards=shards)
 
+    # Check for error reported in https://github.com/googleapis/python-documentai-toolbox/issues/332
+    assert repr(actual)
     assert actual[0].type_ == "computer_vision"
     assert round(actual[0].documentai_object.confidence, 8) == 0.47925246
     assert actual[0].documentai_object.id == "0"
