@@ -48,7 +48,6 @@ def _chunks_from_shards(
 def _document_layout_blocks_from_shards(
     shards: List[documentai.Document],
 ) -> List[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
-
     def extract_blocks(
         blocks: List[documentai.Document.DocumentLayout.DocumentLayoutBlock],
     ) -> List[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
