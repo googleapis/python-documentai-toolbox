@@ -734,6 +734,22 @@ def test_split_pdf(mock_Pdf, get_bytes_splitter_mock):
     ]
 
 
+def test_split_pdf_with_non_splitter(get_bytes_classifier_mock):
+    doc = document.Document.from_gcs(
+        gcs_bucket_name="test-directory", gcs_prefix="documentai/output/123456789/0"
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Entities do not contain start or end pages.",
+    ):
+        doc.split_pdf(
+            pdf_path="procurement_multi_document.pdf", output_path="splitter/output/"
+        )
+
+    get_bytes_classifier_mock.assert_called_once()
+
+
 def test_convert_document_to_annotate_file_response():
     doc = document.Document.from_document_path(
         document_path="tests/unit/resources/0/toolbox_invoice_test-0.json"
