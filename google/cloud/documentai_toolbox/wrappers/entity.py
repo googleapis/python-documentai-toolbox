@@ -57,28 +57,33 @@ class Entity:
     page_offset: dataclasses.InitVar[Optional[int]] = 0
 
     type_: str = dataclasses.field(init=False)
-    mention_text: str = dataclasses.field(init=False, default="")
-    normalized_text: str = dataclasses.field(init=False, default="")
+    mention_text: Optional[str] = dataclasses.field(init=False, default="")
+    normalized_text: Optional[str] = dataclasses.field(init=False, default="")
 
-    start_page: int = dataclasses.field(init=False)
-    # Only Populated for Splitter/Classifier Output
-    end_page: int = dataclasses.field(init=False)
+    # Not populated in Classifier output
+    start_page: Optional[int] = dataclasses.field(init=False)
+    # Only Populated for Splitter Output
+    end_page: Optional[int] = dataclasses.field(init=False)
 
     _image: Optional[Image.Image] = dataclasses.field(init=False, default=None)
 
     def __post_init__(self, page_offset: int) -> None:
         self.type_ = self.documentai_object.type_
-        self.mention_text = self.documentai_object.mention_text
+
+        if self.documentai_object.mention_text:
+            self.mention_text = self.documentai_object.mention_text
+
         if (
             self.documentai_object.normalized_value
             and self.documentai_object.normalized_value.text
         ):
             self.normalized_text = self.documentai_object.normalized_value.text
 
-        page_refs = self.documentai_object.page_anchor.page_refs
-        if page_refs:
-            self.start_page = int(page_refs[0].page) + page_offset
-            self.end_page = int(page_refs[-1].page) + page_offset
+        if self.documentai_object.page_anchor:
+            page_refs = self.documentai_object.page_anchor.page_refs
+            if page_refs:
+                self.start_page = int(page_refs[0].page) + page_offset
+                self.end_page = int(page_refs[-1].page) + page_offset
 
     def crop_image(
         self, documentai_page: documentai.Document.Page
