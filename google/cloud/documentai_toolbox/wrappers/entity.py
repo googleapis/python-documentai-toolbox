@@ -57,13 +57,13 @@ class Entity:
     page_offset: dataclasses.InitVar[Optional[int]] = 0
 
     type_: str = dataclasses.field(init=False)
-    mention_text: Optional[str] = dataclasses.field(init=False, default="")
-    normalized_text: Optional[str] = dataclasses.field(init=False, default="")
+    mention_text: Optional[str] = dataclasses.field(init=False, default=None)
+    normalized_text: Optional[str] = dataclasses.field(init=False, default=None)
 
     # Not populated in Classifier output
-    start_page: Optional[int] = dataclasses.field(init=False)
+    start_page: Optional[int] = dataclasses.field(init=False, default=None)
     # Only Populated for Splitter Output
-    end_page: Optional[int] = dataclasses.field(init=False)
+    end_page: Optional[int] = dataclasses.field(init=False, default=None)
 
     _image: Optional[Image.Image] = dataclasses.field(init=False, default=None)
 

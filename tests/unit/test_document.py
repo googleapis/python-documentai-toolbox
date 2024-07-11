@@ -226,6 +226,15 @@ def test_entities_from_shards_classifier(get_bytes_classifier_mock):
     assert actual[0].type_ == "computer_vision"
     assert round(actual[0].documentai_object.confidence, 8) == 0.47925246
     assert actual[0].documentai_object.id == "0"
+    assert actual[1].type_ == "crypto"
+    assert round(actual[1].documentai_object.confidence, 8) == 0.0433604
+    assert actual[1].documentai_object.id == "1"
+    assert actual[2].type_ == "med_tech"
+    assert round(actual[2].documentai_object.confidence, 8) == 0.26732057
+    assert actual[2].documentai_object.id == "2"
+    assert actual[3].type_ == "other"
+    assert round(actual[3].documentai_object.confidence, 8) == 0.2100666
+    assert actual[3].documentai_object.id == "3"
 
 
 @mock.patch("google.cloud.documentai_toolbox.wrappers.document.documentai")
