@@ -414,7 +414,8 @@ class Document:
             A list of un-nested `Entities` in the `Document`.
         chunks (List[documentai.Document.ChunkedDocument.Chunk]):
             A list of document chunks extracted from a Layout Parser.
-        document_layout_blocks(List[documentai.Document.DocumentLayout.DocumentLayoutBlock])
+        document_layout_blocks (List[documentai.Document.DocumentLayout.DocumentLayoutBlock]):
+            A list of document layout blocks extracted from a Layout Parser.
         text (str):
             The full text of the `Document`.
     """
