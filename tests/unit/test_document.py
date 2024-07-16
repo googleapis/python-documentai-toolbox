@@ -402,8 +402,6 @@ def test_document_from_documentai_document_layout_parser():
         doc = documentai.Document.from_json(f.read())
 
     actual = document.Document.from_documentai_document(documentai_document=doc)
-    assert actual.text
-    assert len(actual.text) == 9458
 
     chunk_list = list(actual.chunks)
     assert len(chunk_list) == 2
@@ -417,10 +415,11 @@ def test_document_from_documentai_document_layout_parser():
     assert chunk_list[1].page_span.page_start == 8
     assert chunk_list[1].page_span.page_end == 15
 
-    for i, block in enumerate(actual.document_layout_blocks, start=1):
+    block_list = list(actual.document_layout_blocks)
+
+    for i, block in enumerate(block_list, start=1):
         assert int(block.block_id) == i
 
-    block_list = list(actual.document_layout_blocks)
     assert len(block_list) == 175
     assert block_list[0].block_id == "1"
     assert block_list[0].text_block.text == "CHAPTER I"

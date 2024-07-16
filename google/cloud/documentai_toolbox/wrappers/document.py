@@ -441,16 +441,7 @@ class Document:
 
     @cached_property
     def text(self):
-        # Layout Parser text
-        chunks_iterator = self.chunks
-        try:
-            first_chunk = next(chunks_iterator)
-        except StopIteration:
-            return "".join(shard.text for shard in self.shards)
-
-        return "".join(
-            chunk.content for chunk in itertools.chain([first_chunk], chunks_iterator)
-        )
+        return "".join(shard.text for shard in self.shards)
 
     @classmethod
     def from_document_path(
