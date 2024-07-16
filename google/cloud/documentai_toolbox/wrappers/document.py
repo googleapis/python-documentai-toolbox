@@ -20,7 +20,6 @@ import copy
 import dataclasses
 from functools import cached_property
 import glob
-import itertools
 import os
 import re
 from typing import Dict, Iterator, List, Optional, Type, Union
