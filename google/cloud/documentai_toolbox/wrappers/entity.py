@@ -40,17 +40,15 @@ class Entity:
             Required. Entity type from a schema e.g. "Address".
         mention_text (str):
             Optional. Text value in the document e.g. "1600 Amphitheatre Pkwy".
-            If the entity is not present in
-            the document, this field will be empty.
+            Only populated for Extraction processors.
         normalized_text (str):
             Optional. Normalized text value in the document e.g. "1970-01-01".
-            If the entity is not present in
-            the document, this field will be empty.
+            Only populated for Extraction processors.
         start_page (int):
-            Required. `Page` containing the `Entity` or the first page of the
-            classification (for Splitter/Classifier processors).
+            Optional. `Page` containing the `Entity` for Extraction processors or the first page of the
+            subdocument for Splitter processors.
         end_page (int):
-            Required. Last page of the classification
+            Optional. Last page of the subdocument for Splitter processors.
     """
 
     documentai_object: documentai.Document.Entity = dataclasses.field(repr=False)
@@ -60,9 +58,7 @@ class Entity:
     mention_text: Optional[str] = dataclasses.field(init=False, default=None)
     normalized_text: Optional[str] = dataclasses.field(init=False, default=None)
 
-    # Not populated in Classifier output
     start_page: Optional[int] = dataclasses.field(init=False, default=None)
-    # Only Populated for Splitter Output
     end_page: Optional[int] = dataclasses.field(init=False, default=None)
 
     _image: Optional[Image.Image] = dataclasses.field(init=False, default=None)
