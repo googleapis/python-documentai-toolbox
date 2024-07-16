@@ -22,7 +22,7 @@ from functools import cached_property
 import glob
 import os
 import re
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, Iterator, List, Optional, Type, Union
 
 from google.api_core.client_options import ClientOptions
 from google.api_core.operation import from_gapic as operation_from_gapic
@@ -41,33 +41,29 @@ from google.cloud.documentai_toolbox.wrappers.page import FormField, Page
 
 def _chunks_from_shards(
     shards: List[documentai.Document],
-) -> List[documentai.Document.ChunkedDocument.Chunk]:
-    return [chunk for shard in shards for chunk in shard.chunked_document.chunks]
+) -> Iterator[documentai.Document.ChunkedDocument.Chunk]:
+    for shard in shards:
+        for chunk in shard.chunked_document.chunks:
+            yield chunk
 
 
 def _document_layout_blocks_from_shards(
     shards: List[documentai.Document],
-) -> List[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
+) -> Iterator[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
     def extract_blocks(
         blocks: List[documentai.Document.DocumentLayout.DocumentLayoutBlock],
-    ) -> List[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
-        unnested_blocks = []
+    ) -> Iterator[documentai.Document.DocumentLayout.DocumentLayoutBlock]:
         queue = collections.deque(blocks)
 
         while queue:
             block = queue.popleft()
-            unnested_blocks.append(block)
+            yield block
             # Add the nested blocks to the stack in the correct order
             if block.text_block and block.text_block.blocks:
                 queue.extendleft(reversed(block.text_block.blocks))
 
-        return unnested_blocks
-
-    return [
-        block
-        for shard in shards
-        for block in extract_blocks(shard.document_layout.blocks)
-    ]
+    for shard in shards:
+        yield from extract_blocks(shard.document_layout.blocks)
 
 
 def _entities_from_shards(
@@ -412,10 +408,10 @@ class Document:
             A list of `Pages` in the `Document`.
         entities (List[Entity]):
             A list of un-nested `Entities` in the `Document`.
-        chunks (List[documentai.Document.ChunkedDocument.Chunk]):
-            A list of document chunks extracted from a Layout Parser.
-        document_layout_blocks (List[documentai.Document.DocumentLayout.DocumentLayoutBlock]):
-            A list of document layout blocks extracted from a Layout Parser.
+        chunks (Iterator[documentai.Document.ChunkedDocument.Chunk]):
+            An iterator of document chunks extracted from a Layout Parser.
+        document_layout_blocks (Iterator[documentai.Document.DocumentLayout.DocumentLayoutBlock]):
+            An iterator of document layout blocks extracted from a Layout Parser.
         text (str):
             The full text of the `Document`.
     """
