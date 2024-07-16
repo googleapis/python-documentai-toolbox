@@ -405,36 +405,35 @@ def test_document_from_documentai_document_layout_parser():
     assert actual.text
     assert len(actual.text) == 9458
 
-    assert len(actual.chunks) == 2
-    assert actual.chunks[0].chunk_id == "c1"
-    assert "CHAPTER I" in actual.chunks[0].content
-    assert actual.chunks[0].page_span.page_start == 1
-    assert actual.chunks[0].page_span.page_end == 8
+    chunk_list = list(actual.chunks)
+    assert len(chunk_list) == 2
+    assert chunk_list[0].chunk_id == "c1"
+    assert "CHAPTER I" in chunk_list[0].content
+    assert chunk_list[0].page_span.page_start == 1
+    assert chunk_list[0].page_span.page_end == 8
 
-    assert actual.chunks[1].chunk_id == "c2"
-    assert "Was that me?" in actual.chunks[1].content
-    assert actual.chunks[1].page_span.page_start == 8
-    assert actual.chunks[1].page_span.page_end == 15
+    assert chunk_list[1].chunk_id == "c2"
+    assert "Was that me?" in chunk_list[1].content
+    assert chunk_list[1].page_span.page_start == 8
+    assert chunk_list[1].page_span.page_end == 15
 
     for i, block in enumerate(actual.document_layout_blocks, start=1):
         assert int(block.block_id) == i
 
-    assert len(actual.document_layout_blocks) == 175
-    assert actual.document_layout_blocks[0].block_id == "1"
-    assert actual.document_layout_blocks[0].text_block.text == "CHAPTER I"
-    assert actual.document_layout_blocks[0].text_block.type_ == "heading-1"
-    assert actual.document_layout_blocks[0].text_block.blocks
-    assert actual.document_layout_blocks[0].page_span.page_start == 1
-    assert actual.document_layout_blocks[0].page_span.page_end == 8
+    block_list = list(actual.document_layout_blocks)
+    assert len(block_list) == 175
+    assert block_list[0].block_id == "1"
+    assert block_list[0].text_block.text == "CHAPTER I"
+    assert block_list[0].text_block.type_ == "heading-1"
+    assert block_list[0].text_block.blocks
+    assert block_list[0].page_span.page_start == 1
+    assert block_list[0].page_span.page_end == 8
 
-    assert actual.document_layout_blocks[1].block_id == "2"
-    assert (
-        actual.document_layout_blocks[1].text_block.text
-        == "IN WHICH We Are Introduced to"
-    )
-    assert actual.document_layout_blocks[1].text_block.type_ == "paragraph"
-    assert actual.document_layout_blocks[1].page_span.page_start == 1
-    assert actual.document_layout_blocks[1].page_span.page_end == 1
+    assert block_list[1].block_id == "2"
+    assert block_list[1].text_block.text == "IN WHICH We Are Introduced to"
+    assert block_list[1].text_block.type_ == "paragraph"
+    assert block_list[1].page_span.page_start == 1
+    assert block_list[1].page_span.page_end == 1
 
 
 def test_document_from_gcs_with_single_shard(get_bytes_single_file_mock):
