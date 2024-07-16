@@ -20,6 +20,7 @@ import copy
 import dataclasses
 from functools import cached_property
 import glob
+import itertools
 import os
 import re
 from typing import Dict, Iterator, List, Optional, Type, Union
@@ -441,10 +442,15 @@ class Document:
     @cached_property
     def text(self):
         # Layout Parser text
-        if self.chunks:
-            return "".join(chunk.content for chunk in self.chunks)
+        chunks_iterator = self.chunks
+        try:
+            first_chunk = next(chunks_iterator)
+        except StopIteration:
+            return "".join(shard.text for shard in self.shards)
 
-        return "".join(shard.text for shard in self.shards)
+        return "".join(
+            chunk.content for chunk in itertools.chain([first_chunk], chunks_iterator)
+        )
 
     @classmethod
     def from_document_path(
