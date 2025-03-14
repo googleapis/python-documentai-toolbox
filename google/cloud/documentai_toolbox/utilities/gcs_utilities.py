@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 """Google Cloud Storage utilities."""
+import importlib.metadata
 import os
 import re
 from typing import Dict, List, Optional, Tuple
 
 from google.api_core.gapic_v1 import client_info
-import importlib.metadata
 
 from google.cloud import documentai, documentai_toolbox, storage
 from google.cloud.documentai_toolbox import constants
