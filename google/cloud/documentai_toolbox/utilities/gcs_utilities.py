@@ -15,11 +15,11 @@
 #
 """Google Cloud Storage utilities."""
 import os
-import pkg_resources
 import re
 from typing import Dict, List, Optional, Tuple
 
 from google.api_core.gapic_v1 import client_info
+import pkg_resources
 
 from google.cloud import documentai, documentai_toolbox, storage
 from google.cloud.documentai_toolbox import constants
