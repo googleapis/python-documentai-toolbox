@@ -144,8 +144,8 @@ def get_blob(
         raise ValueError("gcs_uri must link to a single file.")
 
     try:
-        version = pkg_resources.get_distribution("google-cloud-storage").version
-    except pkg_resources.DistributionNotFound:
+        version = importlib.metadata.version("google-cloud-storage")
+    except importlib.metadata.PackageNotFoundError:
         raise ImportError("google-cloud-storage is not installed.")
 
     client = _get_storage_client(module=module)
