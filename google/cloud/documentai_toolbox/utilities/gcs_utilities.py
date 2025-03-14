@@ -15,6 +15,7 @@
 #
 """Google Cloud Storage utilities."""
 import os
+import pkg_resources
 import re
 from typing import Dict, List, Optional, Tuple
 
@@ -142,7 +143,18 @@ def get_blob(
     if not re.match(constants.FILE_CHECK_REGEX, gcs_uri):
         raise ValueError("gcs_uri must link to a single file.")
 
-    return storage.Blob.from_uri(gcs_uri, _get_storage_client(module=module))
+    try:
+        version = pkg_resources.get_distribution("google-cloud-storage").version
+    except pkg_resources.DistributionNotFound:
+        raise ImportError("google-cloud-storage is not installed.")
+
+    client = _get_storage_client(module=module)
+
+    major, _, _ = map(int, version.split("."))
+    if major < 3:
+        return storage.Blob.from_string(gcs_uri, client)
+    else:
+        return storage.Blob.from_uri(gcs_uri, client)
 
 
 def split_gcs_uri(gcs_uri: str) -> Tuple[str, str]:
