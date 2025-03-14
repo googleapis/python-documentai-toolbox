@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.3-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.14.2-alpha...v0.14.3-alpha) (2025-03-14)
+
+
+### Bug Fixes
+
+* Remove setup.cfg configuration for creating universal wheels ([#383](https://github.com/googleapis/python-documentai-toolbox/issues/383)) ([b1f3772](https://github.com/googleapis/python-documentai-toolbox/commit/b1f3772dd2f7fa76fc2bb8621282287f2066d644))
+
 ## [0.14.2-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.14.1-alpha...v0.14.2-alpha) (2025-03-05)
 
 
