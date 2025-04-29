@@ -297,6 +297,17 @@ def test_Token(docproto):
     # checking cached value
     assert token.text == "Q.\n"
     assert token.hocr_bounding_box == "bbox 585 1781 620 1818"
+    
+    # Check confidence value
+    assert isinstance(token.confidence, float)
+    assert 0.0 <= token.confidence <= 1.0
+    
+    # Check detected languages
+    assert isinstance(token.detected_languages, list)
+    if token.detected_languages:
+        for language in token.detected_languages:
+            assert isinstance(language, documentai.Document.Page.DetectedLanguage)
+            assert hasattr(language, "language_code")
 
     assert token.symbols == []
 

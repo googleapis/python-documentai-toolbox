@@ -247,11 +247,29 @@ class Token(_BasePageElement):
             Required. The text of the Token.
         symbols (List[Symbol]):
             Optional. The Symbols contained within the Token.
+        confidence (float):
+            Optional. The confidence score of the Token detection.
+        detected_languages (List[documentai.Document.Page.DetectedLanguage]):
+            Optional. A list of detected languages for this Token.
     """
 
     @cached_property
     def symbols(self) -> List[Symbol]:
         return self._get_children_of_element(self._page.symbols)
+        
+    @cached_property
+    def confidence(self) -> float:
+        """
+        The confidence score of the Token detection.
+        """
+        return self.documentai_object.layout.confidence
+        
+    @cached_property
+    def detected_languages(self) -> List[documentai.Document.Page.DetectedLanguage]:
+        """
+        A list of detected languages for this Token.
+        """
+        return self.documentai_object.detected_languages
 
 
 @dataclasses.dataclass
