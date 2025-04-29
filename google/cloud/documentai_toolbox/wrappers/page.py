@@ -171,6 +171,22 @@ class _BasePageElement(ABC):
             self.documentai_object, self._page.documentai_object.dimension
         )
 
+    @cached_property
+    def confidence(self) -> Optional[float]:
+        """
+        Optional. The confidence score of the page element detection.
+        """
+        return getattr(self.documentai_object, "confidence", None)
+
+    @cached_property
+    def detected_languages(
+        self,
+    ) -> Optional[List[documentai.Document.Page.DetectedLanguage]]:
+        """
+        Optional. A list of detected languages for the page element.
+        """
+        return getattr(self.documentai_object, "detected_languages", None)
+
     # This field is a cached property to improve export times for hOCR
     # as outlined in https://github.com/googleapis/python-documentai-toolbox/issues/312
     @cached_property
@@ -247,29 +263,11 @@ class Token(_BasePageElement):
             Required. The text of the Token.
         symbols (List[Symbol]):
             Optional. The Symbols contained within the Token.
-        confidence (float):
-            Optional. The confidence score of the Token detection.
-        detected_languages (List[documentai.Document.Page.DetectedLanguage]):
-            Optional. A list of detected languages for this Token.
     """
 
     @cached_property
     def symbols(self) -> List[Symbol]:
         return self._get_children_of_element(self._page.symbols)
-        
-    @cached_property
-    def confidence(self) -> float:
-        """
-        The confidence score of the Token detection.
-        """
-        return self.documentai_object.layout.confidence
-        
-    @cached_property
-    def detected_languages(self) -> List[documentai.Document.Page.DetectedLanguage]:
-        """
-        A list of detected languages for this Token.
-        """
-        return self.documentai_object.detected_languages
 
 
 @dataclasses.dataclass
