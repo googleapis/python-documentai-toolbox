@@ -37,6 +37,8 @@ def test_quickstart_sample_gcs_bucket_prefix(capsys: pytest.CaptureFixture) -> N
     assert "Document structure in Cloud Storage" in out
     assert "Number of Pages: 1" in out
     assert "Number of Entities: 35" in out
+    assert "Confidence:" in out
+    assert "Detected Languages:" in out or "No language detected" in out
 
 
 def test_quickstart_sample_gcs_uri(capsys: pytest.CaptureFixture) -> None:
@@ -48,6 +50,8 @@ def test_quickstart_sample_gcs_uri(capsys: pytest.CaptureFixture) -> None:
 
     assert "Number of Pages: 1" in out
     assert "Number of Entities: 35" in out
+    assert "Confidence:" in out
+    assert "Detected Languages:" in out or "No language detected" in out
 
 
 def test_quickstart_sample_document_path(capsys: pytest.CaptureFixture) -> None:
@@ -58,6 +62,8 @@ def test_quickstart_sample_document_path(capsys: pytest.CaptureFixture) -> None:
     assert "Number of Pages: 1" in out
     assert "Number of Entities: 0" in out
     assert "Form Date" in out
+    assert "Confidence:" in out
+    assert "Detected Languages:" in out or "No language detected" in out
 
 
 def test_quickstart_sample_documentai_document(capsys: pytest.CaptureFixture) -> None:
@@ -72,6 +78,8 @@ def test_quickstart_sample_documentai_document(capsys: pytest.CaptureFixture) ->
     assert "Number of Pages: 1" in out
     assert "Number of Entities: 0" in out
     assert "Form Date" in out
+    assert "Confidence:" in out
+    assert "Detected Languages:" in out or "No language detected" in out
 
 
 def test_quickstart_sample_batch_process_metadata(
