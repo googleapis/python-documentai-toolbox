@@ -255,7 +255,7 @@ def test_Block(docproto):
     # Check confidence value
     assert isinstance(block.confidence, float)
     assert 0.0 <= block.confidence <= 1.0
-    
+
     # Check detected languages
     assert isinstance(block.detected_languages, list)
     if block.detected_languages:
@@ -282,7 +282,7 @@ def test_Paragraph(docproto):
     # Check confidence value
     assert isinstance(paragraph.confidence, float)
     assert 0.0 <= paragraph.confidence <= 1.0
-    
+
     # Check detected languages
     assert isinstance(paragraph.detected_languages, list)
     if paragraph.detected_languages:
@@ -309,7 +309,7 @@ def test_Line(docproto):
     # Check confidence value
     assert isinstance(line.confidence, float)
     assert 0.0 <= line.confidence <= 1.0
-    
+
     # Check detected languages
     assert isinstance(line.detected_languages, list)
     if line.detected_languages:
@@ -330,11 +330,11 @@ def test_Token(docproto):
     # checking cached value
     assert token.text == "Q.\n"
     assert token.hocr_bounding_box == "bbox 585 1781 620 1818"
-    
+
     # Check confidence value
     assert isinstance(token.confidence, float)
     assert 0.0 <= token.confidence <= 1.0
-    
+
     # Check detected languages
     assert isinstance(token.detected_languages, list)
     if token.detected_languages:
