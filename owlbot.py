@@ -40,4 +40,4 @@ s.move(templated_files, excludes=["docs/multiprocessing.rst", "README.rst"])
 # Run blacken session
 # ----------------------------------------------------------------------------
 
-s.shell.run(["nox", "-s", "format"], hide_output=False)
+s.shell.run(["nox", "-s", "blacken"], hide_output=False)
