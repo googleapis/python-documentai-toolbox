@@ -32,7 +32,7 @@ BLACK_VERSION = "black[jupyter]==23.7.0"
 ISORT_VERSION = "isort==5.11.0"
 LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
-DEFAULT_PYTHON_VERSION = "3.8"
+DEFAULT_PYTHON_VERSION = "3.11"
 
 UNIT_TEST_PYTHON_VERSIONS: List[str] = [
     "3.8",
@@ -175,7 +175,7 @@ def install_unittest_dependencies(session, *constraints):
 def unit(session, protobuf_implementation):
     # Install all test dependencies, then install this package in-place.
 
-    if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13"):
+    if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13", "3.14"):
         session.skip("cpp implementation is not supported in python 3.11+")
 
     constraints_path = str(
@@ -383,7 +383,7 @@ def docfx(session):
 def prerelease_deps(session, protobuf_implementation):
     """Run all tests with prerelease versions of dependencies installed."""
 
-    if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13"):
+    if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13", "3.14"):
         session.skip("cpp implementation is not supported in python 3.11+")
 
     # Install all dependencies
