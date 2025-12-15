@@ -105,6 +105,16 @@ def quickstart_sample(
             print(line.text)
         for token in page.tokens:
             print(token.text)
+            # Print token confidence
+            print(f"\tConfidence: {token.confidence:.4f}")
+            # Print detected languages
+            if token.detected_languages:
+                print("\tDetected Languages:")
+                for lang in token.detected_languages:
+                    confidence_str = f", confidence: {lang.confidence:.4f}" if hasattr(lang, "confidence") else ""
+                    print(f"\t\t- {lang.language_code}{confidence_str}")
+            else:
+                print("\tNo language detected")
 
         # Only supported with Form Parser processor
         # https://cloud.google.com/document-ai/docs/form-parser

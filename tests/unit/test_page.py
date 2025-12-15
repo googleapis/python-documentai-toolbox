@@ -252,6 +252,17 @@ def test_Block(docproto):
 
     assert block.paragraphs
 
+    # Check confidence value
+    assert isinstance(block.confidence, float)
+    assert 0.0 <= block.confidence <= 1.0
+
+    # Check detected languages
+    assert isinstance(block.detected_languages, list)
+    if block.detected_languages:
+        for language in block.detected_languages:
+            assert isinstance(language, documentai.Document.Page.DetectedLanguage)
+            assert hasattr(language, "language_code")
+
 
 def test_Paragraph(docproto):
     wrapped_page = page.Page(
@@ -267,6 +278,17 @@ def test_Paragraph(docproto):
     assert paragraph.hocr_bounding_box == "bbox 1310 220 1534 282"
 
     assert paragraph.lines
+
+    # Check confidence value
+    assert isinstance(paragraph.confidence, float)
+    assert 0.0 <= paragraph.confidence <= 1.0
+
+    # Check detected languages
+    assert isinstance(paragraph.detected_languages, list)
+    if paragraph.detected_languages:
+        for language in paragraph.detected_languages:
+            assert isinstance(language, documentai.Document.Page.DetectedLanguage)
+            assert hasattr(language, "language_code")
 
 
 def test_Line(docproto):
@@ -284,6 +306,17 @@ def test_Line(docproto):
 
     assert line.tokens
 
+    # Check confidence value
+    assert isinstance(line.confidence, float)
+    assert 0.0 <= line.confidence <= 1.0
+
+    # Check detected languages
+    assert isinstance(line.detected_languages, list)
+    if line.detected_languages:
+        for language in line.detected_languages:
+            assert isinstance(language, documentai.Document.Page.DetectedLanguage)
+            assert hasattr(language, "language_code")
+
 
 def test_Token(docproto):
     wrapped_page = page.Page(
@@ -297,6 +330,17 @@ def test_Token(docproto):
     # checking cached value
     assert token.text == "Q.\n"
     assert token.hocr_bounding_box == "bbox 585 1781 620 1818"
+
+    # Check confidence value
+    assert isinstance(token.confidence, float)
+    assert 0.0 <= token.confidence <= 1.0
+
+    # Check detected languages
+    assert isinstance(token.detected_languages, list)
+    if token.detected_languages:
+        for language in token.detected_languages:
+            assert isinstance(language, documentai.Document.Page.DetectedLanguage)
+            assert hasattr(language, "language_code")
 
     assert token.symbols == []
 
