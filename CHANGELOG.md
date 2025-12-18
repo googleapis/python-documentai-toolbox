@@ -1,5 +1,9 @@
 # Changelog
 
+[PyPI History][1]
+
+[1]: https://pypi.org/project/google-cloud-documentai-toolbox/#history
+
 ## [0.15.0-alpha](https://github.com/googleapis/python-documentai-toolbox/compare/v0.14.2-alpha...v0.15.0-alpha) (2025-12-11)
 
 
