@@ -32,7 +32,7 @@ BLACK_VERSION = "black[jupyter]==23.7.0"
 ISORT_VERSION = "isort==5.11.0"
 LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
-DEFAULT_PYTHON_VERSION = "3.13"
+DEFAULT_PYTHON_VERSION = "3.14"
 
 UNIT_TEST_PYTHON_VERSIONS: List[str] = [
     "3.9",
@@ -71,10 +71,6 @@ CURRENT_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 nox.options.sessions = [
     "unit-3.9",
-    "unit-3.10",
-    "unit-3.11",
-    "unit-3.12",
-    "unit-3.13",
     "unit-3.14",
     "system",
     "cover",
@@ -303,7 +299,7 @@ def cover(session):
     session.run("coverage", "erase")
 
 
-@nox.session(python="3.10")
+@nox.session(python="3.14")
 def docs(session):
     """Build the docs for this library."""
 
@@ -338,7 +334,7 @@ def docs(session):
     )
 
 
-@nox.session(python="3.10")
+@nox.session(python="3.14")
 def docfx(session):
     """Build the docfx yaml files for this library."""
 
