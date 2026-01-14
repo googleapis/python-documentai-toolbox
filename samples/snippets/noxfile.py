@@ -16,8 +16,8 @@ from __future__ import annotations, print_function
 
 import glob
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 import nox
@@ -42,9 +42,11 @@ TEST_CONFIG = {
         "2.7",
         "3.6",
         "3.7",
-        "3.9",
+        "3.8",
         "3.10",
         "3.11",
+        "3.12",
+        "3.13",
     ],
     # Old samples are opted out of enforcing Python type hints
     # All new samples should feature them
@@ -94,7 +96,18 @@ def get_pytest_env_vars() -> Dict[str, str]:
 
 # DO NOT EDIT - automatically generated.
 # All versions used to tested samples.
-ALL_VERSIONS = ["2.7", "3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+ALL_VERSIONS = [
+    "2.7",
+    "3.6",
+    "3.7",
+    "3.8",
+    "3.9",
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+]
 
 # Any default versions that should be ignored.
 IGNORED_VERSIONS = TEST_CONFIG["ignored_versions"]
