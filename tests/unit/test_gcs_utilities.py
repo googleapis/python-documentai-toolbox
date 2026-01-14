@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
 from unittest import mock
 
 import pytest
@@ -579,3 +580,90 @@ def test_get_blobs_with_no_input():
         match="You must provide either `gcs_uri` or both `gcs_bucket_name` and `gcs_prefix`.",
     ):
         gcs_utilities.get_blobs()
+
+
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
+def test_get_blobs_with_gcs_uri(mock_storage):
+    client = mock_storage.Client.return_value
+    gcs_uri = "gs://test-bucket/test-directory/1/"
+
+    gcs_utilities.get_blobs(gcs_uri=gcs_uri)
+
+    mock_storage.Client.assert_called_once()
+    client.list_blobs.assert_called_once_with("test-bucket", prefix="test-directory/1/")
+
+
+def test_get_blobs_with_file_type_error():
+    with pytest.raises(ValueError, match="gcs_prefix cannot contain file types"):
+        gcs_utilities.get_blobs(gcs_bucket_name="test-bucket", gcs_prefix="test.json")
+
+
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
+def test_get_blob_success_major_3(mock_storage):
+    mock_version = "3.0.0"
+    with mock.patch("importlib.metadata.version", return_value=mock_version):
+        client = mock_storage.Client.return_value
+        gcs_uri = "gs://test-bucket/test.json"
+
+        gcs_utilities.get_blob(gcs_uri)
+
+        mock_storage.Blob.from_uri.assert_called_once_with(gcs_uri, client)
+
+
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
+def test_get_blob_success_major_2(mock_storage):
+    mock_version = "2.0.0"
+    with mock.patch("importlib.metadata.version", return_value=mock_version):
+        client = mock_storage.Client.return_value
+        gcs_uri = "gs://test-bucket/test.json"
+
+        gcs_utilities.get_blob(gcs_uri)
+
+        mock_storage.Blob.from_string.assert_called_once_with(gcs_uri, client)
+
+
+def test_get_blob_invalid_uri():
+    with pytest.raises(ValueError, match="gcs_uri must link to a single file."):
+        gcs_utilities.get_blob("gs://test-bucket/prefix/")
+
+
+def test_get_blob_import_error():
+    with mock.patch(
+        "importlib.metadata.version",
+        side_effect=importlib.metadata.PackageNotFoundError,
+    ):
+        with pytest.raises(ImportError, match="google-cloud-storage is not installed."):
+            gcs_utilities.get_blob("gs://test-bucket/test.json")
+
+
+@mock.patch("google.cloud.documentai_toolbox.utilities.gcs_utilities.storage")
+def test_print_gcs_document_tree_with_skipping_files(mock_storage, capfd):
+    client = mock_storage.Client.return_value
+    mock_bucket = mock.Mock()
+    client.Bucket.return_value = mock_bucket
+
+    blobs = [
+        storage.Blob(
+            name=f"gs://test-directory/1/test_shard{i}.json",
+            bucket="gs://test-directory/1",
+        )
+        for i in range(1, 11)
+    ]
+
+    client.list_blobs.return_value = blobs
+
+    # files_to_display = 2. 10 files total.
+    # idx 0, 1, 2 -> print
+    # idx 3, 4, 5, 6, 7, 8 -> skip
+    # idx 9 -> print last
+    gcs_utilities.print_gcs_document_tree(
+        gcs_bucket_name="test-directory", gcs_prefix="/", files_to_display=2
+    )
+
+    out, err = capfd.readouterr()
+    assert "├──test_shard1.json" in out
+    assert "├──test_shard2.json" in out
+    assert "├──test_shard3.json" in out
+    assert "├──test_shard4.json" not in out
+    assert "│  ...." in out
+    assert "└──test_shard10.json" in out
