@@ -116,7 +116,7 @@ def blacken(session):
     )
 
 
-@nox.session(python=DEFAULT_PYTHON_VERSION)
+@nox.session(python="3.10")
 def format(session):
     """
     Run isort to sort imports. Then run black
