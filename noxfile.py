@@ -179,6 +179,9 @@ def install_unittest_dependencies(session, *constraints):
 def unit(session, protobuf_implementation):
     # Install all test dependencies, then install this package in-place.
 
+    # Pin setuptools to a version before the removal of pkg_resources
+    session.install("setuptools<82")
+
     if protobuf_implementation == "cpp" and session.python in (
         "3.11",
         "3.12",
@@ -197,6 +200,8 @@ def unit(session, protobuf_implementation):
     # The 'cpp' implementation requires Protobuf<4.
     if protobuf_implementation == "cpp":
         session.install("protobuf<4")
+
+    session.run("python", "-m", "pip", "freeze")
 
     # Run py.test against the unit tests.
     session.run(
