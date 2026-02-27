@@ -16,4 +16,4 @@ google-cloud-storage==2.7.0
 pandas-gbq==0.21.0
 numpy==1.23.5
 pikepdf==8.2.3
-setuptools<82.0.0
+setuptools<81.0.0
