@@ -180,7 +180,7 @@ def unit(session, protobuf_implementation):
     # Install all test dependencies, then install this package in-place.
 
     # Pin setuptools to a version before the removal of pkg_resources
-    session.install("setuptools<82")
+    session.install("setuptools<81")
 
     if protobuf_implementation == "cpp" and session.python in (
         "3.11",
