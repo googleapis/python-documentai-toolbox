@@ -35,6 +35,7 @@ LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 DEFAULT_PYTHON_VERSION = "3.14"
 
 UNIT_TEST_PYTHON_VERSIONS: List[str] = [
+    "3.9",
     "3.10",
     "3.11",
     "3.12",
@@ -69,6 +70,9 @@ SYSTEM_TEST_EXTRAS_BY_PYTHON: Dict[str, List[str]] = {}
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 nox.options.sessions = [
+    "unit-3.10",
+    "unit-3.11",
+    "unit-3.12",
     "unit-3.13",
     "unit-3.14",
     "system",
